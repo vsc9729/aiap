@@ -1,4 +1,4 @@
-package com.geekyants.tippy
+package com.geekyants.synchronoss
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

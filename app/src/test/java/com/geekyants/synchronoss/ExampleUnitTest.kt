@@ -1,4 +1,4 @@
-package com.geekyants.tippy
+package com.geekyants.synchronoss
 
 import org.junit.Test
 

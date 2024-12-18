@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,25 +10,33 @@ plugins {
 }
 
 android {
-    namespace = "com.geekyants.tippy"
+    namespace = "com.geekyants.synchronoss"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.geekyants.tippy"
+        applicationId = "com.geekyants.synchronoss"
         minSdk = 21
-        targetSdk = 33
-        versionCode = 6
-        versionName = "1.6"
+        targetSdk = 34
+        versionCode = 2
+        versionName = "2.0"
 
 
 
 
         signingConfigs {
             create("release") {
-                storeFile = file("my_keystore.jks")
-                storePassword = "Viki@8968"
-                keyAlias = "key0"
-                keyPassword = "Viki@8968"
+                val keystorePropertiesFile = rootProject.file("keystore.properties")
+                val keystoreProperties = Properties()
+
+                if (keystorePropertiesFile.exists()) {
+                    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+                }
+
+                storeFile = file(keystoreProperties.getProperty("storeFile", "keystore.jks"))
+                storePassword = keystoreProperties.getProperty("storePassword", "")
+                keyAlias = keystoreProperties.getProperty("keyAlias", "")
+                keyPassword = keystoreProperties.getProperty("keyPassword", "")
+
             }
         }
 

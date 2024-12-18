@@ -25,7 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
 
 @Composable
-fun SubscriptionsViewDialog(modifier: Modifier = Modifier, onDismissRequest: () -> Unit) {
+fun SubscriptionsViewDialog(modifier: Modifier = Modifier, onDismissRequest: () -> Unit, activity: ComponentActivity) {
     val subscriptionsViewModel: SubscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
     if (subscriptionsViewModel.dialogState.value)
         Dialog(
@@ -59,7 +59,7 @@ fun SubscriptionsViewDialog(modifier: Modifier = Modifier, onDismissRequest: () 
                         )
                     }
                 }
-                SubscriptionsView()
+                SubscriptionsView(activity = activity)
             }
         }
 

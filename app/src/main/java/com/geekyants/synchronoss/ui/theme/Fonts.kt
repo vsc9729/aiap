@@ -1,9 +1,9 @@
-package com.geekyants.tippy.ui.theme
+package com.geekyants.synchronoss.ui.theme
 
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import com.geekyants.tippy.R
+import com.geekyants.synchronoss.R
 
 val Roboto = FontFamily(
 

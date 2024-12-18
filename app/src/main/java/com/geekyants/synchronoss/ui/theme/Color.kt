@@ -1,4 +1,4 @@
-package com.geekyants.tippy.ui.theme
+package com.geekyants.synchronoss.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

@@ -1,4 +1,4 @@
-package com.geekyants.tippy
+package com.geekyants.synchronoss
 
 
 import SubscriptionsViewDialog
@@ -40,12 +40,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewModelScope
 
 
-import com.geekyants.tippy.ui.theme.Poppins
-import com.geekyants.tippy.ui.theme.Roboto
-import com.geekyants.tippy.ui.theme.TippyTheme
+import com.geekyants.synchronoss.ui.theme.Poppins
+import com.geekyants.synchronoss.ui.theme.Roboto
+import com.geekyants.synchronoss.ui.theme.SynchronossTheme
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -63,7 +62,7 @@ class MainActivity : ComponentActivity() {
         setContent {
 
 
-            TippyTheme {
+            SynchronossTheme {
                 Scaffold(
                     modifier = Modifier
                         .fillMaxSize()
@@ -85,6 +84,7 @@ class MainActivity : ComponentActivity() {
                         onDismissRequest = {
                             //TODO: If the implementor wants to do something on dismissal
                         },
+                        activity = this
                     )
 
 
@@ -309,7 +309,7 @@ fun SubscriptionScreen(
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    TippyTheme {
+    SynchronossTheme {
         SubscriptionScreen()
     }
 }

@@ -1,3 +1,4 @@
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,11 +13,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 import kotlinx.coroutines.runBlocking
 
 @Composable
-fun SubscriptionsView(modifier: Modifier = Modifier) {
+fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
 
 
@@ -24,8 +27,7 @@ fun SubscriptionsView(modifier: Modifier = Modifier) {
     runBlocking {
         subscriptionsViewModel.startConnection(
             productIds = listOf(
-                "iap_yearly_1499",
-                "test_product"
+                "yearly_subscription",
             )
         )
     }
@@ -41,6 +43,19 @@ fun SubscriptionsView(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .padding(4.dp)
                     .clickable {
+
+                        runBlocking {
+                            subscriptionsViewModel.purchaseSubscription(
+                                activity = activity,
+                                product = product,
+                                onError = { error ->
+                                    // Handle error
+                                    println("Error: $error")
+                                }
+                            )
+                        }
+
+
                         //TODO: Launch Billing Flow Implementation
                     })
             Spacer(modifier = modifier.height(4.dp))
