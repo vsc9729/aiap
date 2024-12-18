@@ -1,0 +1,31 @@
+stages:
+  - test
+  - build
+
+variables:
+  JAVA_VERSION: "17"
+
+build-and-test:
+  image: eclipse-temurin:17-jdk
+  stage: test
+
+  before_script:
+    - apt-get update && apt-get install -y git
+    - chmod +x ./gradlew
+
+  script:
+    - echo "$ENCODED_KEYSTORE" | base64 -d > app/keystore.jks
+    - export KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD
+    - export KEY_ALIAS=$KEY_ALIAS
+    - export KEY_PASSWORD=$KEY_PASSWORD
+    - ./gradlew build
+    - ./gradlew test
+
+  only:
+    refs:
+      - merge_requests
+    variables:
+      - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"
+
+  variables:
+    GIT_DEPTH: 1
