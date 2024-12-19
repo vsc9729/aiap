@@ -1,19 +1,38 @@
+image: jangrewe/gitlab-ci-android:latest
+
 stages:
   - test
   - build
 
-variables:
-  JAVA_VERSION: "17"
+cache:
+  key: ${CI_PROJECT_ID}
+  paths:
+    - .gradle/
 
-build-and-test:
-  image: eclipse-temurin:17-jdk
+test:
   stage: test
-  tags:
-    - java
 
   before_script:
-    - apt-get update && apt-get install -y git
+    - export GRADLE_USER_HOME=$(pwd)/.gradle
     - chmod +x ./gradlew
+    - java -version  # Verify Java version
+
+  script:
+    - ./gradlew test
+
+  only:
+    refs:
+      - merge_requests
+    variables:
+      - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"
+
+build:
+  stage: build
+
+  before_script:
+    - export GRADLE_USER_HOME=$(pwd)/.gradle
+    - chmod +x ./gradlew
+    - java -version
 
   script:
     - echo "$ENCODED_KEYSTORE" | base64 -d > app/keystore.jks
@@ -21,7 +40,6 @@ build-and-test:
     - export KEY_ALIAS=$KEY_ALIAS
     - export KEY_PASSWORD=$KEY_PASSWORD
     - ./gradlew build
-    - ./gradlew test
 
   only:
     refs:
