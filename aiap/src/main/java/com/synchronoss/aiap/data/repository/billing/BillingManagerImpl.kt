@@ -19,7 +19,6 @@ class BillingManagerImpl(
     BillingManager {
     private val billingClient: BillingClient = BillingClient.newBuilder(context)
         .setListener(this)
-        .enablePendingPurchases()
         .build()
 
     override fun startConnection(onConnected: () -> Unit, onDisconnected: () -> Unit) {

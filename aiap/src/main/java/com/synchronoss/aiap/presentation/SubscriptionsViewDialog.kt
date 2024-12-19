@@ -65,23 +65,3 @@ fun SubscriptionsViewDialog(modifier: Modifier = Modifier, onDismissRequest: () 
 
 }
 
-
-@Composable
-fun ComponentActivity.ShowSubscriptionsDialog(
-    onDismissRequest: () -> Unit,
-
-    ) {
-    val dialogState = remember { mutableStateOf(false) }
-    val dialogView = ComposeView(this).apply {
-        setContent {
-            if (dialogState.value) {
-
-            }
-        }
-    }
-    (window.decorView as ViewGroup).addView(
-        dialogView,
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.MATCH_PARENT
-    )
-}
