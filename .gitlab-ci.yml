@@ -8,6 +8,8 @@ variables:
 build-and-test:
   image: eclipse-temurin:17-jdk
   stage: test
+  tags:
+    - java
 
   before_script:
     - apt-get update && apt-get install -y git
