@@ -3,21 +3,29 @@ package com.synchronoss.aiap.data.repository.billing
 
 import android.content.Context
 import androidx.activity.ComponentActivity
+import com.android.billingclient.api.AccountIdentifiers
+import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
+import com.android.billingclient.api.Purchase.PendingPurchaseUpdate
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
+import org.json.JSONException
+import org.json.JSONObject
+
 
 class BillingManagerImpl(
     context: Context,
 ) : PurchasesUpdatedListener,
     BillingManager {
     private val billingClient: BillingClient = BillingClient.newBuilder(context)
+        .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .setListener(this)
         .build()
 
@@ -88,11 +96,19 @@ class BillingManagerImpl(
         billingResult: BillingResult,
         purchases: MutableList<Purchase>?
     ) {
-        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-            for (purchase in purchases) {
 
-                // Handle the purchase
+        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
+            //To be done from the backend in the future
+            billingClient.acknowledgePurchase(
+                AcknowledgePurchaseParams.newBuilder()
+                    .setPurchaseToken(purchases[0].purchaseToken)
+                    .build()
+            ) { billingResultAck ->
+                if (billingResultAck.responseCode == BillingClient.BillingResponseCode.OK) {
+                    println("Purchase acknowledged")
+                }
             }
+
         } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
 
             // Handle an error caused by a user canceling the purchase flow.
@@ -109,6 +125,7 @@ class BillingManagerImpl(
             // Handle any other error codes.
         }
     }
+
 
 
 }
