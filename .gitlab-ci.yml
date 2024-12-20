@@ -2,6 +2,11 @@ stages:
   - test
   - build
 
+variables:
+  # Set JAVA_HOME to the desired Java version
+  JAVA_HOME: "/Library/Java/JavaVirtualMachines/jdk-19.jdk/Contents/Home"
+  PATH: "$JAVA_HOME/bin:$PATH"
+
 cache:
   key: ${CI_PROJECT_ID}
   paths:
@@ -11,6 +16,7 @@ test:
   stage: test
 
   before_script:
+    - export
     - export GRADLE_USER_HOME=$(pwd)/.gradle
     - chmod +x ./gradlew
     - java -version  # Verify Java version
