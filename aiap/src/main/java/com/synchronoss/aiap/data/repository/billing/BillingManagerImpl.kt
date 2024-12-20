@@ -15,6 +15,7 @@ import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.Purchase.PendingPurchaseUpdate
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
+import com.synchronoss.aiap.common.UuidGenerator
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
 import org.json.JSONException
 import org.json.JSONObject
@@ -96,9 +97,18 @@ class BillingManagerImpl(
         billingResult: BillingResult,
         purchases: MutableList<Purchase>?
     ) {
-
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-            //To be done from the backend in the future
+            val uuid: String = UuidGenerator.generateUUID(purchases[0].packageName)
+
+
+            val modifiedJson : JSONObject = JSONObject (purchases[0].originalJson)
+                .put("appId", uuid)
+                .put("ppiId","6e49e6a7-6201-474e-b8a0-95d71c2e588e")
+                .put("signature",purchases[0].signature)
+
+            println(modifiedJson)
+            //send modified json to backend and get the purchase verified and then acknowledge the purchase
+
             billingClient.acknowledgePurchase(
                 AcknowledgePurchaseParams.newBuilder()
                     .setPurchaseToken(purchases[0].purchaseToken)
@@ -110,9 +120,8 @@ class BillingManagerImpl(
             }
 
         } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
-
             // Handle an error caused by a user canceling the purchase flow.
-        } else if (billingResult.responseCode == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
+        } else if (billingResult.responseCode == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED ) {
             // Handle an error caused by a user already owning this item
         } else if (billingResult.responseCode == BillingClient.BillingResponseCode.ITEM_UNAVAILABLE) {
             // Handle an error caused by the item being unavailable

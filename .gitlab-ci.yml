@@ -1,4 +1,4 @@
-image: inovex/gitlab-ci-android:latest
+image: theimpulson/gitlab-ci-android
 
 stages:
   - test
