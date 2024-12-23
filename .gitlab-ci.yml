@@ -21,7 +21,6 @@ cache:
 
 before_script:
   - export PATH="$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$JAVA_HOME/bin:$PATH"
-  - rvm use 3.3.0
   - ruby -v
   - gem install bundler:2.5.23 || gem install bundler -v "~> 2.3.0"
   - bundle install --path=vendor/bundle
