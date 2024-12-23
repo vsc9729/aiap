@@ -51,7 +51,7 @@ build_debug:
 build_release:
   stage: build
   script:
-    - echo "$KEYSTORE" | base64 -d > app/keystore.jks
+    - echo "$KEYSTORE" | base64 -d > $CI_PROJECT_DIR/app/keystore.jks
     - bundle exec fastlane build_release
   only:
     - master
