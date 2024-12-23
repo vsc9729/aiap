@@ -20,7 +20,7 @@ cache:
     - app/build/
 
 before_script:
-  - export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+  - chmod -R 777 $CI_PROJECT_DIR
   - echo "sdk.dir=$ANDROID_HOME" > local.properties
   - ruby -v
   - gem install bundler:2.5.23 || gem install bundler -v "~> 2.3.0"
