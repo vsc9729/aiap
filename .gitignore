@@ -36,20 +36,24 @@ misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml
 
+
+# Fastlane
+fastlane/report.xml
+fastlane/report.html
+fastlane/logs/
+fastlane/*.json
+fastlane/*.key
+
+# Android-specific
+fastlane/keystore.properties
+fastlane/*.keystore
+
+
 # Keystore files
 *.jks
 *.keystore
 keystore.properties
 synchronoss-445109-97b86f468d05.json
-
-# Fastlane generated files
-fastlane/report.xml
-fastlane/test_output
-fastlane/.env
-
-# Gemfile lock for local dependencies (if you prefer to install dependencies on CI/CD)
-Gemfile.lock
-
 # Google Services (e.g. APIs or Firebase)
 google-services.json
 
