@@ -8,7 +8,7 @@ variables:
   ANDROID_HOME: "/Users/$USER/Library/Android/sdk"
   LC_ALL: "en_US.UTF-8"
   LANG: "en_US.UTF-8"
-
+  PATH: "$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$PATH"
 
 
 cache:
@@ -20,7 +20,7 @@ cache:
     - app/build/
 
 before_script:
-  - export PATH="$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$JAVA_HOME/bin:$PATH"
+  - echo "sdk.dir=$ANDROID_HOME" > local.properties
   - ruby -v
   - gem install bundler:2.5.23 || gem install bundler -v "~> 2.3.0"
   - bundle install --path=vendor/bundle
