@@ -1,8 +1,11 @@
-image: inovex/gitlab-ci-android:latest
-
 stages:
   - test
   - build
+
+variables:
+  # Set JAVA_HOME to the desired Java version
+  JAVA_HOME: "/Library/Java/JavaVirtualMachines/jdk-19.jdk/Contents/Home"
+  PATH: "$JAVA_HOME/bin:$PATH"
 
 cache:
   key: ${CI_PROJECT_ID}
@@ -13,7 +16,8 @@ test:
   stage: test
 
   before_script:
-    - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+    - export JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk-19.jdk/Contents/Home"
+    - export PATH="$JAVA_HOME/bin:$PATH"
     - export GRADLE_USER_HOME=$(pwd)/.gradle
     - chmod +x ./gradlew
     - java -version  # Verify Java version
@@ -31,6 +35,8 @@ build:
   stage: build
 
   before_script:
+    - export JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk-19.jdk/Contents/Home"
+    - export PATH="$JAVA_HOME/bin:$PATH"
     - export GRADLE_USER_HOME=$(pwd)/.gradle
     - chmod +x ./gradlew
     - java -version
