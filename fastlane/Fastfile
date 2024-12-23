@@ -1,0 +1,41 @@
+default_platform(:android)
+
+platform :android do
+  desc "Runs all tests"
+  lane :test do
+    gradle(task: "test")
+  end
+
+  desc "Build debug APK"
+  lane :build_debug do
+    gradle(
+      task: "clean assembleDebug"
+    )
+  end
+
+  desc "Build release APK"
+  lane :build_release do
+    gradle(
+      task: "clean assembleRelease",
+      properties: {
+        "android.injected.signing.store.file" => ENV["KEYSTORE_PATH"],
+        "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
+      }
+    )
+  end
+
+  desc "Run lint check"
+  lane :lint do
+    gradle(task: "lint")
+  end
+
+  desc "Deploy to Play Store internal testing track"
+  lane :deploy_internal do
+    upload_to_play_store(
+      track: 'internal',
+      aab: ENV['AAB_PATH'] || lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH]
+    )
+  end
+end

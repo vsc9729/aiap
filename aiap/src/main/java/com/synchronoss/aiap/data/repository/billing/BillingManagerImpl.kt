@@ -3,6 +3,8 @@ package com.synchronoss.aiap.data.repository.billing
 
 import android.content.Context
 import androidx.activity.ComponentActivity
+import com.android.billingclient.api.AccountIdentifiers
+import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
@@ -10,15 +12,21 @@ import com.android.billingclient.api.BillingResult
 import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
+import com.android.billingclient.api.Purchase.PendingPurchaseUpdate
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
+import com.synchronoss.aiap.common.UuidGenerator
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
+import org.json.JSONException
+import org.json.JSONObject
+
 
 class BillingManagerImpl(
     context: Context,
 ) : PurchasesUpdatedListener,
     BillingManager {
     private val billingClient: BillingClient = BillingClient.newBuilder(context)
+        .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .setListener(this)
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .build()
@@ -91,14 +99,30 @@ class BillingManagerImpl(
         purchases: MutableList<Purchase>?
     ) {
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-            for (purchase in purchases) {
+            val uuid: String = UuidGenerator.generateUUID(purchases[0].packageName)
 
-                // Handle the purchase
+
+            val modifiedJson : JSONObject = JSONObject (purchases[0].originalJson)
+                .put("appId", uuid)
+                .put("ppiId","6e49e6a7-6201-474e-b8a0-95d71c2e588e")
+                .put("signature",purchases[0].signature)
+
+            println(modifiedJson)
+            //send modified json to backend and get the purchase verified and then acknowledge the purchase
+
+            billingClient.acknowledgePurchase(
+                AcknowledgePurchaseParams.newBuilder()
+                    .setPurchaseToken(purchases[0].purchaseToken)
+                    .build()
+            ) { billingResultAck ->
+                if (billingResultAck.responseCode == BillingClient.BillingResponseCode.OK) {
+                    println("Purchase acknowledged")
+                }
             }
-        } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
 
+        } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
             // Handle an error caused by a user canceling the purchase flow.
-        } else if (billingResult.responseCode == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
+        } else if (billingResult.responseCode == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED ) {
             // Handle an error caused by a user already owning this item
         } else if (billingResult.responseCode == BillingClient.BillingResponseCode.ITEM_UNAVAILABLE) {
             // Handle an error caused by the item being unavailable
@@ -111,6 +135,7 @@ class BillingManagerImpl(
             // Handle any other error codes.
         }
     }
+
 
 
 }

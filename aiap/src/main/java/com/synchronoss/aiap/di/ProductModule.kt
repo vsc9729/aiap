@@ -38,7 +38,7 @@ object ProductModule {
             .build()
 
         val retrofit = Retrofit.Builder()
-            .baseUrl("https://your.api.url/")
+            .baseUrl(BASE_URL)
             .addConverterFactory(MoshiConverterFactory.create())
             .client(client)
             .build()
