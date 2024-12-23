@@ -5,7 +5,7 @@ stages:
 
 
 variables:
-  ANDROID_HOME: "/Users/$USER/Library/Android/sdk"
+  ANDROID_HOME: "/Users/vikrantsingh/Library/Android/sdk"
   LC_ALL: "en_US.UTF-8"
   LANG: "en_US.UTF-8"
 
