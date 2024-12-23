@@ -13,6 +13,33 @@ platform :android do
     )
   end
 
+   desc "Increment version code and name"
+   lane :increment_version_code do
+     path = "#{ENV['CI_PROJECT_DIR']}/app/build.gradle"
+     vc_regex = /versionCode\s+(\d+)/
+     vn_regex = /versionName\s+"(\d+\.\d+\.\d+)"/
+
+      # Read the build.gradle file
+     gradle_file = File.read(path)
+
+      # Increment versionCode
+     version_code = gradle_file.match(vc_regex)[1].to_i
+     updated_gradle_file = gradle_file.sub(vc_regex, "versionCode #{version_code + 1}")
+
+      # Increment versionName (optional)
+     version_name = gradle_file.match(vn_regex)[1]
+     version_parts = version_name.split('.').map(&:to_i)
+     version_parts[2] += 1 # Increment patch version
+     updated_version_name = version_parts.join('.')
+     updated_gradle_file = updated_gradle_file.sub(vn_regex, "versionName \"#{updated_version_name}\"")
+
+      # Write the changes back to build.gradle
+     File.open(path, 'w') { |file| file.write(updated_gradle_file) }
+
+     UI.success("Version code incremented to #{version_code + 1}")
+     UI.success("Version name updated to #{updated_version_name}")
+   end
+
   desc "Build release APK"
   lane :build_release do
     gradle(
@@ -33,13 +60,10 @@ platform :android do
 
   desc "Deploy to Play Store internal testing track"
   lane :deploy_internal do
-
-    version_code = sh("grep 'versionCode' app/build.gradle | awk '{print $2}'").strip
     upload_to_play_store(
       track: 'internal',
         json_key: "#{ENV['CI_PROJECT_DIR']}/play-store-credentials.json",
         aab: ENV['AAB_PATH'] || lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
-        version_code: version_code.to_i
     )
   end
 end

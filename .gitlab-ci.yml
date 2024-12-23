@@ -48,11 +48,23 @@ build_debug:
     paths:
       - app/build/outputs/apk/debug/
 
+increment_version_code:
+  stage: build
+  script:
+    - bundle exec fastlane increment_version_code
+  only:
+    - master
+  artifacts:
+    paths:
+      - app/build.gradle
+
 build_release:
   stage: build
   script:
     - echo "$KEYSTORE" | base64 -d > $CI_PROJECT_DIR/app/keystore.jks
     - bundle exec fastlane build_release
+  dependencies:
+    - increment_version_code
   only:
     - master
   artifacts:
@@ -62,10 +74,11 @@ build_release:
 deploy_internal:
   stage: deploy
   script:
-    
     - echo $PLAY_STORE_JSON_KEY > $CI_PROJECT_DIR/play-store-credentials.json
     - cat $CI_PROJECT_DIR/play-store-credentials.json
     - bundle exec fastlane deploy_internal
+  dependencies:
+    - build_release
   only:
     - master
   when: manual
