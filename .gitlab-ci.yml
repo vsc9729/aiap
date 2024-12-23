@@ -51,8 +51,7 @@ build_debug:
 build_release:
   stage: build
   script:
-    - echo "$ENCODED_KEYSTORE" | base64 -d > app/keystore.jks
-    - export KEYSTORE_PATH="$PWD/app/keystore.jks"
+    - echo "$KEYSTORE" | base64 -d > keystore.jks
     - bundle exec fastlane build_release
   only:
     - master
