@@ -3,14 +3,13 @@ stages:
   - build
   - deploy
 
+
 variables:
   ANDROID_HOME: "/Users/$USER/Library/Android/sdk"
   LC_ALL: "en_US.UTF-8"
   LANG: "en_US.UTF-8"
 
-before_script:
-  - export PATH="$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$JAVA_HOME/bin:$PATH"
-  - bundle install
+
 
 cache:
   key: ${CI_PROJECT_ID}
@@ -19,6 +18,13 @@ cache:
     - .gradle/
     - build/
     - app/build/
+
+before_script:
+  - export PATH="$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$JAVA_HOME/bin:$PATH"
+  - ruby -v
+  - gem install bundler:2.5.23 || gem install bundler -v "~> 2.3.0"
+  - bundle install --path=vendor/bundle
+  - bundle install
 
 test:
   stage: test
