@@ -8,7 +8,7 @@ variables:
   ANDROID_HOME: "/Users/$USER/Library/Android/sdk"
   LC_ALL: "en_US.UTF-8"
   LANG: "en_US.UTF-8"
-  PATH: "$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$PATH"
+  PATH: "/bin:/usr/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$PATH"
 
 
 cache:
