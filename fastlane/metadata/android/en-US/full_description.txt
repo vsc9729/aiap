@@ -1,0 +1,1 @@
+A sample app to test a custom implementation of the google play billing library
