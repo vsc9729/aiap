@@ -62,7 +62,9 @@ build_release:
 deploy_internal:
   stage: deploy
   script:
+    
     - echo '$PLAY_STORE_JSON_KEY' > $CI_PROJECT_DIR/play-store-credentials.json
+    - chmod 600 $CI_PROJECT_DIR/play-store-credentials.json
     - cat $CI_PROJECT_DIR/play-store-credentials.json
     - bundle exec fastlane deploy_internal
   only:
