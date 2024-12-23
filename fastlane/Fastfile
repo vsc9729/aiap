@@ -33,10 +33,13 @@ platform :android do
 
   desc "Deploy to Play Store internal testing track"
   lane :deploy_internal do
+
+    version_code = sh("grep 'versionCode' app/build.gradle | awk '{print $2}'").strip
     upload_to_play_store(
       track: 'internal',
         json_key: "#{ENV['CI_PROJECT_DIR']}/play-store-credentials.json",
         aab: ENV['AAB_PATH'] || lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH]
+        version_code: version_code.to_i
     )
   end
 end
