@@ -5,9 +5,14 @@ import com.synchronoss.aiap.data.remote.ProductDto
 import com.synchronoss.aiap.domain.models.ProductData
 import com.synchronoss.aiap.domain.models.ProductInfo
 
-fun ProductDto.toProductData(): ProductData {
-    return ProductData(
-        products = products.map { ProductInfo(it) }
+fun ProductDataDto.toProductInfo(): ProductInfo {
+    return ProductInfo(
+        productName = productName,
+        displayName = displayName,
+        description = description,
+        ppiId = ppiId,
+        isActive = isActive,
+        duration = duration
     )
 }
 

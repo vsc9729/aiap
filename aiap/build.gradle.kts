@@ -68,8 +68,11 @@ dependencies {
     implementation(libs.androidx.compose.ui.google.fonts)
     kapt(libs.hilt.android.compiler)
     implementation(libs.android.billing.client)
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
+    implementation(libs.retrofit)
+    implementation(libs.converter.moshi)
+    implementation (libs.logging.interceptor)
+
+    kapt (libs.moshi.kotlin.codegen)
 }
 kapt {
     correctErrorTypes = true

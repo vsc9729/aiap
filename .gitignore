@@ -40,6 +40,15 @@ render.experimental.xml
 *.jks
 *.keystore
 keystore.properties
+synchronoss-445109-97b86f468d05.json
+
+# Fastlane generated files
+fastlane/report.xml
+fastlane/test_output
+fastlane/.env
+
+# Gemfile lock for local dependencies (if you prefer to install dependencies on CI/CD)
+Gemfile.lock
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json
