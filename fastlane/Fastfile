@@ -35,7 +35,8 @@ platform :android do
   lane :deploy_internal do
     upload_to_play_store(
       track: 'internal',
-      aab: ENV['AAB_PATH'] || lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH]
+        json_key: "#{ENV['CI_PROJECT_DIR']}/play-store-credentials.json",
+        aab: ENV['AAB_PATH'] || lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH]
     )
   end
 end
