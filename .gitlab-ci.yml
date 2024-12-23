@@ -3,28 +3,35 @@ stages:
   - build
 
 variables:
-  # Set JAVA_HOME to the desired Java version
-  JAVA_HOME: "/Library/Java/JavaVirtualMachines/jdk-19.jdk/Contents/Home"
-  PATH: "$JAVA_HOME/bin:$PATH"
+  ANDROID_COMPILE_SDK: "34"
+  ANDROID_BUILD_TOOLS: "34.0.0"
+  ANDROID_SDK_TOOLS:   "9477386"
+
+before_script:
+  - export GRADLE_USER_HOME=$(pwd)/.gradle
+  - apt-get --quiet update --yes
+  - apt-get --quiet install --yes wget unzip
+  # Setup Android SDK
+  - wget --quiet --output-document=android-sdk.zip https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_TOOLS}_latest.zip
+  - unzip -d android-sdk-linux android-sdk.zip
+  - export ANDROID_HOME=$PWD/android-sdk-linux
+  - export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+  # Install SDK components
+  - yes | sdkmanager --licenses
+  - sdkmanager "platforms;android-${ANDROID_COMPILE_SDK}"
+  - sdkmanager "build-tools;${ANDROID_BUILD_TOOLS}"
+  - chmod +x ./gradlew
 
 cache:
   key: ${CI_PROJECT_ID}
   paths:
     - .gradle/
+    - android-sdk-linux/
 
 test:
   stage: test
-
-  before_script:
-    - export JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk-19.jdk/Contents/Home"
-    - export PATH="$JAVA_HOME/bin:$PATH"
-    - export GRADLE_USER_HOME=$(pwd)/.gradle
-    - chmod +x ./gradlew
-    - java -version  # Verify Java version
-
   script:
     - ./gradlew test
-
   only:
     refs:
       - merge_requests
@@ -33,26 +40,16 @@ test:
 
 build:
   stage: build
-
-  before_script:
-    - export JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk-19.jdk/Contents/Home"
-    - export PATH="$JAVA_HOME/bin:$PATH"
-    - export GRADLE_USER_HOME=$(pwd)/.gradle
-    - chmod +x ./gradlew
-    - java -version
-
   script:
     - echo "$ENCODED_KEYSTORE" | base64 -d > app/keystore.jks
     - export KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD
     - export KEY_ALIAS=$KEY_ALIAS
     - export KEY_PASSWORD=$KEY_PASSWORD
     - ./gradlew build
-
   only:
     refs:
       - merge_requests
     variables:
       - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"
-
   variables:
     GIT_DEPTH: 1
