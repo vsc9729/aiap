@@ -49,14 +49,15 @@ platform :android do
 
     File.write(path, updated_gradle_file)
 
-    # Set up Git authentication with Personal Access Token (PAT)
-      gitlab_token = ENV["GITLAB_TOKEN"]
-      unless gitlab_token
-        UI.error("GITLAB_TOKEN environment variable is not set")
-        raise "GITLAB_TOKEN missing"
-      end
+      # Setup SSH key for CI/CD
+        sh "mkdir -p ~/.ssh"
+        sh "echo $SSH_PRIVATE_KEY > ~/.ssh/id_rsa"
+        sh "chmod 600 ~/.ssh/id_rsa"
+        sh "ssh-keyscan git.geekyants.com >> ~/.ssh/known_hosts"
 
-      repo_url = "https://#{gitlab_token}@git.geekyants.com/client-projects/synchronous/android-sample-app.git"
+        repo_url = "git@git.geekyants.com:client-projects/synchronous/android-sample-app.git"
+        sh "git remote set-url origin #{repo_url}"
+
 
       # Update the Git remote URL to use the token
       sh "git remote set-url origin #{repo_url}"
