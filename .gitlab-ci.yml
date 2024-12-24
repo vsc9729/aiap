@@ -51,6 +51,7 @@ build_debug:
 increment_version_code:
   stage: build
   script:
+    - git remote set-url origin https://oauth2:${CI_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git
     - bundle exec fastlane increment_version_code
   only:
     - master

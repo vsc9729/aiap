@@ -15,42 +15,84 @@ platform :android do
 
   desc "Increment version code and name with git commit"
     lane :increment_version_code do
-      path = "#{ENV['CI_PROJECT_DIR']}/app/build.gradle"
-      vc_regex = /versionCode\s+(\d+)/
-      vn_regex = /versionName\s+"(\d+\.\d+\.\d+)"/
+     # Debug current directory and environment
+         UI.message("Current directory: #{Dir.pwd}")
+         UI.message("CI_PROJECT_DIR: #{ENV['CI_PROJECT_DIR']}")
+         UI.message("Files in current directory: #{Dir.entries('.')}")
 
-      # Read the build.gradle file
-      gradle_file = File.read(path)
+         # Try to find build.gradle in different possible locations
+         possible_paths = [
+           "#{ENV['CI_PROJECT_DIR']}/app/build.gradle",
+           "./app/build.gradle",
+           "../app/build.gradle"
+         ]
 
-      # Extract and increment version code
-      version_code = gradle_file.match(vc_regex)[1].to_i
-      new_version_code = version_code + 1
-      updated_gradle_file = gradle_file.sub(vc_regex, "versionCode #{new_version_code}")
+         path = nil
+         possible_paths.each do |p|
+           UI.message("Checking path: #{p}")
+           if File.exist?(p)
+             path = p
+             UI.success("Found build.gradle at: #{p}")
+             break
+           end
+         end
 
-      # Extract and increment version name
-      version_name = gradle_file.match(vn_regex)[1]
-      version_parts = version_name.split('.').map(&:to_i)
-      version_parts[2] += 1  # Increment patch version
-      new_version_name = version_parts.join('.')
-      updated_gradle_file = updated_gradle_file.sub(vn_regex, "versionName \"#{new_version_name}\"")
+         unless path
+           UI.error("Could not find build.gradle in any of these locations:")
+           possible_paths.each { |p| UI.error("- #{p}") }
+           UI.error("Directory contents:")
+           Dir.glob("**/*").each { |f| UI.error("- #{f}") }
+           raise "Could not find build.gradle file"
+         end
 
-      # Write changes back to build.gradle
-      File.open(path, 'w') { |file| file.write(updated_gradle_file) }
+         vc_regex = /versionCode\s+(\d+)/
+         vn_regex = /versionName\s+"(\d+\.\d+\.\d+)"/
 
-      # Create git commit with version bump
-      sh "git config --global user.email 'ci@example.com'"
-      sh "git config --global user.name 'GitLab CI'"
-      sh "git add #{path}"
-      sh "git commit -m '[ci skip] Bump version code to #{new_version_code} and version name to #{new_version_name}'"
-      sh "git push origin HEAD:#{ENV['CI_COMMIT_REF_NAME']}"
+         # Read the build.gradle file
+         begin
+           gradle_file = File.read(path)
+           UI.success("Successfully read build.gradle file")
+         rescue => e
+           UI.error("Error reading build.gradle: #{e.message}")
+           UI.error("File permissions: #{File.stat(path).mode.to_s(8)}")
+           raise
+         end
 
-      # Set environment variables for later stages
-      ENV['NEW_VERSION_CODE'] = new_version_code.to_s
-      ENV['NEW_VERSION_NAME'] = new_version_name
+         # Extract and increment version code
+         version_code = gradle_file.match(vc_regex)[1].to_i
+         new_version_code = version_code + 1
+         updated_gradle_file = gradle_file.sub(vc_regex, "versionCode #{new_version_code}")
 
-      UI.success("Version code incremented to #{new_version_code}")
-      UI.success("Version name updated to #{new_version_name}")
-    end
+         # Extract and increment version name
+         version_name = gradle_file.match(vn_regex)[1]
+         version_parts = version_name.split('.').map(&:to_i)
+         version_parts[2] += 1  # Increment patch version
+         new_version_name = version_parts.join('.')
+         updated_gradle_file = updated_gradle_file.sub(vn_regex, "versionName \"#{new_version_name}\"")
+
+         # Write changes back to build.gradle
+         begin
+           File.open(path, 'w') { |file| file.write(updated_gradle_file) }
+           UI.success("Successfully wrote updated build.gradle file")
+         rescue => e
+           UI.error("Error writing build.gradle: #{e.message}")
+           raise
+         end
+
+         # Create git commit with version bump
+         sh "git config --global user.email 'ci@example.com'"
+         sh "git config --global user.name 'GitLab CI'"
+         sh "git add #{path}"
+         sh "git commit -m '[ci skip] Bump version code to #{new_version_code} and version name to #{new_version_name}'"
+         sh "git push origin HEAD:#{ENV['CI_COMMIT_REF_NAME']}"
+
+         # Set environment variables for later stages
+         ENV['NEW_VERSION_CODE'] = new_version_code.to_s
+         ENV['NEW_VERSION_NAME'] = new_version_name
+
+         UI.success("Version code incremented to #{new_version_code}")
+         UI.success("Version name updated to #{new_version_name}")
+       end
 
   desc "Build release APK"
   lane :build_release do
