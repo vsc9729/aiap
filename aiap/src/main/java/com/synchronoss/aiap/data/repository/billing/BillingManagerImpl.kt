@@ -16,15 +16,29 @@ import com.android.billingclient.api.Purchase.PendingPurchaseUpdate
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.synchronoss.aiap.common.UuidGenerator
+import com.synchronoss.aiap.data.remote.HandlePurchaseRequest
+import com.synchronoss.aiap.data.remote.ProductApi
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
+import com.synchronoss.aiap.utils.Constants.PPI_USER_ID
+import com.synchronoss.aiap.utils.Constants.PURCHASE
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 
 
 class BillingManagerImpl(
     context: Context,
+    private val productApi: ProductApi
 ) : PurchasesUpdatedListener,
     BillingManager {
+
+    private val productDetailsMap = mutableMapOf<String, ProductDetails>()
     private val billingClient: BillingClient = BillingClient.newBuilder(context)
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .setListener(this)
@@ -62,6 +76,9 @@ class BillingManagerImpl(
 
         billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                productDetailsList.forEach { productDetails ->
+                    productDetailsMap[productDetails.productId] = productDetails
+                }
                 onProductsReceived(productDetailsList)
             } else {
                 onError(billingResult.debugMessage)
@@ -94,13 +111,29 @@ class BillingManagerImpl(
         }
     }
 
+    private fun calculateExpiryDate(productDetails: ProductDetails, purchaseTime: Long): Long {
+        val purchaseDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(purchaseTime), ZoneId.systemDefault())
+        val subscriptionOfferDetails = productDetails.subscriptionOfferDetails?.filter { it.offerId ==null }?.firstOrNull()
+        val pricingPhaseList = subscriptionOfferDetails?.pricingPhases?.pricingPhaseList
+        val billingPeriod = subscriptionOfferDetails?.pricingPhases?.pricingPhaseList?.last()?.billingPeriod
+
+        val expiryDateTime = when {
+            billingPeriod?.contains("P1M") == true -> purchaseDateTime.plus(1, ChronoUnit.MONTHS)
+            billingPeriod?.contains("P1Y") == true -> purchaseDateTime.plus(1, ChronoUnit.YEARS)
+            else -> throw IllegalArgumentException("Unknown subscription type: $billingPeriod")
+        }
+
+        return expiryDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onPurchasesUpdated(
         billingResult: BillingResult,
         purchases: MutableList<Purchase>?
     ) {
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
             val uuid: String = UuidGenerator.generateUUID(purchases[0].packageName)
-
+            val productDetails: ProductDetails? = productDetailsMap[purchases[0].products.first()]
 
             val modifiedJson : JSONObject = JSONObject (purchases[0].originalJson)
                 .put("appId", uuid)
@@ -108,6 +141,36 @@ class BillingManagerImpl(
                 .put("signature",purchases[0].signature)
 
             println(modifiedJson)
+
+
+            val handleRequest = HandlePurchaseRequest(
+                orderId = purchases[0].orderId.toString(),
+                packageName = purchases[0].packageName,
+                productId = purchases[0].products.first().toString(),
+                purchaseTime = purchases[0].purchaseTime,
+                purchaseState = purchases[0].purchaseState,
+                purchaseToken = purchases[0].purchaseToken,
+                quantity = 1,
+                autoRenewing = purchases[0].isAutoRenewing,
+                acknowledged = purchases[0].isAcknowledged,
+                appId = uuid,
+                ppiUserId = PPI_USER_ID,
+                signature = purchases[0].signature,
+                expiresDate = calculateExpiryDate(
+                    productDetails = productDetails!!,
+                    purchaseTime = calculateExpiryDate(productDetails, purchases[0].purchaseTime),
+                ), // Example expiration date
+                transactionId = uuid,
+                type = PURCHASE
+            )
+
+
+            GlobalScope.launch {
+                productApi.handlePurchase(
+                    "Bearer ${purchases[0].packageName}",
+                    handleRequest
+                )
+            }
             //send modified json to backend and get the purchase verified and then acknowledge the purchase
 
             billingClient.acknowledgePurchase(
