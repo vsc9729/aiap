@@ -15,6 +15,7 @@
 local.properties
 # Gradle files
 .gradle/
+
 build/
 
 

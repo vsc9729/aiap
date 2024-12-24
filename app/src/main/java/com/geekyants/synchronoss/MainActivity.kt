@@ -60,8 +60,6 @@ class MainActivity : ComponentActivity() {
 
         makeStatusBarTransparent()
         setContent {
-
-
             SynchronossTheme {
                 Scaffold(
                     modifier = Modifier
@@ -76,8 +74,6 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding),
                         onClickSubscribe = {
                             subscriptionsViewModel.dialogState.value = true
-
-
                         }
                     )
                     SubscriptionsViewDialog(

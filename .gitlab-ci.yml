@@ -1,58 +1,85 @@
 stages:
   - test
   - build
+  - deploy
+
 
 variables:
-  # Set JAVA_HOME to the desired Java version
-  JAVA_HOME: "/Library/Java/JavaVirtualMachines/jdk-19.jdk/Contents/Home"
-  PATH: "$JAVA_HOME/bin:$PATH"
+  ANDROID_HOME: "/Users/vikrantsingh/Library/Android/sdk"
+  LC_ALL: "en_US.UTF-8"
+  LANG: "en_US.UTF-8"
+
+
 
 cache:
   key: ${CI_PROJECT_ID}
   paths:
+    - vendor/bundle
     - .gradle/
+    - build/
+    - app/build/
+
+before_script:
+  - export PATH="$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$JAVA_HOME/bin:$PATH"
+  - echo "sdk.dir=$ANDROID_HOME" > local.properties
+  - ruby -v
+  - gem install bundler:2.5.23 || gem install bundler -v "~> 2.3.0"
+  - bundle install --path=vendor/bundle
+  - bundle install
 
 test:
   stage: test
-
-  before_script:
-    - export JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk-19.jdk/Contents/Home"
-    - export PATH="$JAVA_HOME/bin:$PATH"
-    - export GRADLE_USER_HOME=$(pwd)/.gradle
-    - chmod +x ./gradlew
-    - java -version  # Verify Java version
-
   script:
-    - ./gradlew test
-
+    - bundle exec fastlane test
+    - bundle exec fastlane lint
   only:
     refs:
       - merge_requests
     variables:
       - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"
 
-build:
+build_debug:
   stage: build
-
-  before_script:
-    - export JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk-19.jdk/Contents/Home"
-    - export PATH="$JAVA_HOME/bin:$PATH"
-    - export GRADLE_USER_HOME=$(pwd)/.gradle
-    - chmod +x ./gradlew
-    - java -version
-
   script:
-    - echo "$ENCODED_KEYSTORE" | base64 -d > app/keystore.jks
-    - export KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD
-    - export KEY_ALIAS=$KEY_ALIAS
-    - export KEY_PASSWORD=$KEY_PASSWORD
-    - ./gradlew build
-
+    - bundle exec fastlane build_debug
   only:
-    refs:
-      - merge_requests
-    variables:
-      - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"
+    - develop
+  artifacts:
+    paths:
+      - app/build/outputs/apk/debug/
 
-  variables:
-    GIT_DEPTH: 1
+increment_version_code:
+  stage: build
+  script:
+    - git remote set-url origin https://oauth2:${CI_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git
+    - bundle exec fastlane increment_version_code
+  only:
+    - master
+  artifacts:
+    paths:
+      - app/build.gradle
+
+build_release:
+  stage: build
+  script:
+    - echo "$KEYSTORE" | base64 -d > $CI_PROJECT_DIR/app/keystore.jks
+    - bundle exec fastlane build_release
+  dependencies:
+    - increment_version_code
+  only:
+    - master
+  artifacts:
+    paths:
+      - app/build/outputs/apk/release/
+
+deploy_internal:
+  stage: deploy
+  script:
+    - echo $PLAY_STORE_JSON_KEY > $CI_PROJECT_DIR/play-store-credentials.json
+    - cat $CI_PROJECT_DIR/play-store-credentials.json
+    - bundle exec fastlane deploy_internal
+  dependencies:
+    - build_release
+  only:
+    - master
+  when: manual
