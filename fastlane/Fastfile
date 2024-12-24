@@ -49,13 +49,31 @@ platform :android do
 
     File.write(path, updated_gradle_file)
 
-    # Git operations
-    sh "git add #{path}"
-    sh "git commit -m '[ci skip] Bump version code to #{new_version_code} and version name to #{new_version_name}'"
-    sh "git push origin HEAD:#{ENV['CI_COMMIT_REF_NAME']}"
+    # Set up Git authentication with Personal Access Token (PAT)
+      gitlab_token = ENV['GITLAB_TOKEN']
+      unless gitlab_token
+        UI.error("GITLAB_TOKEN environment variable is not set")
+        raise "GITLAB_TOKEN missing"
+      end
 
-    ENV['NEW_VERSION_CODE'] = new_version_code.to_s
-    ENV['NEW_VERSION_NAME'] = new_version_name
+      repo_url = "https://#{gitlab_token}@gitlab.com/client-projects/synchronous/android-sample-app.git"
+
+      # Update the Git remote URL to use the token
+      sh "git remote set-url origin #{repo_url}"
+
+      # Commit and push changes
+      sh "git config --global user.email 'ci@example.com'"
+      sh "git config --global user.name 'GitLab CI'"
+      sh "git add #{path}"
+      sh "git commit -m '[ci skip] Bump version code to #{new_version_code} and version name to #{new_version_name}'"
+      sh "git push origin HEAD:#{ENV['CI_COMMIT_REF_NAME']}"
+
+      # Set environment variables for later stages
+      ENV['NEW_VERSION_CODE'] = new_version_code.to_s
+      ENV['NEW_VERSION_NAME'] = new_version_name
+
+      UI.success("Version code incremented to #{new_version_code}")
+      UI.success("Version name updated to #{new_version_name}")
   end
 
 
