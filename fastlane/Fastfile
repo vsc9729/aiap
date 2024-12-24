@@ -116,6 +116,17 @@ platform :android do
     version_code = vc_match[1].to_i
     UI.message("Detected version code: #{version_code}")
 
+    # Determine the AAB path
+      aab_path = ENV['AAB_PATH'] || lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH]
+
+      unless aab_path && File.exist?(aab_path)
+        UI.error("AAB file not found at: #{aab_path}")
+        raise "AAB file missing. Ensure the build lane generates it and sets the correct path."
+      end
+
+      UI.success("AAB file located: #{aab_path}")
+
+
     # Upload to Play Store
     upload_to_play_store(
       track: 'internal',
