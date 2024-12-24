@@ -98,10 +98,31 @@ platform :android do
 
   desc "Deploy to Play Store internal testing track"
   lane :deploy_internal do
+    # Read the version code from build.gradle.kts
+    path = "#{ENV['CI_PROJECT_DIR']}/app/build.gradle.kts"
+    unless File.exist?(path)
+      UI.error("Could not find build.gradle.kts at: #{path}")
+      raise "build.gradle.kts not found"
+    end
+
+    gradle_file = File.read(path)
+    vc_match = gradle_file.match(/versionCode\s*=\s*(\d+)/)
+
+    unless vc_match
+      UI.error("Could not find versionCode in build.gradle.kts")
+      raise "Version code not found"
+    end
+
+    version_code = vc_match[1].to_i
+    UI.message("Detected version code: #{version_code}")
+
+    # Upload to Play Store
     upload_to_play_store(
       track: 'internal',
-        json_key: "#{ENV['CI_PROJECT_DIR']}/play-store-credentials.json",
-        aab: ENV['AAB_PATH'] || lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
+      json_key: "#{ENV['CI_PROJECT_DIR']}/play-store-credentials.json",
+      aab: ENV['AAB_PATH'] || lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
+      version_code: version_code # Pass the detected version code
     )
   end
+
 end
