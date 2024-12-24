@@ -13,32 +13,44 @@ platform :android do
     )
   end
 
-   desc "Increment version code and name"
-   lane :increment_version_code do
-     path = "#{ENV['CI_PROJECT_DIR']}/app/build.gradle"
-     vc_regex = /versionCode\s+(\d+)/
-     vn_regex = /versionName\s+"(\d+\.\d+\.\d+)"/
+  desc "Increment version code and name with git commit"
+    lane :increment_version_code do
+      path = "#{ENV['CI_PROJECT_DIR']}/app/build.gradle"
+      vc_regex = /versionCode\s+(\d+)/
+      vn_regex = /versionName\s+"(\d+\.\d+\.\d+)"/
 
       # Read the build.gradle file
-     gradle_file = File.read(path)
+      gradle_file = File.read(path)
 
-      # Increment versionCode
-     version_code = gradle_file.match(vc_regex)[1].to_i
-     updated_gradle_file = gradle_file.sub(vc_regex, "versionCode #{version_code + 1}")
+      # Extract and increment version code
+      version_code = gradle_file.match(vc_regex)[1].to_i
+      new_version_code = version_code + 1
+      updated_gradle_file = gradle_file.sub(vc_regex, "versionCode #{new_version_code}")
 
-      # Increment versionName (optional)
-     version_name = gradle_file.match(vn_regex)[1]
-     version_parts = version_name.split('.').map(&:to_i)
-     version_parts[2] += 1 # Increment patch version
-     updated_version_name = version_parts.join('.')
-     updated_gradle_file = updated_gradle_file.sub(vn_regex, "versionName \"#{updated_version_name}\"")
+      # Extract and increment version name
+      version_name = gradle_file.match(vn_regex)[1]
+      version_parts = version_name.split('.').map(&:to_i)
+      version_parts[2] += 1  # Increment patch version
+      new_version_name = version_parts.join('.')
+      updated_gradle_file = updated_gradle_file.sub(vn_regex, "versionName \"#{new_version_name}\"")
 
-      # Write the changes back to build.gradle
-     File.open(path, 'w') { |file| file.write(updated_gradle_file) }
+      # Write changes back to build.gradle
+      File.open(path, 'w') { |file| file.write(updated_gradle_file) }
 
-     UI.success("Version code incremented to #{version_code + 1}")
-     UI.success("Version name updated to #{updated_version_name}")
-   end
+      # Create git commit with version bump
+      sh "git config --global user.email 'ci@example.com'"
+      sh "git config --global user.name 'GitLab CI'"
+      sh "git add #{path}"
+      sh "git commit -m '[ci skip] Bump version code to #{new_version_code} and version name to #{new_version_name}'"
+      sh "git push origin HEAD:#{ENV['CI_COMMIT_REF_NAME']}"
+
+      # Set environment variables for later stages
+      ENV['NEW_VERSION_CODE'] = new_version_code.to_s
+      ENV['NEW_VERSION_NAME'] = new_version_name
+
+      UI.success("Version code incremented to #{new_version_code}")
+      UI.success("Version name updated to #{new_version_name}")
+    end
 
   desc "Build release APK"
   lane :build_release do
