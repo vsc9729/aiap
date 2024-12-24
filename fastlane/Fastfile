@@ -15,7 +15,6 @@ platform :android do
 
   desc "Increment version code and name with git commit"
     lane :increment_version_code do
-      # Define the exact path for build.gradle.kts
       path = "#{ENV['CI_PROJECT_DIR']}/app/build.gradle.kts"
 
       UI.message("Reading build.gradle.kts from: #{path}")
@@ -23,32 +22,33 @@ platform :android do
       unless File.exist?(path)
         UI.error("Could not find build.gradle.kts at: #{path}")
         UI.error("Current directory: #{Dir.pwd}")
-        UI.error("Directory contents:")
-        Dir.glob("**/*").each { |f| UI.error("- #{f}") }
         raise "build.gradle.kts not found"
       end
-
-      # Kotlin DSL specific regex patterns
-      # This assumes versions are in the android { defaultConfig { ... } } block
-      android_block_regex = /android\s*\{[^}]*defaultConfig\s*\{([^}]*)\}/m
-      vc_regex = /versionCode\s*=\s*(\d+)/
-      vn_regex = /versionName\s*=\s*"(\d+\.\d+\.\d+)"/
 
       begin
         # Read the build.gradle.kts file
         gradle_file = File.read(path)
         UI.success("Successfully read build.gradle.kts file")
 
-        # Find the defaultConfig block
-        config_block = gradle_file.match(android_block_regex)
-        unless config_block
-          UI.error("Could not find android.defaultConfig block in build.gradle.kts")
-          raise "Invalid build.gradle.kts structure"
+        # Print file content for debugging
+        UI.message("File content:")
+        UI.message(gradle_file)
+
+        # More lenient regex patterns for Kotlin DSL
+        vc_match = gradle_file.match(/versionCode\s*=\s*(\d+)/)
+        vn_match = gradle_file.match(/versionName\s*=\s*"([^"]+)"/)
+
+        unless vc_match && vn_match
+          UI.error("Could not find version information in build.gradle.kts")
+          UI.error("Please ensure your build.gradle.kts contains 'versionCode = X' and 'versionName = \"X.X.X\"'")
+          raise "Version information not found"
         end
 
-        # Extract version code and name
-        version_code = gradle_file.match(vc_regex)[1].to_i
-        version_name = gradle_file.match(vn_regex)[1]
+        version_code = vc_match[1].to_i
+        version_name = vn_match[1]
+
+        UI.message("Current version code: #{version_code}")
+        UI.message("Current version name: #{version_name}")
 
         # Increment versions
         new_version_code = version_code + 1
@@ -58,8 +58,8 @@ platform :android do
 
         # Update the file content
         updated_gradle_file = gradle_file
-          .sub(vc_regex, "versionCode = #{new_version_code}")
-          .sub(vn_regex, "versionName = \"#{new_version_name}\"")
+          .sub(/versionCode\s*=\s*\d+/, "versionCode = #{new_version_code}")
+          .sub(/versionName\s*=\s*"[^"]+"/, "versionName = \"#{new_version_name}\"")
 
         # Write changes back to build.gradle.kts
         File.write(path, updated_gradle_file)
@@ -81,7 +81,7 @@ platform :android do
 
       rescue => e
         UI.error("Error processing build.gradle.kts: #{e.message}")
-        UI.error("Error backtrace: #{e.backtrace.join("\n")}")
+        UI.error("Error location: #{e.backtrace.first}")
         raise
       end
     end
