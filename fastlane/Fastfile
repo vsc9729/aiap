@@ -50,7 +50,7 @@ platform :android do
     File.write(path, updated_gradle_file)
 
     # Set up Git authentication with Personal Access Token (PAT)
-      gitlab_token = ENV['GITLAB_TOKEN']
+      gitlab_token = ENV["GITLAB_TOKEN"]
       unless gitlab_token
         UI.error("GITLAB_TOKEN environment variable is not set")
         raise "GITLAB_TOKEN missing"
@@ -62,7 +62,7 @@ platform :android do
       sh "git remote set-url origin #{repo_url}"
 
       # Commit and push changes
-      sh "git config --global user.email 'ci@example.com'"
+      sh "git config --global user.email 'vikrantsingh@geekyants.com'"
       sh "git config --global user.name 'GitLab CI'"
       sh "git add #{path}"
       sh "git commit -m '[ci skip] Bump version code to #{new_version_code} and version name to #{new_version_name}'"
