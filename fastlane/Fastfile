@@ -56,7 +56,7 @@ platform :android do
         raise "GITLAB_TOKEN missing"
       end
 
-      repo_url = "https://#{gitlab_token}@gitlab.com/client-projects/synchronous/android-sample-app.git"
+      repo_url = "https://#{gitlab_token}@git.geekyants.com/client-projects/synchronous/android-sample-app.git"
 
       # Update the Git remote URL to use the token
       sh "git remote set-url origin #{repo_url}"
