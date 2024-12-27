@@ -5,6 +5,8 @@ plugins {
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
     id("maven-publish")
+    id("com.google.devtools.ksp")
+
 }
 
 android {
@@ -71,8 +73,8 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.moshi)
     implementation (libs.logging.interceptor)
-
-    kapt (libs.moshi.kotlin.codegen)
+    ksp(libs.moshi.kotlin.codegen)
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
 }
 kapt {
     correctErrorTypes = true

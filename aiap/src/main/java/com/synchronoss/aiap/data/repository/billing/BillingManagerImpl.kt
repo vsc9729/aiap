@@ -167,7 +167,7 @@ class BillingManagerImpl(
 
             GlobalScope.launch {
                 productApi.handlePurchase(
-                    "Bearer ${purchases[0].packageName}",
+                    "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzYWNoaW4iLCJyb2xlcyI6WyJBRE1JTiIsIlNVUEVSX0FETUlOIiwiVVNFUiJdLCJpYXQiOjE3MzQ5MzIzNzIsImV4cCI6MTczNTAxODc3Mn0.k2Sw7ADCidbS_RRqWuewu-x6SsFEcdWCp6zd3Wnzm48",
                     handleRequest
                 )
             }
