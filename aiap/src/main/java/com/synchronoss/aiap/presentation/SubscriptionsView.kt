@@ -14,17 +14,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -42,7 +49,7 @@ import kotlinx.coroutines.runBlocking
 @Composable
 fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
-
+    var selectedTab by remember { mutableStateOf(TabOption.MONTHLY) }
 
 
     runBlocking {
@@ -54,43 +61,88 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     }
     val products: List<ProductDetails>? = subscriptionsViewModel.products
 
-    Column(modifier = Modifier.padding(30.dp)) {
-        Text(
-            text = STORAGE_TAGLINE,
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontWeight = FontWeight.W700,
-                color = AppColors.black,
-                fontSize = 24.sp,
-                textAlign = TextAlign.Center
+    Box {
+        Column(modifier = Modifier.padding(30.dp)) {
+            Text(
+                text = STORAGE_TAGLINE,
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.W700,
+                    color = AppColors.black,
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center
+                )
             )
-        )
 
-        Spacer(modifier = Modifier.height(8.dp))
-        ScrollablePlans(activity = activity)
-//        products?.forEach { product ->
-//            Text(
-//                product.name,
-//                style = MaterialTheme.typography.bodyLarge,
-//                modifier = Modifier
-//                    .padding(4.dp)
-//                    .clickable {
-//
-//                        runBlocking {
-//                            subscriptionsViewModel.purchaseSubscription(
-//                                activity = activity,
-//                                product = product,
-//                                onError = { error ->
-//                                    // Handle error
-//                                    println("Error: $error")
-//                                }
-//                            )
-//                        }
-//
-//
-//                        //TODO: Launch Billing Flow Implementation
-//                    })
+            Spacer(modifier = Modifier.height(8.dp))
+            TabSelector(
+                selectedTab = selectedTab,
+                onTabSelected = { tab ->
+                    selectedTab = tab
+                    // Handle tab selection
+
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            ScrollablePlans(activity = activity)
             Spacer(modifier = modifier.height(4.dp))
         }
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(170.dp)
+                .clip(RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp))
+                .background(Color.White)
+                .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+                .align(Alignment.BottomCenter)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
+
+            ) {
+                Text(
+                    text = "Plan auto-renews for ₹1000 every month until cancelled.",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.W400,
+                        color = AppColors.textGray,
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center
+                    )
+                )
+                Button(
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AppColors.primaryBlue),
+                    shape = RoundedCornerShape(10.dp),
+                    onClick = {
+                        runBlocking {
+                            subscriptionsViewModel.purchaseSubscription(
+                                activity = activity,
+                                product = products?.get(0) ?: return@runBlocking,
+                                onError = { error ->
+                                    // Handle error
+                                    println("Error: $error")
+                                }
+                            )
+                        }
+                    },
+                ) {
+                    Text("Continue",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.W600,)
+                }
+                Text(
+                    text = "Apply Coupon",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.W600,
+                    color = AppColors.textGray,
+                )
+            }
+
+        }
+    }
     }
 
 
@@ -116,40 +168,13 @@ fun ScrollablePlans(
             val price = pricingPhases?.formattedPrice
             val description: String = product.description.ifEmpty { "Get 100 GB of storage for photos, files  & backup." }
             OtherPlanCard(
-
                 price = price ?: "₹500",
                 description = description,
                 product = product,
                 activity = activity
             )
             Spacer(modifier = Modifier.height(16.dp)) // Spacing between cards
-//            Text(
-//                price.toString().split(" ")[0],
-//                style = MaterialTheme.typography.bodyLarge,
-//                modifier = Modifier
-//                    .padding(4.dp)
-//                    .clickable {
-//
-//                        runBlocking {
-//                            subscriptionsViewModel.purchaseSubscription(
-//                                activity = activity,
-//                                product = product,
-//                                onError = { error ->
-//                                    // Handle error
-//                                    println("Error: $error")
-//                                }
-//                            )
-//                        }
-//
-//
-//                        //TODO: Launch Billing Flow Implementation
-//                    })
         }
-//        repeat(3){
-//
-//            OtherPlanCard()
-//            Spacer(modifier = Modifier.height(16.dp)) // Spacing between cards
-//        }
     }
 }
 
@@ -161,7 +186,7 @@ fun CurrentPlanCard() {
             .height(80.dp)
             .background(
                 brush = Brush.horizontalGradient(
-                    colors = listOf( Color(0xFFA954D4),Color(0xFF3AD8EC))
+                    colors = listOf(Color(0xFFA954D4), Color(0xFF3AD8EC))
                 ),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -195,14 +220,20 @@ fun CurrentPlanCard() {
                 }
                 Column(
                     modifier = Modifier
-                        .background(Color(0xFFDFF6DD), RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp))
+                        .background(
+                            Color(0xFFDFF6DD),
+                            RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)
+                        )
                         .padding(horizontal = 6.dp, vertical = 0.dp),
                     verticalArrangement = Arrangement.Top
                 ) {
 
                     Box(
                         modifier = Modifier
-                            .background(Color(0xFFDFF6DD), RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp))
+                            .background(
+                                Color(0xFFDFF6DD),
+                                RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)
+                            )
                             .padding(horizontal = 6.dp, vertical = 0.dp),
                     ) {
                         Text(
@@ -253,18 +284,19 @@ fun OtherPlanCard(price: String,  description: String,activity: ComponentActivit
                 color = Color.White,
                 shape = RoundedCornerShape(12.dp)
             )
-            .padding(start = 16.dp, end = 16.dp)                    .clickable {
+            .padding(start = 16.dp, end = 16.dp)
+            .clickable {
 
-                        runBlocking {
-                            subscriptionsViewModel.purchaseSubscription(
-                                activity = activity,
-                                product = product,
-                                onError = { error ->
-                                    // Handle error
-                                    println("Error: $error")
-                                }
-                            )
+                runBlocking {
+                    subscriptionsViewModel.purchaseSubscription(
+                        activity = activity,
+                        product = product,
+                        onError = { error ->
+                            // Handle error
+                            println("Error: $error")
                         }
+                    )
+                }
             }
     ) {
         Column(
@@ -322,9 +354,48 @@ fun OtherPlanCard(price: String,  description: String,activity: ComponentActivit
     }
 }
 
+enum class TabOption {
+    MONTHLY,
+    YEARLY
+}
 
-@Preview(showBackground = true)
 @Composable
-fun PreviewSubscriptionsView() {
-    SubscriptionsView(activity = ComponentActivity())
+fun TabSelector(
+    selectedTab: TabOption,
+    onTabSelected: (TabOption) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .height(50.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFFE7F8FF)),
+        color = Color(0xFFE7F8FF)
+    ) {
+        Row(
+            modifier = Modifier.padding(6.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            TabOption.entries.forEach { tab ->
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(
+                            if (tab == selectedTab) AppColors.primaryBlue
+                            else Color.Transparent
+                        )
+                        .clickable { onTabSelected(tab) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = tab.name.lowercase().replaceFirstChar { it.uppercase() },
+                        color = if (tab == selectedTab) Color.White else AppColors.primaryBlue,
+                        fontWeight = FontWeight.W600
+                    )
+                }
+            }
+        }
+    }
 }
