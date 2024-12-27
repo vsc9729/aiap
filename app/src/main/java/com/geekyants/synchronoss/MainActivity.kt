@@ -1,7 +1,7 @@
 package com.geekyants.synchronoss
 
 
-import SubscriptionsViewDialog
+import SubscriptionsViewBottomSheet
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
                             subscriptionsViewModel.dialogState.value = true
                         }
                     )
-                    SubscriptionsViewDialog(
+                    SubscriptionsViewBottomSheet(
                         onDismissRequest = {
                             //TODO: If the implementor wants to do something on dismissal
                         },
