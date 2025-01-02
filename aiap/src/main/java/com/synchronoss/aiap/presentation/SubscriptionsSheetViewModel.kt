@@ -93,7 +93,7 @@ class SubscriptionsViewModel @Inject constructor(
         product: ProductDetails,
         onError: (String) -> Unit
     ) {
-        billingManagerUseCases.purchaseSubscription(activity, product, onError, isUserAlreadySubscribed = currentProductId != null)
+        billingManagerUseCases.purchaseSubscription(activity, product, onError)
     }
 
 //    fun updateCurrentPlan(product: ProductDetails){

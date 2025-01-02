@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
+import com.synchronoss.aiap.ui.theme.SampleAiAPTheme
 import com.synchronoss.aiap.utils.AppColors
 import kotlinx.coroutines.launch
 
@@ -40,7 +41,9 @@ fun SubscriptionsViewBottomSheet(
     activity: ComponentActivity,
     subscriptionsViewModel: SubscriptionsViewModel = hiltViewModel()
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+    )
     val coroutineScope = rememberCoroutineScope()
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
@@ -56,32 +59,34 @@ fun SubscriptionsViewBottomSheet(
     }
 
     if (subscriptionsViewModel.dialogState.value) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                coroutineScope.launch {
-                    sheetState.hide()
-                    subscriptionsViewModel.dialogState.value = false
-                    onDismissRequest()
-                }
-            },
-            sheetState = sheetState,
-            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-            modifier = modifier.height(sheetHeight),
-            dragHandle = null
-
-        ) {
-
-            Row (
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = MaterialTheme.colorScheme.background,
-                    ),
-
-                horizontalArrangement = Arrangement.End,
+        SampleAiAPTheme {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        coroutineScope.launch {
+                            sheetState.hide()
+                            subscriptionsViewModel.dialogState.value = false
+                            onDismissRequest()
+                        }
+                    },
+                    sheetState = sheetState,
+                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+                    modifier = modifier.height(sheetHeight),
+                    dragHandle = null,
 
 
-            ){
+                ) {
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = MaterialTheme.colorScheme.background,
+                        ),
+
+                    horizontalArrangement = Arrangement.End,
+
+
+                    ) {
                     IconButton(
                         onClick = {
                             coroutineScope.launch {
@@ -102,6 +107,7 @@ fun SubscriptionsViewBottomSheet(
 
                 SubscriptionsView(activity = activity)
             }
+        }
 
     }
 }

@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -77,20 +78,23 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     val products: List<ProductDetails>? = subscriptionsViewModel.products
 
     Box {
-        Column(modifier = Modifier.fillMaxSize()
+        Column(modifier = Modifier
+            .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.background)
             .padding(20.dp)
         ) {
 
+
                 Text(
                     text = STORAGE_TAGLINE,
-                    style = MaterialTheme.typography.headlineLarge.copy(
+                    style = LocalTextStyle.current.copy(
                         fontWeight = FontWeight.W700,
-                        color = AppColors.black,
                         fontSize = 24.sp,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         textAlign = TextAlign.Center
                     )
                 )
+
 
                 Spacer(modifier = Modifier.height(8.dp))
                 TabSelector(
@@ -112,11 +116,12 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
             ) {
                 Text(
                     text = "Restore purchase",
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onTertiary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.W400,
                     style = TextStyle(
-                        textDecoration = TextDecoration.Underline
+                        textDecoration = TextDecoration.Underline,
+
                     )
                 )
             }
@@ -130,17 +135,17 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
             modifier = Modifier
                 .shadow(
                     elevation = 1.dp,
-                    shape =RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp),
+                    shape = RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp),
                     spotColor = Color.Black.copy(alpha = 0.1f),
                     ambientColor = Color.Black.copy(alpha = 0.1f)
 
-                    )
+                )
                 .fillMaxWidth()
                 .height(170.dp)
                 .clip(RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp))
-                .background(Color.White)
+                .background(color = MaterialTheme.colorScheme.tertiary)
                 .align(Alignment.BottomCenter)
-                .border(border = BorderStroke(0.5.dp, Color(0xFFE5E7EB)), shape = RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp))
+
         )
         {
             Box(modifier = Modifier.padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)) {
@@ -155,7 +160,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     text = "Plan auto-renews for ₹1000 every month. You can cancel anytime you want.",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.W400,
-                        color = AppColors.textGray,
+                        color = MaterialTheme.colorScheme.onSecondary,
                         fontSize = 12.sp,
                         textAlign = TextAlign.Center
                     )
@@ -197,7 +202,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     text = "Apply Coupon",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.W600,
-                    color = AppColors.textGray,
+                    color = MaterialTheme.colorScheme.onTertiary,
                 )
             }
         }
@@ -269,7 +274,10 @@ fun ActualCurrentPlanCard(
                 color = Color.White,
                 shape = RoundedCornerShape(12.dp)
             )
-            .border(border = BorderStroke(0.5.dp, Color(0xFFE5E7EB)), shape = RoundedCornerShape(12.dp))
+            .border(
+                border = BorderStroke(0.5.dp, Color(0xFFE5E7EB)),
+                shape = RoundedCornerShape(12.dp)
+            )
     ) {
         Column(
             modifier = Modifier
@@ -278,7 +286,7 @@ fun ActualCurrentPlanCard(
             Row(
                 modifier = Modifier
                     .background(
-                        color = Color(0xFFDFF6DD),
+                        color = MaterialTheme.colorScheme.surface,
                         RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
                     )
                     .fillMaxWidth()
@@ -287,7 +295,7 @@ fun ActualCurrentPlanCard(
                 Text(
                     text = "Current Subscription",
                     fontSize = 14.sp,
-                    color = Color(0xFF2E7D32),
+                    color =MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.W600,
 //                modifier = Modifier.padding(horizontal = 6.dp)
                 )
@@ -343,10 +351,13 @@ fun DemoCurrentPlanCard() {
             .fillMaxWidth()
             .height(120.dp)
             .background(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.background,
                 shape = RoundedCornerShape(12.dp)
             )
-            .border(border = BorderStroke(0.5.dp, Color(0xFFE5E7EB)), shape = RoundedCornerShape(12.dp))
+            .border(
+                border = BorderStroke(0.5.dp, color = MaterialTheme.colorScheme.outline),
+                shape = RoundedCornerShape(12.dp)
+            )
     ) {
         Column(
             modifier = Modifier
@@ -355,7 +366,7 @@ fun DemoCurrentPlanCard() {
         Row(
             modifier = Modifier
                 .background(
-                    color = Color(0xFFDFF6DD),
+                   color = MaterialTheme.colorScheme.surface,
                     RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
                 )
                 .fillMaxWidth()
@@ -364,7 +375,7 @@ fun DemoCurrentPlanCard() {
             Text(
                 text = "Current Subscription",
                 fontSize = 14.sp,
-                color = Color(0xFF2E7D32),
+                color =MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.W600,
 //                modifier = Modifier.padding(horizontal = 6.dp)
             )
@@ -388,7 +399,7 @@ fun DemoCurrentPlanCard() {
                     text = "₹500",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.W700,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
 
@@ -396,7 +407,7 @@ fun DemoCurrentPlanCard() {
                     text = "Get 50 GB of storage for photos, files & backup.",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.W400,
-                    color = AppColors.lightGray,
+                    color = MaterialTheme.colorScheme.onSecondary,
                     lineHeight = 16.sp
                 )
             }
@@ -423,11 +434,11 @@ fun OtherPlanCard(price: String, description: String, activity: ComponentActivit
             .fillMaxWidth()
             .height(95.dp)
             .background(
-                color = Color.Transparent,
+                color = MaterialTheme.colorScheme.background,
                 shape = RoundedCornerShape(12.dp)
             )
             .then(
-                if(subscriptionsViewModel.selectedPlan == productIndex) {
+                if (subscriptionsViewModel.selectedPlan == productIndex) {
                     Log.d("Co", "Current Plan: ${subscriptionsViewModel.selectedPlan}")
                     Modifier
                         .shadow(
@@ -437,12 +448,18 @@ fun OtherPlanCard(price: String, description: String, activity: ComponentActivit
 //                            ambientColor = Color.Black.copy(alpha = 0.1f)  // More transparent ambient shadow
                         )
                         .background(
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.background,
                             shape = RoundedCornerShape(12.dp)
                         )
-                        .border(border = BorderStroke(0.5.dp, Color(0xFF0096D5)), shape = RoundedCornerShape(12.dp))
-                } else{
-                    Modifier.border(border = BorderStroke(0.5.dp, Color(0xFFE5E7EB)), shape = RoundedCornerShape(12.dp))
+                        .border(
+                            border = BorderStroke(1.5.dp,color = MaterialTheme.colorScheme.outlineVariant),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                } else {
+                    Modifier.border(
+                        border = BorderStroke(0.5.dp, color = MaterialTheme.colorScheme.outline),
+                        shape = RoundedCornerShape(12.dp)
+                    )
                 }
             )
             .clickable {
@@ -467,7 +484,7 @@ fun OtherPlanCard(price: String, description: String, activity: ComponentActivit
                     text = price,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.W700,
-                    color = AppColors.black,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
 
@@ -475,7 +492,7 @@ fun OtherPlanCard(price: String, description: String, activity: ComponentActivit
                     text = description,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.W400,
-                    color = AppColors.lightGray,
+                    color = MaterialTheme.colorScheme.onSecondary,
                     lineHeight = 16.sp
                 )
             }
@@ -518,8 +535,8 @@ fun TabSelector(
         modifier = modifier
             .height(50.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFFE7F8FF)),
-        color = Color(0xFFE7F8FF)
+            .background(color = MaterialTheme.colorScheme.secondary),
+        color = MaterialTheme.colorScheme.secondary
     ) {
         Row(
             modifier = Modifier.padding(6.dp),
