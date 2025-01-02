@@ -15,6 +15,7 @@ import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.Purchase.PendingPurchaseUpdate
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
+import com.android.billingclient.api.QueryPurchasesParams
 import com.synchronoss.aiap.common.UuidGenerator
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
 import org.json.JSONException
@@ -66,6 +67,43 @@ class BillingManagerImpl(
             } else {
                 onError(billingResult.debugMessage)
             }
+        }
+    }
+
+    suspend fun checkExistingSubscriptions(
+        productId: String,
+        onSubscriptionFound: (Purchase) -> Unit,
+        onNoSubscription: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        if (billingClient.connectionState != BillingClient.ConnectionState.CONNECTED) {
+            onError("Billing client not connected")
+            return
+        }
+
+        try {
+            val params = QueryPurchasesParams.newBuilder()
+                .setProductType(BillingClient.ProductType.SUBS)
+                .build()
+
+            billingClient.queryPurchasesAsync(params) { billingResult, purchaseList ->
+                when (billingResult.responseCode) {
+                    BillingClient.BillingResponseCode.OK -> {
+                        val subscription = purchaseList.find { purchase ->
+                            purchase.products.contains(productId) && purchase.purchaseState == Purchase.PurchaseState.PURCHASED
+                        }
+
+                        if (subscription != null) {
+                            onSubscriptionFound(subscription)
+                        } else {
+                            onNoSubscription()
+                        }
+                    }
+                    else -> onError("Failed to query purchases: ${billingResult.debugMessage}")
+                }
+            }
+        } catch (e: Exception) {
+            onError("Error checking subscriptions: ${e.message}")
         }
     }
 

@@ -21,6 +21,6 @@ dependencyResolutionManagement {
 
 }
 
-rootProject.name = "Tippy"
+rootProject.name = "Sample AIAP"
 include(":app")
 include(":aiap")
