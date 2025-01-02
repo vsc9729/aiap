@@ -14,6 +14,7 @@ interface BillingManager {
     suspend fun getProducts(
         productIds: List<String>,
         onProductsReceived: (List<ProductDetails>) -> Unit,
+        onSubscriptionFound: (String) -> Unit,
         onError: (String) -> Unit
     )
 

@@ -26,6 +26,7 @@ class SubscriptionsViewModel @Inject constructor(
 ) : ViewModel() {
     val dialogState = mutableStateOf(false)
     var products: List<ProductDetails>? by mutableStateOf(null)
+    var selectedProductId: String? = null
 
     suspend fun startConnection(productIds: List<String>) {
         billingManagerUseCases.startConnection(
@@ -73,6 +74,7 @@ class SubscriptionsViewModel @Inject constructor(
         billingManagerUseCases.getProducts(
             productIds = productIds,
             onProductsReceived = { products = it },
+            onSubscriptionFound = { selectedProductId = it },
             onError = onError
         )
     }

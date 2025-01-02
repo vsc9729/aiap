@@ -18,6 +18,10 @@ import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
 import com.synchronoss.aiap.common.UuidGenerator
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -46,9 +50,11 @@ class BillingManagerImpl(
         })
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override suspend fun getProducts(
         productIds: List<String>,
         onProductsReceived: (List<ProductDetails>) -> Unit,
+        onSubscriptionFound: (String) -> Unit,
         onError: (String) -> Unit
     ) {
         val params = QueryProductDetailsParams.newBuilder()
@@ -63,17 +69,20 @@ class BillingManagerImpl(
 
         billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                GlobalScope.launch {
+                    checkExistingSubscriptions(onSubscriptionFound = onSubscriptionFound, onError = onError)
+                }
+
                 onProductsReceived(productDetailsList)
+
             } else {
                 onError(billingResult.debugMessage)
             }
         }
     }
 
-    suspend fun checkExistingSubscriptions(
-        productId: String,
-        onSubscriptionFound: (Purchase) -> Unit,
-        onNoSubscription: () -> Unit,
+    private fun checkExistingSubscriptions(
+        onSubscriptionFound: (String) -> Unit,
         onError: (String) -> Unit
     ) {
         if (billingClient.connectionState != BillingClient.ConnectionState.CONNECTED) {
@@ -90,13 +99,11 @@ class BillingManagerImpl(
                 when (billingResult.responseCode) {
                     BillingClient.BillingResponseCode.OK -> {
                         val subscription = purchaseList.find { purchase ->
-                            purchase.products.contains(productId) && purchase.purchaseState == Purchase.PurchaseState.PURCHASED
+                           purchase.purchaseState == Purchase.PurchaseState.PURCHASED ||purchase.purchaseState == Purchase.PurchaseState.UNSPECIFIED_STATE
                         }
 
                         if (subscription != null) {
-                            onSubscriptionFound(subscription)
-                        } else {
-                            onNoSubscription()
+                            onSubscriptionFound(subscription.products[0].toString())
                         }
                     }
                     else -> onError("Failed to query purchases: ${billingResult.debugMessage}")
