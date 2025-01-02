@@ -3,7 +3,6 @@ package com.synchronoss.aiap.data.remote
 import com.squareup.moshi.Json
 
 data class ProductDataDto(
-    @field:Json(name = "productName")
     val productName: String,
     @field:Json(name = "displayName")
     val displayName: String,

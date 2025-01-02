@@ -1,6 +1,7 @@
 package com.synchronoss.aiap.di
 
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.synchronoss.aiap.data.remote.ProductApi
 import com.synchronoss.aiap.data.repository.product.ProductMangerImpl
 import com.synchronoss.aiap.domain.repository.product.ProductManager
@@ -28,6 +29,9 @@ object ProductModule {
     @Provides
     @Singleton
     fun provideProductApi(): ProductApi {
+        val moshi = Moshi.Builder()
+            .add(KotlinJsonAdapterFactory())
+            .build()
 
         val logging = HttpLoggingInterceptor().apply {
             setLevel(HttpLoggingInterceptor.Level.BODY)
@@ -39,7 +43,7 @@ object ProductModule {
 
         val retrofit = Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .addConverterFactory(MoshiConverterFactory.create())
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
             .client(client)
             .build()
 

@@ -1,6 +1,7 @@
 package com.synchronoss.aiap.di
 
 import android.app.Application
+import com.synchronoss.aiap.data.remote.ProductApi
 import com.synchronoss.aiap.data.repository.billing.BillingManagerImpl
 import com.synchronoss.aiap.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.domain.usecases.billing.GetProducts
@@ -22,9 +23,10 @@ object BillingModule {
     @Provides
     @Singleton
     fun provideBillingManager(
-        application: Application
+        application: Application,
+        productApi: ProductApi
     ): BillingManager {
-        return BillingManagerImpl(application)
+        return BillingManagerImpl(application, productApi )
     }
 
     @Provides
