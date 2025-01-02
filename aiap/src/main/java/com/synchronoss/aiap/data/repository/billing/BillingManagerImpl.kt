@@ -69,9 +69,9 @@ class BillingManagerImpl(
 
         billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                GlobalScope.launch {
-                    checkExistingSubscriptions(onSubscriptionFound = onSubscriptionFound, onError = onError)
-                }
+
+                checkExistingSubscriptions(onSubscriptionFound = onSubscriptionFound, onError = onError)
+
 
                 onProductsReceived(productDetailsList)
 

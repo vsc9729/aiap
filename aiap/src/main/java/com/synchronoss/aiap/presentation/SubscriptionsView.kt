@@ -219,10 +219,17 @@ fun ScrollablePlans(
             .padding(bottom = 16.dp)
 
     ) {
-         // Add multiple cards for testing
-        CurrentPlanCard()
+        val selectedProductIndex = products?.indexOfFirst { it.productId == subscriptionsViewModel.selectedProductId }
+        val selectedProduct = products?.get(selectedProductIndex ?: -1)
+
+        if (subscriptionsViewModel.selectedProductId == null) DemoCurrentPlanCard() else ActualCurrentPlanCard(
+            product = selectedProduct!!
+        )
+        // Add multiple cards for testing
+
         Spacer(modifier = Modifier.height(16.dp)) // Spacing between cards
         products?.forEachIndexed { index, product ->
+            if(product.productId == subscriptionsViewModel.selectedProductId) return@forEachIndexed
             val subscriptionOfferDetails = product.subscriptionOfferDetails?.last()
             val pricingPhases = subscriptionOfferDetails?.pricingPhases?.pricingPhaseList?.last()
             val price = pricingPhases?.formattedPrice
@@ -243,7 +250,86 @@ fun ScrollablePlans(
 }
 
 @Composable
-fun CurrentPlanCard() {
+fun ActualCurrentPlanCard(
+    product: ProductDetails
+) {
+    val subscriptionOfferDetails = product.subscriptionOfferDetails?.last()
+    val pricingPhases = subscriptionOfferDetails?.pricingPhases?.pricingPhaseList?.last()
+    val price = pricingPhases?.formattedPrice
+    val description: String = product.description.ifEmpty { "Get 100 GB of storage for photos, files  & backup." }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp)
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xFFA954D4), Color(0xFF3AD8EC))
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(start = 16.dp, end = 16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Content Column
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = price ?: "500",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.W700,
+                    color = Color.White,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+
+                Text(
+                    text = description ?:"Get 50GB for stoage for photos, files and backup",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.W400,
+                    color = Color.White,
+                    lineHeight = 16.sp
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .background(
+                    color = Color.Transparent,
+                    RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)
+                )
+                .fillMaxWidth()
+                .padding(horizontal = 6.dp, vertical = 0.dp),
+            horizontalArrangement = Arrangement.End
+
+        ) {
+
+            Box(
+                modifier = Modifier
+                    .background(
+                        Color(0xFFDFF6DD),
+                        RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)
+                    )
+                    .padding(horizontal = 6.dp, vertical = 0.dp),
+            ) {
+                Text(
+                    text = "Current Plan",
+                    fontSize = 10.sp,
+                    color = Color(0xFF2E7D32),
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+@Composable
+fun DemoCurrentPlanCard() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
