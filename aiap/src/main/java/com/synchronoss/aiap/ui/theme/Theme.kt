@@ -19,6 +19,8 @@ private val DarkColorScheme = darkColorScheme(
     onPrimary = ThemeColors.Dark.textHeading,
     onSecondary = ThemeColors.Dark.textBody,
     onBackground = ThemeColors.Dark.textBodyAlt,
+    surface = ThemeColors.Dark.surface,
+    onSurface = ThemeColors.Dark.onSurface,
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -29,6 +31,8 @@ private val LightColorScheme = lightColorScheme(
         onPrimary = ThemeColors.Light.textHeading,
         onSecondary = ThemeColors.Light.textBody,
         onBackground = ThemeColors.Light.textBodyAlt,
+        surface = ThemeColors.Light.surface,
+        onSurface = ThemeColors.Light.onSurface
 )
 
 @Composable

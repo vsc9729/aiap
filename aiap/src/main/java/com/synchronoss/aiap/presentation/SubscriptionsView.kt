@@ -78,7 +78,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 
     Box {
         Column(modifier = Modifier.fillMaxSize()
-            .background(color = Color.White)
+            .background(color = MaterialTheme.colorScheme.background)
             .padding(20.dp)
         ) {
 
@@ -222,18 +222,18 @@ fun ScrollablePlans(
             .padding(bottom = 16.dp)
 
     ) {
-        val selectedProductIndex : Int? = products?.indexOfFirst { it.productId == subscriptionsViewModel.selectedProductId }
+        val currentProductIndex : Int? = products?.indexOfFirst { it.productId == subscriptionsViewModel.currentProductId }
 
-        val selectedProduct = if (selectedProductIndex != -1) products?.get(selectedProductIndex!!) else null
+        val currentProduct = if (currentProductIndex != -1) products?.get(currentProductIndex!!) else null
 
-        if (subscriptionsViewModel.selectedProductId == null) DemoCurrentPlanCard() else ActualCurrentPlanCard(
-            product = selectedProduct!!
+        if (subscriptionsViewModel.currentProductId == null) DemoCurrentPlanCard() else ActualCurrentPlanCard(
+            product = currentProduct!!
         )
         // Add multiple cards for testing
 
         Spacer(modifier = Modifier.height(16.dp)) // Spacing between cards
         products?.forEachIndexed { index, product ->
-            if(product.productId == subscriptionsViewModel.selectedProductId) return@forEachIndexed
+            if(product.productId == subscriptionsViewModel.currentProductId) return@forEachIndexed
             val subscriptionOfferDetails = product.subscriptionOfferDetails?.last()
             val pricingPhases = subscriptionOfferDetails?.pricingPhases?.pricingPhaseList?.last()
             val price = pricingPhases?.formattedPrice
@@ -264,72 +264,76 @@ fun ActualCurrentPlanCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
+            .height(120.dp)
             .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFFA954D4), Color(0xFF3AD8EC))
-                ),
+                color = Color.White,
                 shape = RoundedCornerShape(12.dp)
             )
-            .padding(start = 16.dp, end = 16.dp)
+            .border(border = BorderStroke(0.5.dp, Color(0xFFE5E7EB)), shape = RoundedCornerShape(12.dp))
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Content Column
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = price ?: "500",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.W700,
-                    color = Color.White,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-
-                Text(
-                    text = description ?:"Get 50GB for stoage for photos, files and backup",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.W400,
-                    color = Color.White,
-                    lineHeight = 16.sp
-                )
-            }
-        }
-        Row(
+        Column(
             modifier = Modifier
-                .background(
-                    color = Color.Transparent,
-                    RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)
-                )
                 .fillMaxWidth()
-                .padding(horizontal = 6.dp, vertical = 0.dp),
-            horizontalArrangement = Arrangement.End
-
-        ) {
-
-            Box(
+        ){
+            Row(
                 modifier = Modifier
                     .background(
-                        Color(0xFFDFF6DD),
-                        RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)
+                        color = Color(0xFFDFF6DD),
+                        RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
                     )
-                    .padding(horizontal = 6.dp, vertical = 0.dp),
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp, horizontal = 16.dp),
             ) {
                 Text(
-                    text = "Current Plan",
-                    fontSize = 10.sp,
+                    text = "Current Subscription",
+                    fontSize = 14.sp,
                     color = Color(0xFF2E7D32),
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.W600,
+//                modifier = Modifier.padding(horizontal = 6.dp)
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Content Column
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = price ?:"₹500",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.W700,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+
+                    Text(
+                        text = description,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.W400,
+                        color = AppColors.lightGray,
+                        lineHeight = 16.sp
+                    )
+                }
+                Image(
+                    painter = painterResource(id = R.drawable.checkmark_circle),
+                    contentDescription = "Selected Plan Indicator",
+                    modifier = Modifier
+                        .size(24.dp),
+                    alignment = Alignment.Center
+
                 )
             }
         }
+
     }
 }
 @Composable
