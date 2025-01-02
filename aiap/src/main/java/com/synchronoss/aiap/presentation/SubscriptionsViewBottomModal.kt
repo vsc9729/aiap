@@ -1,10 +1,14 @@
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -21,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
 import com.synchronoss.aiap.utils.AppColors
@@ -60,15 +65,22 @@ fun SubscriptionsViewBottomSheet(
             },
             sheetState = sheetState,
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-            modifier = modifier.height(sheetHeight)
+            modifier = modifier.height(sheetHeight),
+            dragHandle = null
+
         ) {
 
-            Box (
-                modifier = Modifier.fillMaxWidth().align(Alignment.End),
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = Color.White,
+                    ),
+
+                horizontalArrangement = Arrangement.End,
+
 
             ){
-
-
                     IconButton(
                         onClick = {
                             coroutineScope.launch {
@@ -81,12 +93,14 @@ fun SubscriptionsViewBottomSheet(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Close",
-                            tint = AppColors.lightGray
+                            tint = AppColors.lightGray,
+                            modifier = Modifier.size(28.dp)
                         )
                     }
+                }
 
                 SubscriptionsView(activity = activity)
             }
-        }
+
     }
 }

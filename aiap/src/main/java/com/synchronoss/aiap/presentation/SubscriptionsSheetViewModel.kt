@@ -3,10 +3,14 @@ package com.synchronoss.aiap.presentation
 
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Recomposer
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.billingclient.api.ProductDetails
@@ -27,6 +31,11 @@ class SubscriptionsViewModel @Inject constructor(
     val dialogState = mutableStateOf(false)
     var products: List<ProductDetails>? by mutableStateOf(null)
     var selectedProductId: String? = null
+
+     var selectedPlan: Int by mutableIntStateOf(-1
+     )
+
+
 
     suspend fun startConnection(productIds: List<String>) {
         billingManagerUseCases.startConnection(
@@ -87,4 +96,11 @@ class SubscriptionsViewModel @Inject constructor(
         billingManagerUseCases.purchaseSubscription(activity, product, onError)
     }
 
+//    fun updateCurrentPlan(product: ProductDetails){
+//        _currentPlan.value = CurrentSelected(product);
+//    }
 }
+
+//data class CurrentSelected(
+//    val product: ProductDetails? = null,
+//)
