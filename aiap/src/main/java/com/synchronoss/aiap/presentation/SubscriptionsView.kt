@@ -173,7 +173,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                         runBlocking {
                             subscriptionsViewModel.purchaseSubscription(
                                 activity = activity,
-                                product = products?.get(0) ?: return@runBlocking,
+                                product = products?.get(subscriptionsViewModel.selectedPlan) ?: return@runBlocking,
                                 onError = { error ->
                                     // Handle error
                                     println("Error: $error")
@@ -219,8 +219,9 @@ fun ScrollablePlans(
             .padding(bottom = 16.dp)
 
     ) {
-        val selectedProductIndex = products?.indexOfFirst { it.productId == subscriptionsViewModel.selectedProductId }
-        val selectedProduct = products?.get(selectedProductIndex ?: -1)
+        val selectedProductIndex : Int? = products?.indexOfFirst { it.productId == subscriptionsViewModel.selectedProductId }
+
+        val selectedProduct = if (selectedProductIndex != -1) products?.get(selectedProductIndex!!) else null
 
         if (subscriptionsViewModel.selectedProductId == null) DemoCurrentPlanCard() else ActualCurrentPlanCard(
             product = selectedProduct!!

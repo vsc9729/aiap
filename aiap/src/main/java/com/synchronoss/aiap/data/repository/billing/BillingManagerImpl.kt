@@ -2,7 +2,9 @@ package com.synchronoss.aiap.data.repository.billing
 
 
 import android.content.Context
+import android.os.Build
 import androidx.activity.ComponentActivity
+import androidx.annotation.RequiresApi
 import com.android.billingclient.api.AccountIdentifiers
 import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
@@ -15,10 +17,22 @@ import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.Purchase.PendingPurchaseUpdate
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
+import com.android.billingclient.api.QueryPurchasesParams
 import com.synchronoss.aiap.common.UuidGenerator
+import com.synchronoss.aiap.data.remote.HandlePurchaseRequest
+import com.synchronoss.aiap.data.remote.ProductApi
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
+import com.synchronoss.aiap.utils.Constants.PPI_USER_ID
+import com.synchronoss.aiap.utils.Constants.PURCHASE
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 
 
 class BillingManagerImpl(
@@ -69,12 +83,11 @@ class BillingManagerImpl(
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
 
                 checkExistingSubscriptions(onSubscriptionFound = onSubscriptionFound, onError = onError)
-
+                onProductsReceived(productDetailsList)
 
                 productDetailsList.forEach { productDetails ->
                     productDetailsMap[productDetails.productId] = productDetails
                 }
-                onProductsReceived(productDetailsList)
 
             } else {
                 onError(billingResult.debugMessage)
@@ -118,7 +131,7 @@ class BillingManagerImpl(
     override suspend fun purchaseSubscription(
         activity: ComponentActivity,
         product: ProductDetails,
-        onError: (String) -> Unit
+        onError: (String) -> Unit,
     ) {
         try {
             val offerToken: String = product.subscriptionOfferDetails?.first()?.offerToken ?: ""
@@ -140,6 +153,7 @@ class BillingManagerImpl(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun calculateExpiryDate(productDetails: ProductDetails, purchaseTime: Long): Long {
         val purchaseDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(purchaseTime), ZoneId.systemDefault())
         val subscriptionOfferDetails = productDetails.subscriptionOfferDetails?.filter { it.offerId ==null }?.firstOrNull()
@@ -155,6 +169,7 @@ class BillingManagerImpl(
         return expiryDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(DelicateCoroutinesApi::class)
     override fun onPurchasesUpdated(
         billingResult: BillingResult,
@@ -166,7 +181,7 @@ class BillingManagerImpl(
 
             val modifiedJson : JSONObject = JSONObject (purchases[0].originalJson)
                 .put("appId", uuid)
-                .put("ppiUserId","5432eb6e-a15c-47c7-94cc-c315551c8413")
+                .put("ppiUserId", PPI_USER_ID)
                 .put("signature",purchases[0].signature)
 
             println(modifiedJson)
@@ -195,7 +210,7 @@ class BillingManagerImpl(
 
 
             GlobalScope.launch {
-                productApi.handlePurchase(
+                val handlePurchase = productApi.handlePurchase(
                     handleRequest
                 )
             }
