@@ -11,7 +11,6 @@ interface ProductApi {
     suspend fun getProducts(): List<ProductDataDto>
     @POST("api/iap/android/handle")
     suspend fun handlePurchase(
-        @Header("Authorization") authHeader: String,
         @Body request: HandlePurchaseRequest
     ): Response<Unit>
 }

@@ -137,7 +137,7 @@ class BillingManagerImpl(
 
             val modifiedJson : JSONObject = JSONObject (purchases[0].originalJson)
                 .put("appId", uuid)
-                .put("ppiId","6e49e6a7-6201-474e-b8a0-95d71c2e588e")
+                .put("ppiUserId","5432eb6e-a15c-47c7-94cc-c315551c8413")
                 .put("signature",purchases[0].signature)
 
             println(modifiedJson)
@@ -167,7 +167,6 @@ class BillingManagerImpl(
 
             GlobalScope.launch {
                 productApi.handlePurchase(
-                    "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzYWNoaW4iLCJyb2xlcyI6WyJBRE1JTiIsIlNVUEVSX0FETUlOIiwiVVNFUiJdLCJpYXQiOjE3MzQ5MzIzNzIsImV4cCI6MTczNTAxODc3Mn0.k2Sw7ADCidbS_RRqWuewu-x6SsFEcdWCp6zd3Wnzm48",
                     handleRequest
                 )
             }

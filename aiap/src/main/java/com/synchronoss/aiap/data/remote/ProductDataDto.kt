@@ -9,7 +9,7 @@ data class ProductDataDto(
     @field:Json(name = "description")
     val description: String,
     @field:Json(name = "ppiId")
-    val ppiId: String,
+    val ppiId: String?,
     @field:Json(name = "isActive")
     val isActive: Boolean,
     @field:Json(name = "duration")
