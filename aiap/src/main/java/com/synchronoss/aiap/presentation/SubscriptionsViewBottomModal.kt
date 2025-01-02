@@ -94,7 +94,7 @@ fun SubscriptionsViewBottomSheet(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Close",
                             tint = AppColors.lightGray,
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }

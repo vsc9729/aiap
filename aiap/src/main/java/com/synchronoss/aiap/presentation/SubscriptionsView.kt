@@ -152,7 +152,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 
             ) {
                 Text(
-                    text = "Plan auto-renews for ₹1000 every month until cancelled.",
+                    text = "Plan auto-renews for ₹1000 every month. You can cancel anytime you want.",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.W400,
                         color = AppColors.textGray,
@@ -161,14 +161,17 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     )
                 )
                 Button(
-                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(999.dp)),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AppColors.primaryBlue, // Normal state color
                         contentColor = Color.White, // Normal text/icon color
                         disabledContainerColor = AppColors.lightGray.copy(alpha = 0.6f),
                         disabledContentColor = Color.White.copy(alpha = 0.6f)
                     ),
-                    shape = RoundedCornerShape(10.dp),
+//                    shape = RoundedCornerShape(10.dp),
                     onClick = {
                         runBlocking {
                             subscriptionsViewModel.purchaseSubscription(
@@ -245,7 +248,7 @@ fun ScrollablePlans(
             Spacer(modifier = Modifier.height(16.dp)) // Spacing between cards
 
         }
-        Spacer(modifier = Modifier.height(135.dp)) // Spacing between cards
+        Spacer(modifier = Modifier.height(135.dp)) // Spacing at the end of the list
 
     }
 }
@@ -334,17 +337,39 @@ fun DemoCurrentPlanCard() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
+            .height(120.dp)
             .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFFA954D4), Color(0xFF3AD8EC))
-                ),
+                color = Color.White,
                 shape = RoundedCornerShape(12.dp)
             )
-            .padding(start = 16.dp, end = 16.dp)
+            .border(border = BorderStroke(0.5.dp, Color(0xFFE5E7EB)), shape = RoundedCornerShape(12.dp))
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+        ){
         Row(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .background(
+                    color = Color(0xFFDFF6DD),
+                    RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+                )
+                .fillMaxWidth()
+                .padding(vertical = 8.dp, horizontal = 16.dp),
+        ) {
+            Text(
+                text = "Current Subscription",
+                fontSize = 14.sp,
+                color = Color(0xFF2E7D32),
+                fontWeight = FontWeight.W600,
+//                modifier = Modifier.padding(horizontal = 6.dp)
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -359,7 +384,7 @@ fun DemoCurrentPlanCard() {
                     text = "₹500",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.W700,
-                    color = Color.White,
+                    color = Color.Black,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
 
@@ -367,39 +392,21 @@ fun DemoCurrentPlanCard() {
                     text = "Get 50 GB of storage for photos, files & backup.",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.W400,
-                    color = Color.White,
+                    color = AppColors.lightGray,
                     lineHeight = 16.sp
                 )
             }
-        }
-        Row(
-            modifier = Modifier
-                .background(
-                   color = Color.Transparent,
-                    RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)
-                )
-                .fillMaxWidth()
-                .padding(horizontal = 6.dp, vertical = 0.dp),
-               horizontalArrangement = Arrangement.End
-
-        ) {
-
-            Box(
+            Image(
+                painter = painterResource(id = R.drawable.checkmark_circle),
+                contentDescription = "Selected Plan Indicator",
                 modifier = Modifier
-                    .background(
-                        Color(0xFFDFF6DD),
-                        RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)
-                    )
-                    .padding(horizontal = 6.dp, vertical = 0.dp),
-            ) {
-                Text(
-                    text = "Current Plan",
-                    fontSize = 10.sp,
-                    color = Color(0xFF2E7D32),
-                    fontWeight = FontWeight.Bold
-                )
-            }
+                    .size(24.dp),
+                alignment = Alignment.Center
+
+            )
         }
+    }
+
     }
     }
 
@@ -415,9 +422,9 @@ fun OtherPlanCard(price: String, description: String, activity: ComponentActivit
                 color = Color.Transparent,
                 shape = RoundedCornerShape(12.dp)
             )
-            .border(border = BorderStroke(0.2.dp, Color(0xFFE5E7EB)), shape = RoundedCornerShape(12.dp))
             .then(
                 if(subscriptionsViewModel.selectedPlan == productIndex) {
+                    Log.d("Co", "Current Plan: ${subscriptionsViewModel.selectedPlan}")
                     Modifier
                         .shadow(
                             elevation = 1.dp,  // Reduced elevation for softer shadow
@@ -429,7 +436,10 @@ fun OtherPlanCard(price: String, description: String, activity: ComponentActivit
                             color = Color.White,
                             shape = RoundedCornerShape(12.dp)
                         )
-                } else Modifier
+                        .border(border = BorderStroke(0.5.dp, Color(0xFF0096D5)), shape = RoundedCornerShape(12.dp))
+                } else{
+                    Modifier.border(border = BorderStroke(0.5.dp, Color(0xFFE5E7EB)), shape = RoundedCornerShape(12.dp))
+                }
             )
             .clickable {
                 subscriptionsViewModel.selectedPlan = productIndex
@@ -469,7 +479,7 @@ fun OtherPlanCard(price: String, description: String, activity: ComponentActivit
             // Checkmark Icon
             if (subscriptionsViewModel.selectedPlan == productIndex) {
                 Image(
-                    painter = painterResource(id = R.drawable.checkmark_circle),
+                    painter = painterResource(id = R.drawable.radio_button_checked),
                     contentDescription = "Selected Plan Indicator",
                     modifier = Modifier
                         .size(24.dp),
