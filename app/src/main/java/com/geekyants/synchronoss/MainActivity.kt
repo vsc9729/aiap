@@ -46,6 +46,8 @@ import com.geekyants.synchronoss.ui.theme.Poppins
 import com.geekyants.synchronoss.ui.theme.Roboto
 import com.geekyants.synchronoss.ui.theme.SynchronossTheme
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
+import com.synchronoss.aiap.ui.theme.ThemeLoader
+import com.synchronoss.aiap.utils.Vendors
 import dagger.hilt.android.AndroidEntryPoint
 
 
@@ -57,7 +59,6 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         makeStatusBarTransparent()
         setContent {
             SynchronossTheme {
@@ -80,7 +81,9 @@ class MainActivity : ComponentActivity() {
                         onDismissRequest = {
                             //TODO: If the implementor wants to do something on dismissal
                         },
-                        activity = this
+                        activity = this,
+                        vendor = null
+
                     )
 
 

@@ -30,7 +30,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
 import com.synchronoss.aiap.ui.theme.SampleAiAPTheme
+import com.synchronoss.aiap.ui.theme.ThemeLoader
 import com.synchronoss.aiap.utils.AppColors
+import com.synchronoss.aiap.utils.Vendors
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,8 +41,10 @@ fun SubscriptionsViewBottomSheet(
     modifier: Modifier = Modifier,
     onDismissRequest: () -> Unit,
     activity: ComponentActivity,
-    subscriptionsViewModel: SubscriptionsViewModel = hiltViewModel()
+    subscriptionsViewModel: SubscriptionsViewModel = hiltViewModel(),
+    vendor : Vendors?
 ) {
+    ThemeLoader.loadTheme(activity,vendor)
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
     )

@@ -42,6 +42,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -171,7 +172,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                         .height(50.dp)
                         .clip(RoundedCornerShape(999.dp)),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColors.primaryBlue, // Normal state color
+                        containerColor = MaterialTheme.colorScheme.primary, // Normal state color
                         contentColor = Color.White, // Normal text/icon color
                         disabledContainerColor = AppColors.lightGray.copy(alpha = 0.6f),
                         disabledContentColor = Color.White.copy(alpha = 0.6f)
@@ -504,7 +505,8 @@ fun OtherPlanCard(price: String, description: String, activity: ComponentActivit
                     contentDescription = "Selected Plan Indicator",
                     modifier = Modifier
                         .size(24.dp),
-                    alignment = Alignment.Center
+                    alignment = Alignment.Center,
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
 
                 )
             }
@@ -549,7 +551,7 @@ fun TabSelector(
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(6.dp))
                         .background(
-                            if (tab == selectedTab) AppColors.primaryBlue
+                            if (tab == selectedTab) MaterialTheme.colorScheme.primary
                             else Color.Transparent
                         )
                         .clickable { onTabSelected(tab) },
@@ -557,7 +559,7 @@ fun TabSelector(
                 ) {
                     Text(
                         text = tab.name.lowercase().replaceFirstChar { it.uppercase() },
-                        color = if (tab == selectedTab) Color.White else AppColors.primaryBlue,
+                        color = if (tab == selectedTab) Color.White else MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.W600
                     )
                 }
