@@ -271,11 +271,11 @@ fun ActualCurrentPlanCard(
             .fillMaxWidth()
             .height(120.dp)
             .background(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.background,
                 shape = RoundedCornerShape(12.dp)
             )
             .border(
-                border = BorderStroke(0.5.dp, Color(0xFFE5E7EB)),
+                border = BorderStroke(0.5.dp, color = MaterialTheme.colorScheme.outline),
                 shape = RoundedCornerShape(12.dp)
             )
     ) {
@@ -316,18 +316,18 @@ fun ActualCurrentPlanCard(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = price ?:"₹500",
+                        text = price?:"₹500",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.W700,
-                        color = Color.Black,
+                        color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
 
                     Text(
-                        text = description,
+                        text = description?: "Get 50 GB of storage for photos, files & backup.",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.W400,
-                        color = AppColors.lightGray,
+                        color = MaterialTheme.colorScheme.onSecondary,
                         lineHeight = 16.sp
                     )
                 }
