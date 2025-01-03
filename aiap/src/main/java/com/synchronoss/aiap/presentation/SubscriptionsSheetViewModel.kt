@@ -30,7 +30,7 @@ class SubscriptionsViewModel @Inject constructor(
 ) : ViewModel() {
     val dialogState = mutableStateOf(false)
     var products: List<ProductDetails>? by mutableStateOf(null)
-    var selectedProductId: String? = null
+    var currentProductId: String? = null
 
      var selectedPlan: Int by mutableIntStateOf(-1
      )
@@ -83,7 +83,7 @@ class SubscriptionsViewModel @Inject constructor(
         billingManagerUseCases.getProducts(
             productIds = productIds,
             onProductsReceived = { products = it },
-            onSubscriptionFound = { selectedProductId = it },
+            onSubscriptionFound = { currentProductId = it },
             onError = onError
         )
     }

@@ -19,6 +19,13 @@ private val DarkColorScheme = darkColorScheme(
     onPrimary = ThemeColors.Dark.textHeading,
     onSecondary = ThemeColors.Dark.textBody,
     onBackground = ThemeColors.Dark.textBodyAlt,
+    surface = ThemeColors.Dark.surface,
+    onSurface = ThemeColors.Dark.onSurface,
+    outline = ThemeColors.Dark.outline,
+    outlineVariant = ThemeColors.Dark.outlineVariant,
+    tertiary = ThemeColors.Dark.tertiary,
+    onTertiary = ThemeColors.Dark.onTertiary
+
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -29,6 +36,13 @@ private val LightColorScheme = lightColorScheme(
         onPrimary = ThemeColors.Light.textHeading,
         onSecondary = ThemeColors.Light.textBody,
         onBackground = ThemeColors.Light.textBodyAlt,
+        surface = ThemeColors.Light.surface,
+        onSurface = ThemeColors.Light.onSurface,
+        outline = ThemeColors.Light.outline,
+        outlineVariant = ThemeColors.Light.outlineVariant,
+        tertiary = ThemeColors.Light.tertiary,
+        onTertiary = ThemeColors.Light.onTertiary
+
 )
 
 @Composable
@@ -39,10 +53,10 @@ fun SampleAiAPTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
+//        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+//            val context = LocalContext.current
+//            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+//        }
 
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
