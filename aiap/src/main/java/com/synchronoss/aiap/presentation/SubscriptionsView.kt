@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -77,6 +78,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     }
     val products: List<ProductDetails>? = subscriptionsViewModel.products
 
+    if(subscriptionsViewModel.products != null)
     Box {
         Column(modifier = Modifier
             .fillMaxSize()
@@ -130,6 +132,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
             ScrollablePlans(activity = activity)
             Spacer(modifier = modifier.height(4.dp))
         }
+
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -209,7 +212,23 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 
         }
     }
+    else Column (
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = MaterialTheme.colorScheme.background)
+            .padding(20.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+
+    ) {
+        //Loader here
+        CircularProgressIndicator(
+            modifier = Modifier.size(50.dp),
+            color = MaterialTheme.colorScheme.primary
+        )
+
     }
+}
 
 
 @Composable

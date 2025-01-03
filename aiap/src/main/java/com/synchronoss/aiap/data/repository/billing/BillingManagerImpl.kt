@@ -1,6 +1,7 @@
 package com.synchronoss.aiap.data.repository.billing
 
 
+
 import android.content.Context
 import android.os.Build
 import androidx.activity.ComponentActivity
@@ -21,6 +22,7 @@ import com.android.billingclient.api.QueryPurchasesParams
 import com.synchronoss.aiap.common.UuidGenerator
 import com.synchronoss.aiap.data.remote.HandlePurchaseRequest
 import com.synchronoss.aiap.data.remote.ProductApi
+import com.synchronoss.aiap.di.PurchaseUpdateHandler
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
 import com.synchronoss.aiap.utils.Constants.PPI_USER_ID
 import com.synchronoss.aiap.utils.Constants.PURCHASE
@@ -39,6 +41,7 @@ import java.time.temporal.ChronoUnit
 class BillingManagerImpl(
     context: Context,
     private val productApi: ProductApi,
+    private val purchaseUpdateHandler: PurchaseUpdateHandler
 ) : PurchasesUpdatedListener,
     BillingManager {
 
@@ -246,6 +249,7 @@ class BillingManagerImpl(
                 val handlePurchase = productApi.handlePurchase(
                     handleRequest
                 )
+                purchaseUpdateHandler.handlePurchaseUpdate()
             }
 
             //send modified json to backend and get the purchase verified and then acknowledge the purchase

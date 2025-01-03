@@ -14,11 +14,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.billingclient.api.ProductDetails
+import com.synchronoss.aiap.di.PurchaseUpdateHandler
 import com.synchronoss.aiap.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.utils.Resource
 
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,11 +28,22 @@ import javax.inject.Inject
 @HiltViewModel
 class SubscriptionsViewModel @Inject constructor(
     private val billingManagerUseCases: BillingManagerUseCases,
-    private val productManagerUseCases: ProductManagerUseCases
+    private val productManagerUseCases: ProductManagerUseCases,
+    private val purchaseUpdateHandler: PurchaseUpdateHandler,
 ) : ViewModel() {
+
+    init {
+        purchaseUpdateHandler.onPurchaseUpdated = {
+            viewModelScope.launch {
+                products = null
+                fetchAndLoadProducts()
+            }
+        }
+
+    }
     val dialogState = mutableStateOf(false)
     var products: List<ProductDetails>? by mutableStateOf(null)
-    var currentProductId: String? = null
+    var currentProductId: String? by mutableStateOf(null)
 
      var selectedPlan: Int by mutableIntStateOf(-1
      )
