@@ -67,19 +67,16 @@ import kotlinx.coroutines.runBlocking
 @Composable
 fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
-    var selectedTab by remember { mutableStateOf(TabOption.MONTHLY) }
 
 
-    runBlocking {
-        subscriptionsViewModel.startConnection(
-            productIds = listOf(
-                "yearly_subscription",
-            )
-        )
+    if(!subscriptionsViewModel.isConnectionStarted){
+        runBlocking {
+            subscriptionsViewModel.startConnection()
+        }
     }
-    val products: List<ProductDetails>? = subscriptionsViewModel.products
+    val filteredProducts: List<ProductDetails>? = subscriptionsViewModel.filteredProducts
 
-    if(subscriptionsViewModel.products != null)
+    if(subscriptionsViewModel.filteredProducts != null)
     Box {
         Column(modifier = Modifier
             .fillMaxSize()
@@ -101,10 +98,10 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 
                 Spacer(modifier = Modifier.height(8.dp))
                 TabSelector(
-                    selectedTab = selectedTab,
+                    selectedTab = subscriptionsViewModel.selectedTab,
                     onTabSelected = { tab ->
-                        selectedTab = tab
-                        // Handle tab selection
+                        subscriptionsViewModel.selectedTab = tab
+                        subscriptionsViewModel.onTabSelected(tab= tab)
 
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -185,7 +182,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                         runBlocking {
                             subscriptionsViewModel.purchaseSubscription(
                                 activity = activity,
-                                product = products?.get(subscriptionsViewModel.selectedPlan) ?: return@runBlocking,
+                                product = filteredProducts?.get(subscriptionsViewModel.selectedPlan) ?: return@runBlocking,
                                 onError = { error ->
                                     // Handle error
                                     println("Error: $error")
@@ -239,7 +236,7 @@ fun ScrollablePlans(
 ) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
 
-    val products: List<ProductDetails>? = subscriptionsViewModel.products
+    val filteredProducts: List<ProductDetails>? = subscriptionsViewModel.filteredProducts
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -247,17 +244,17 @@ fun ScrollablePlans(
             .padding(bottom = 16.dp)
 
     ) {
-        val currentProductIndex : Int? = products?.indexOfFirst { it.productId == subscriptionsViewModel.currentProductId }
+        val currentProductIndex : Int? = filteredProducts?.indexOfFirst { it.productId == subscriptionsViewModel.currentProductId }
 
-        val currentProduct = if (currentProductIndex != -1) products?.get(currentProductIndex!!) else null
+        val currentProduct = if (currentProductIndex != -1) filteredProducts?.get(currentProductIndex!!) else null
 
-        if (subscriptionsViewModel.currentProductId == null) DemoCurrentPlanCard() else ActualCurrentPlanCard(
-            product = currentProduct!!
+        if (currentProduct == null) DemoCurrentPlanCard() else ActualCurrentPlanCard(
+            product = currentProduct
         )
         // Add multiple cards for testing
 
         Spacer(modifier = Modifier.height(16.dp)) // Spacing between cards
-        products?.forEachIndexed { index, product ->
+        filteredProducts?.forEachIndexed { index, product ->
             if(product.productId == subscriptionsViewModel.currentProductId) return@forEachIndexed
             val subscriptionOfferDetails = product.subscriptionOfferDetails?.last()
             val pricingPhases = subscriptionOfferDetails?.pricingPhases?.pricingPhaseList?.last()
@@ -542,8 +539,9 @@ fun OtherPlanCard(price: String, description: String, activity: ComponentActivit
 }
 
 enum class TabOption {
+    YEARLY,
     MONTHLY,
-    YEARLY
+    WEEKlY,
 }
 
 @Composable

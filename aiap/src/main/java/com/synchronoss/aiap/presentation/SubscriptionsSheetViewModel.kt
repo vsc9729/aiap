@@ -1,6 +1,7 @@
 package com.synchronoss.aiap.presentation
 
 
+import TabOption
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.MutableState
@@ -8,6 +9,7 @@ import androidx.compose.runtime.Recomposer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -22,6 +24,10 @@ import com.synchronoss.aiap.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 import javax.inject.Inject
 
 
@@ -43,24 +49,59 @@ class SubscriptionsViewModel @Inject constructor(
     }
     val dialogState = mutableStateOf(false)
     var products: List<ProductDetails>? by mutableStateOf(null)
+    var filteredProducts: List<ProductDetails>? by mutableStateOf(null)
     var currentProductId: String? by mutableStateOf(null)
+    var selectedTab by  mutableStateOf(TabOption.YEARLY)
+     var isConnectionStarted: Boolean = false
 
      var selectedPlan: Int by mutableIntStateOf(-1
      )
 
 
 
-    suspend fun startConnection(productIds: List<String>) {
-        billingManagerUseCases.startConnection(
-            {
-                viewModelScope.launch {
-                    fetchAndLoadProducts()
-                }
-            },
-            {
-                Log.d("Co", "Failed to connect to billing service");
-            },
-        )
+    suspend fun startConnection() {
+        if(!isConnectionStarted){
+            isConnectionStarted = true
+            billingManagerUseCases.startConnection(
+                {
+                    viewModelScope.launch {
+                        fetchAndLoadProducts()
+                    }
+                },
+                {
+                    Log.d("Co", "Failed to connect to billing service");
+                },
+            )
+        }
+
+    }
+
+
+    private fun getProductBillingPeriod(product: ProductDetails, billingPeriod: String ): Boolean? {
+        return product.subscriptionOfferDetails
+            ?.filter { it.offerId == null }
+            ?.firstOrNull()
+            ?.pricingPhases
+            ?.pricingPhaseList
+            ?.lastOrNull()
+            ?.billingPeriod?.contains(billingPeriod)
+    }
+    fun  onTabSelected(tab: TabOption) {
+
+        selectedTab = tab
+        if (selectedTab == TabOption.MONTHLY){
+            filteredProducts = products?.filter { product ->
+                    getProductBillingPeriod(product, "P1M") == true
+            }
+        }else if(selectedTab == TabOption.YEARLY){
+            filteredProducts = products?.filter { product ->
+                getProductBillingPeriod(product, "P1Y") == true
+            }
+        }else {
+            filteredProducts = products?.filter { product ->
+                getProductBillingPeriod(product, "P1W") == true
+            }
+        }
     }
 
     private suspend fun fetchAndLoadProducts() {
@@ -92,13 +133,15 @@ class SubscriptionsViewModel @Inject constructor(
         onError: (String) -> Unit
     ) {
 
-
-        billingManagerUseCases.getProducts(
-            productIds = productIds,
-            onProductsReceived = { products = it },
-            onSubscriptionFound = { currentProductId = it },
-            onError = onError
-        )
+            billingManagerUseCases.getProducts(
+                productIds = productIds,
+                onProductsReceived = {
+                    products = it
+                    onTabSelected(selectedTab)
+                },
+                onSubscriptionFound = { currentProductId = it },
+                onError = onError
+            )
     }
 
     suspend fun purchaseSubscription(

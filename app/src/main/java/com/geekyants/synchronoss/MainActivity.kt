@@ -82,7 +82,7 @@ class MainActivity : ComponentActivity() {
                             //TODO: If the implementor wants to do something on dismissal
                         },
                         activity = this,
-                        vendor = null
+                        vendor = Vendors.BT
 
                     )
 
