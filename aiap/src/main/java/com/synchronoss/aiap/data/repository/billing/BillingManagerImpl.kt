@@ -1,6 +1,7 @@
 package com.synchronoss.aiap.data.repository.billing
 
 
+
 import android.content.Context
 import android.os.Build
 import androidx.activity.ComponentActivity
@@ -21,11 +22,13 @@ import com.android.billingclient.api.QueryPurchasesParams
 import com.synchronoss.aiap.common.UuidGenerator
 import com.synchronoss.aiap.data.remote.HandlePurchaseRequest
 import com.synchronoss.aiap.data.remote.ProductApi
+import com.synchronoss.aiap.di.PurchaseUpdateHandler
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
 import com.synchronoss.aiap.utils.Constants.PPI_USER_ID
 import com.synchronoss.aiap.utils.Constants.PURCHASE
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
@@ -37,11 +40,13 @@ import java.time.temporal.ChronoUnit
 
 class BillingManagerImpl(
     context: Context,
-    private val productApi: ProductApi
+    private val productApi: ProductApi,
+    private val purchaseUpdateHandler: PurchaseUpdateHandler
 ) : PurchasesUpdatedListener,
     BillingManager {
 
     private val productDetailsMap = mutableMapOf<String, ProductDetails>()
+    private var currentProduct :Purchase? = null
     private val billingClient: BillingClient = BillingClient.newBuilder(context)
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .setListener(this)
@@ -117,6 +122,7 @@ class BillingManagerImpl(
                         }
 
                         if (subscription != null) {
+                            currentProduct  = subscription
                             onSubscriptionFound(subscription.products[0].toString())
                         }
                     }
@@ -141,13 +147,33 @@ class BillingManagerImpl(
                     .setOfferToken(offerToken)
                     .build()
             )
-            val flowParams = BillingFlowParams.newBuilder()
-                .setProductDetailsParamsList(productDetailsParams)
-                .build()
-            val billingResult = billingClient.launchBillingFlow(activity, flowParams)
-            if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
-                onError(billingResult.debugMessage)
+
+            if(currentProduct != null){
+                val subscriptionParams = BillingFlowParams.SubscriptionUpdateParams.newBuilder()
+                    .setOldPurchaseToken(currentProduct!!.purchaseToken)
+                    .setSubscriptionReplacementMode(BillingFlowParams.SubscriptionUpdateParams.ReplacementMode.CHARGE_FULL_PRICE)
+                    .build()
+
+                val flowParams = BillingFlowParams.newBuilder()
+                    .setProductDetailsParamsList(productDetailsParams)
+                    .setSubscriptionUpdateParams(subscriptionParams)
+                    .build()
+
+                val billingResult = billingClient.launchBillingFlow(activity, flowParams)
+                if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
+                    onError(billingResult.debugMessage)
+                }
+            } else {
+                val flowParams = BillingFlowParams.newBuilder()
+                    .setProductDetailsParamsList(productDetailsParams)
+
+                    .build()
+                val billingResult = billingClient.launchBillingFlow(activity, flowParams)
+                if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
+                    onError(billingResult.debugMessage)
+                }
             }
+
         } catch (e: Exception) {
             onError(e.message ?: "Unknown error")
         }
@@ -163,6 +189,7 @@ class BillingManagerImpl(
         val expiryDateTime = when {
             billingPeriod?.contains("P1M") == true -> purchaseDateTime.plus(1, ChronoUnit.MONTHS)
             billingPeriod?.contains("P1Y") == true -> purchaseDateTime.plus(1, ChronoUnit.YEARS)
+            billingPeriod?.contains("P1W") == true -> purchaseDateTime.plus(1, ChronoUnit.WEEKS)
             else -> throw IllegalArgumentException("Unknown subscription type: $billingPeriod")
         }
 
@@ -176,6 +203,15 @@ class BillingManagerImpl(
         purchases: MutableList<Purchase>?
     ) {
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
+            billingClient.acknowledgePurchase(
+                AcknowledgePurchaseParams.newBuilder()
+                    .setPurchaseToken(purchases[0].purchaseToken)
+                    .build()
+            ) { billingResultAck ->
+                if (billingResultAck.responseCode == BillingClient.BillingResponseCode.OK) {
+                    println("Purchase acknowledged")
+                }
+            }
             val uuid: String = UuidGenerator.generateUUID(purchases[0].packageName)
             val productDetails: ProductDetails? = productDetailsMap[purchases[0].products.first()]
 
@@ -213,18 +249,11 @@ class BillingManagerImpl(
                 val handlePurchase = productApi.handlePurchase(
                     handleRequest
                 )
+                purchaseUpdateHandler.handlePurchaseUpdate()
             }
+
             //send modified json to backend and get the purchase verified and then acknowledge the purchase
 
-            billingClient.acknowledgePurchase(
-                AcknowledgePurchaseParams.newBuilder()
-                    .setPurchaseToken(purchases[0].purchaseToken)
-                    .build()
-            ) { billingResultAck ->
-                if (billingResultAck.responseCode == BillingClient.BillingResponseCode.OK) {
-                    println("Purchase acknowledged")
-                }
-            }
 
         } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
             // Handle an error caused by a user canceling the purchase flow.

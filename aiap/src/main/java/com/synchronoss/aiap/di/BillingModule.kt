@@ -22,11 +22,19 @@ import javax.inject.Singleton
 object BillingModule {
     @Provides
     @Singleton
+    fun providePurchaseUpdateHandler(): PurchaseUpdateHandler {
+        return PurchaseUpdateHandler(
+            onPurchaseUpdated = { /* Do nothing */ },
+        )
+    }
+    @Provides
+    @Singleton
     fun provideBillingManager(
         application: Application,
-        productApi: ProductApi
+        productApi: ProductApi,
+        purchaseUpdateHandler: PurchaseUpdateHandler
     ): BillingManager {
-        return BillingManagerImpl(application, productApi )
+        return BillingManagerImpl(application, productApi, purchaseUpdateHandler)
     }
 
     @Provides
