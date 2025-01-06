@@ -75,7 +75,7 @@ dependencies {
     implementation(libs.converter.moshi)
     implementation (libs.logging.interceptor)
     ksp(libs.moshi.kotlin.codegen)
-    implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
+    implementation(libs.moshi.kotlin)
 }
 kapt {
     correctErrorTypes = true
