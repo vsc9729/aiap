@@ -17,17 +17,29 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,6 +63,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.R
@@ -67,6 +80,7 @@ import kotlinx.coroutines.runBlocking
 @Composable
 fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
+    var showDialog by remember { mutableStateOf(false) }
 
 
     if(!subscriptionsViewModel.isConnectionStarted){
@@ -199,12 +213,18 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                         color = Color.White
                     )
                 }
-                Text(
-                    text = "Apply Coupon",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.W600,
-                    color = MaterialTheme.colorScheme.onTertiary
-                )
+                TextButton(
+                    onClick = {
+                            showDialog = true
+                        }
+                ) {
+                    Text(
+                        text = "Apply Coupon",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.W600,
+                        color = MaterialTheme.colorScheme.onTertiary
+                    )
+                }
             }
         }
 
@@ -224,6 +244,13 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
             modifier = Modifier.size(50.dp),
             color = MaterialTheme.colorScheme.primary
         )
+
+    }
+    if(showDialog){
+        DialogBox(
+            onDismiss = {showDialog = false},
+            onConfirm = { input -> Log.d("Co", "Input: $input")}
+            )
 
     }
 }
@@ -403,7 +430,7 @@ fun DemoCurrentPlanCard() {
         Row(
             modifier = Modifier
                 .background(
-                   color = MaterialTheme.colorScheme.surface,
+                    color = MaterialTheme.colorScheme.surface,
                     RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
                 )
                 .fillMaxWidth()
@@ -489,7 +516,10 @@ fun OtherPlanCard(price: String, description: String, activity: ComponentActivit
                             shape = RoundedCornerShape(12.dp)
                         )
                         .border(
-                            border = BorderStroke(1.5.dp,color = MaterialTheme.colorScheme.outlineVariant),
+                            border = BorderStroke(
+                                1.5.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            ),
                             shape = RoundedCornerShape(12.dp)
                         )
                 } else {
@@ -599,6 +629,86 @@ fun TabSelector(
                         color = if (tab == selectedTab) Color.White else MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.W600
                     )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DialogBox(
+    onDismiss : ()->Unit,
+    onConfirm : (String)->Unit
+) {
+    var text by remember { mutableStateOf("") }
+    BasicAlertDialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Card(
+            modifier = Modifier
+                .height(300.dp)
+                .width(400.dp)
+                .padding(24.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White,
+            ),
+
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+
+            ) {
+                Text(
+                    text = "Enter Your Coupon Code",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.Black,
+                    fontWeight = FontWeight.W400
+                )
+
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(
+                        text = "Coupon Code",
+                        color = Color.Gray
+                    ) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                ),
+                    textStyle = TextStyle(color = Color.Black)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Cancel")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            onConfirm(text);
+                            onDismiss();
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("OK")
+                    }
                 }
             }
         }
