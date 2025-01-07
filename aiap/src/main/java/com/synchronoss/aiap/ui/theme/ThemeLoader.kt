@@ -57,7 +57,7 @@ data class SurfaceColors(
 
 @JsonClass(generateAdapter = true)
 data class OutlineColors(
-    @Json(name = "default") val default: String,
+    @Json(name = "defaultColor") val defaultColor: String,
     @Json(name = "variant") val variant: String
 )
 
@@ -116,7 +116,7 @@ object ThemeLoader {
             textBodyAlt = themeConfig?.themes?.light?.colors?.text?.bodyAlt?.toColor() ?: Color(0xFF1F2937),
             surface = themeConfig?.themes?.light?.colors?.surface?.base?.toColor() ?: Color(0xFFE4FFF4),
             onSurface = themeConfig?.themes?.light?.colors?.surface?.onSurface?.toColor() ?: Color(0xFF2A7948),
-            outline = themeConfig?.themes?.light?.colors?.outline?.default?.toColor() ?: Color(0xFFE5E7EB),
+            outline = themeConfig?.themes?.light?.colors?.outline?.defaultColor?.toColor() ?: Color(0xFFE5E7EB),
             outlineVariant = themeConfig?.themes?.light?.colors?.outline?.variant?.toColor() ?: Color(0xFF0096D5),
             tertiary = themeConfig?.themes?.light?.colors?.tertiary?.base?.toColor() ?: Color.White,
             onTertiary = themeConfig?.themes?.light?.colors?.tertiary?.onTertiary?.toColor() ?: Color(0xFF6B7280)
@@ -133,7 +133,7 @@ object ThemeLoader {
             textBodyAlt = themeConfig?.themes?.dark?.colors?.text?.bodyAlt?.toColor() ?: Color(0xFFFEFEFF),
             surface = themeConfig?.themes?.dark?.colors?.surface?.base?.toColor() ?: Color(0xFF166534),
             onSurface = themeConfig?.themes?.dark?.colors?.surface?.onSurface?.toColor() ?: Color(0xFFE4FFF4),
-            outline = themeConfig?.themes?.dark?.colors?.outline?.default?.toColor() ?: Color(0xFF262627),
+            outline = themeConfig?.themes?.dark?.colors?.outline?.defaultColor?.toColor() ?: Color(0xFF262627),
             outlineVariant = themeConfig?.themes?.dark?.colors?.outline?.variant?.toColor() ?: Color(0xFF404040),
             tertiary = themeConfig?.themes?.dark?.colors?.tertiary?.base?.toColor() ?: Color(0xFF212121),
             onTertiary = themeConfig?.themes?.dark?.colors?.tertiary?.onTertiary?.toColor() ?: Color(0xFFFEFEFF)
