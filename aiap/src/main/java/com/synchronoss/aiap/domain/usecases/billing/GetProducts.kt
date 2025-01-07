@@ -10,7 +10,7 @@ class GetProducts(
     suspend operator fun invoke(
         productIds: List<String>,
         onProductsReceived: (List<ProductDetails>) -> Unit,
-        onSubscriptionFound: (String) -> Unit,
+        onSubscriptionFound: (String?) -> Unit,
         onError: (String) -> Unit
     ) {
         billingManager.getProducts(

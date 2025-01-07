@@ -71,7 +71,7 @@ class BillingManagerImpl(
     override suspend fun getProducts(
         productIds: List<String>,
         onProductsReceived: (List<ProductDetails>) -> Unit,
-        onSubscriptionFound: (String) -> Unit,
+        onSubscriptionFound: (String?) -> Unit,
         onError: (String) -> Unit
     ) {
         val params = QueryProductDetailsParams.newBuilder()
@@ -101,7 +101,7 @@ class BillingManagerImpl(
     }
 
     private fun checkExistingSubscriptions(
-        onSubscriptionFound: (String) -> Unit,
+        onSubscriptionFound: (String?) -> Unit,
         onError: (String) -> Unit
     ) {
         if (billingClient.connectionState != BillingClient.ConnectionState.CONNECTED) {
@@ -124,6 +124,8 @@ class BillingManagerImpl(
                         if (subscription != null) {
                             currentProduct  = subscription
                             onSubscriptionFound(subscription.products[0].toString())
+                        }else{
+                            onSubscriptionFound(null)
                         }
                     }
                     else -> onError("Failed to query purchases: ${billingResult.debugMessage}")

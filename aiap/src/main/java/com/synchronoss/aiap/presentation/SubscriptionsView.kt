@@ -76,7 +76,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     }
     val filteredProducts: List<ProductDetails>? = subscriptionsViewModel.filteredProducts
 
-    if(subscriptionsViewModel.filteredProducts != null)
+    if(subscriptionsViewModel.filteredProducts != null && subscriptionsViewModel.selectedTab != null)
     Box {
         Column(modifier = Modifier
             .fillMaxSize()
@@ -98,7 +98,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 
                 Spacer(modifier = Modifier.height(8.dp))
                 TabSelector(
-                    selectedTab = subscriptionsViewModel.selectedTab,
+                    selectedTab = subscriptionsViewModel.selectedTab?:TabOption.YEARLY,
                     onTabSelected = { tab ->
                         subscriptionsViewModel.selectedTab = tab
                         subscriptionsViewModel.onTabSelected(tab= tab)
@@ -203,7 +203,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     text = "Apply Coupon",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.W600,
-                    color = MaterialTheme.colorScheme.onTertiary,
+                    color = MaterialTheme.colorScheme.onTertiary
                 )
             }
         }
@@ -244,34 +244,54 @@ fun ScrollablePlans(
             .padding(bottom = 16.dp)
 
     ) {
-        val currentProductIndex : Int? = filteredProducts?.indexOfFirst { it.productId == subscriptionsViewModel.currentProductId }
-
-        val currentProduct = if (currentProductIndex != -1) filteredProducts?.get(currentProductIndex!!) else null
-
-        if (currentProduct == null) DemoCurrentPlanCard() else ActualCurrentPlanCard(
-            product = currentProduct
-        )
-        // Add multiple cards for testing
-
-        Spacer(modifier = Modifier.height(16.dp)) // Spacing between cards
-        filteredProducts?.forEachIndexed { index, product ->
-            if(product.productId == subscriptionsViewModel.currentProductId) return@forEachIndexed
-            val subscriptionOfferDetails = product.subscriptionOfferDetails?.last()
-            val pricingPhases = subscriptionOfferDetails?.pricingPhases?.pricingPhaseList?.last()
-            val price = pricingPhases?.formattedPrice
-            val description: String = product.description.ifEmpty { "Get 100 GB of storage for photos, files  & backup." }
-            OtherPlanCard(
-                price = price ?: "₹500",
-                description = description,
-                product = product,
-                activity = activity,
-                productIndex= index
+        if (subscriptionsViewModel.filteredProducts.isNullOrEmpty()) {
+            Text(
+                text = "No products available",
+                style = LocalTextStyle.current.copy(
+                    fontWeight = FontWeight.W700,
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    textAlign = TextAlign.Center
+                )
             )
+        } else {
+            val currentProductIndex: Int? =
+                subscriptionsViewModel.products?.indexOfFirst { it.productId == subscriptionsViewModel.currentProductId }
+
+            val currentProduct =
+                if (currentProductIndex != -1) subscriptionsViewModel.products?.get(currentProductIndex!!) else null
+
+            if (currentProduct == null) DemoCurrentPlanCard()
+            if(currentProduct != null && (filteredProducts?: mutableListOf()).contains(currentProduct)){
+                ActualCurrentPlanCard(
+                    product = currentProduct
+                )
+            }
+
+            // Add multiple cards for testing
+
             Spacer(modifier = Modifier.height(16.dp)) // Spacing between cards
+            filteredProducts?.forEachIndexed { index, product ->
+                if (product.productId == subscriptionsViewModel.currentProductId) return@forEachIndexed
+                val subscriptionOfferDetails = product.subscriptionOfferDetails?.last()
+                val pricingPhases =
+                    subscriptionOfferDetails?.pricingPhases?.pricingPhaseList?.last()
+                val price = pricingPhases?.formattedPrice
+                val description: String =
+                    product.description.ifEmpty { "Get 100 GB of storage for photos, files  & backup." }
+                OtherPlanCard(
+                    price = price ?: "₹500",
+                    description = description,
+                    product = product,
+                    activity = activity,
+                    productIndex = index
+                )
+                Spacer(modifier = Modifier.height(16.dp)) // Spacing between cards
+
+            }
+            Spacer(modifier = Modifier.height(135.dp)) // Spacing at the end of the list
 
         }
-        Spacer(modifier = Modifier.height(135.dp)) // Spacing at the end of the list
-
     }
 }
 

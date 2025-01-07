@@ -51,7 +51,7 @@ class SubscriptionsViewModel @Inject constructor(
     var products: List<ProductDetails>? by mutableStateOf(null)
     var filteredProducts: List<ProductDetails>? by mutableStateOf(null)
     var currentProductId: String? by mutableStateOf(null)
-    var selectedTab by  mutableStateOf(TabOption.YEARLY)
+    var selectedTab:TabOption? by  mutableStateOf(null)
      var isConnectionStarted: Boolean = false
 
      var selectedPlan: Int by mutableIntStateOf(-1
@@ -86,8 +86,9 @@ class SubscriptionsViewModel @Inject constructor(
             ?.lastOrNull()
             ?.billingPeriod?.contains(billingPeriod)
     }
-    fun  onTabSelected(tab: TabOption) {
-
+    fun  onTabSelected(tab: TabOption?) {
+        print("onTabSelected: $tab")
+        selectedPlan = -1
         selectedTab = tab
         if (selectedTab == TabOption.MONTHLY){
             filteredProducts = products?.filter { product ->
@@ -133,15 +134,35 @@ class SubscriptionsViewModel @Inject constructor(
         onError: (String) -> Unit
     ) {
 
-            billingManagerUseCases.getProducts(
-                productIds = productIds,
-                onProductsReceived = {
-                    products = it
-                    onTabSelected(selectedTab)
-                },
-                onSubscriptionFound = { currentProductId = it },
-                onError = onError
-            )
+        billingManagerUseCases.getProducts(
+            productIds = productIds,
+            onProductsReceived = {
+                products = it
+//                onTabSelected(selectedTab)
+            },
+            onSubscriptionFound = { current ->
+                currentProductId = current
+                if(current != null){
+                    products?.findLast { it.productId == currentProductId }?.let {
+                        selectedTab = when {
+                            getProductBillingPeriod(it, "P1M") == true -> TabOption.MONTHLY
+                            getProductBillingPeriod(it, "P1Y") == true -> TabOption.YEARLY
+                            else -> TabOption.WEEKlY
+                        }
+                    }
+
+                }else{
+                    selectedTab = TabOption.YEARLY
+                }
+                onTabSelected(selectedTab)
+                
+                print("currentProductId: $currentProductId")
+
+
+            },
+            onError = onError)
+
+
     }
 
     suspend fun purchaseSubscription(
