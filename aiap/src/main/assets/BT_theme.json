@@ -18,12 +18,17 @@
           "onSurface": "#2A7948"
         },
         "outline": {
-          "default": "#E5E7EB",
+          "defaultColor": "#E5E7EB",
           "variant": "#5514b4"
         },
         "tertiary": {
           "base": "#FFFFFF",
           "onTertiary": "#6B7280"
+        },
+        "error": {
+          "text": "#D76C1F",
+          "background": "#FFF9F5",
+          "border": "#FECDAA"
         }
       }
     },
@@ -42,12 +47,17 @@
           "onSurface": "#E4FFF4"
         },
         "outline": {
-          "default": "#262627",
+          "defaultColor": "#262627",
           "variant": "#404040"
         },
         "tertiary": {
           "base": "#212121",
           "onTertiary": "#FEFEFF"
+        },
+        "error": {
+          "text": "#D76C1F",
+          "background": "#FFF9F5",
+          "border": "#FECDAA"
         }
       }
     }
