@@ -52,8 +52,10 @@ class SubscriptionsViewModel @Inject constructor(
         }
         libraryActivityManagerUseCases.launchLibrary()
         purchaseUpdateHandler.onPurchaseUpdated = {
+            products = null
+            filteredProducts = null
             viewModelScope.launch {
-                products = null
+
                 fetchAndLoadProducts()
             }
         }

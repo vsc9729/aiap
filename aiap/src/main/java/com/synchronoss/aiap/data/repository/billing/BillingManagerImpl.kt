@@ -211,6 +211,7 @@ class BillingManagerImpl(
                     .build()
             ) { billingResultAck ->
                 if (billingResultAck.responseCode == BillingClient.BillingResponseCode.OK) {
+                    purchaseUpdateHandler.handlePurchaseUpdate()
                     println("Purchase acknowledged")
                 }
             }
@@ -251,7 +252,7 @@ class BillingManagerImpl(
                 val handlePurchase = productApi.handlePurchase(
                     handleRequest
                 )
-                purchaseUpdateHandler.handlePurchaseUpdate()
+
             }
 
             //send modified json to backend and get the purchase verified and then acknowledge the purchase
