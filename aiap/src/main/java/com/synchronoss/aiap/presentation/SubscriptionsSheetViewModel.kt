@@ -17,6 +17,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.di.PurchaseUpdateHandler
+import com.synchronoss.aiap.di.SubscriptionCancelledHandler
+import com.synchronoss.aiap.domain.usecases.activity.LibraryActivityManagerUseCases
 import com.synchronoss.aiap.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.utils.Resource
@@ -35,17 +37,26 @@ import javax.inject.Inject
 class SubscriptionsViewModel @Inject constructor(
     private val billingManagerUseCases: BillingManagerUseCases,
     private val productManagerUseCases: ProductManagerUseCases,
+    private val libraryActivityManagerUseCases: LibraryActivityManagerUseCases,
     private val purchaseUpdateHandler: PurchaseUpdateHandler,
+    private val subscriptionCancelledHandler: SubscriptionCancelledHandler
 ) : ViewModel() {
 
     init {
+        subscriptionCancelledHandler.onSubscriptionCancelled = {
+            viewModelScope.launch {
+                products = null
+                filteredProducts = null
+                fetchAndLoadProducts()
+            }
+        }
+        libraryActivityManagerUseCases.launchLibrary()
         purchaseUpdateHandler.onPurchaseUpdated = {
             viewModelScope.launch {
                 products = null
                 fetchAndLoadProducts()
             }
         }
-
     }
     val dialogState = mutableStateOf(false)
     var products: List<ProductDetails>? by mutableStateOf(null)

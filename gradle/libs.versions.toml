@@ -22,6 +22,7 @@ moshiKotlin = "1.15.2"
 moshiKotlinCodegen = "1.15.2"
 retrofit = "2.11.0"
 uiToolingPreviewAndroid = "1.7.6"
+lifecycleProcess = "2.8.7"
 
 [libraries]
 aiap-synchronoss = { module = "com.github.vsc9729:aiap-synchronoss", version.ref = "aiapSynchronoss" }
@@ -53,6 +54,7 @@ moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "mosh
 moshi-kotlin-codegen = { module = "com.squareup.moshi:moshi-kotlin-codegen", version.ref = "moshiKotlinCodegen" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "ui-tooling-preview-android", version.ref = "uiToolingPreviewAndroid" }
+androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
