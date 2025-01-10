@@ -1,12 +1,15 @@
 package com.synchronoss.aiap.di
 
+import GetActiveSubscription
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.synchronoss.aiap.data.remote.ProductApi
 import com.synchronoss.aiap.data.repository.product.ProductMangerImpl
+import com.synchronoss.aiap.domain.repository.billing.BillingManager
 import com.synchronoss.aiap.domain.repository.product.ProductManager
 import com.synchronoss.aiap.domain.usecases.product.GetProductsApi
 import com.synchronoss.aiap.domain.usecases.product.ProductManagerUseCases
+import com.synchronoss.aiap.utils.CacheManager
 import com.synchronoss.aiap.utils.Constants.BASE_URL
 
 import dagger.Module
@@ -55,15 +58,16 @@ object ProductModule {
 
     @Provides
     @Singleton
-    fun provideProductManager(api: ProductApi): ProductManager {
-        return ProductMangerImpl(api)
+    fun provideProductManager(api: ProductApi, billingManager: BillingManager,cacheManager: CacheManager ): ProductManager {
+        return ProductMangerImpl(api, billingManager, cacheManager)
     }
 
     @Provides
     @Singleton
     fun provideProductManagerUseCases(productManager: ProductManager): ProductManagerUseCases {
         return ProductManagerUseCases(
-            getProductsApi = GetProductsApi(productManager)
+            getProductsApi = GetProductsApi(productManager),
+            getActiveSubscription = GetActiveSubscription(productManager),
         )
     }
 }

@@ -67,6 +67,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.R
+import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
 import com.synchronoss.aiap.utils.AppColors
 import com.synchronoss.aiap.utils.Constants.PURCHASE_REQUIRED
@@ -88,9 +89,9 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
             subscriptionsViewModel.startConnection()
         }
     }
-    val filteredProducts: List<ProductDetails>? = subscriptionsViewModel.filteredProducts
+    val filteredProducts: List<ProductInfo>? = subscriptionsViewModel.filteredProducts
 
-    if(subscriptionsViewModel.filteredProducts != null && subscriptionsViewModel.selectedTab != null)
+    if(subscriptionsViewModel.isConnectionStarted && subscriptionsViewModel.filteredProducts != null && subscriptionsViewModel.selectedTab != null)
     Box {
         Column(modifier = Modifier
             .fillMaxSize()
@@ -263,7 +264,7 @@ fun ScrollablePlans(
 ) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
 
-    val filteredProducts: List<ProductDetails>? = subscriptionsViewModel.filteredProducts
+    val filteredProducts: List<ProductInfo>? = subscriptionsViewModel.filteredProducts
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -300,17 +301,8 @@ fun ScrollablePlans(
             Spacer(modifier = Modifier.height(16.dp)) // Spacing between cards
             filteredProducts?.forEachIndexed { index, product ->
                 if (product.productId == subscriptionsViewModel.currentProductId) return@forEachIndexed
-                val subscriptionOfferDetails = product.subscriptionOfferDetails?.last()
-                val pricingPhases =
-                    subscriptionOfferDetails?.pricingPhases?.pricingPhaseList?.last()
-                val price = pricingPhases?.formattedPrice
-                val description: String =
-                    product.description.ifEmpty { "Get 100 GB of storage for photos, files  & backup." }
                 OtherPlanCard(
-                    price = price ?: "₹500",
-                    description = description,
                     product = product,
-                    activity = activity,
                     productIndex = index
                 )
                 Spacer(modifier = Modifier.height(16.dp)) // Spacing between cards
@@ -324,12 +316,12 @@ fun ScrollablePlans(
 
 @Composable
 fun ActualCurrentPlanCard(
-    product: ProductDetails
+    product: ProductInfo
 ) {
-    val subscriptionOfferDetails = product.subscriptionOfferDetails?.last()
-    val pricingPhases = subscriptionOfferDetails?.pricingPhases?.pricingPhaseList?.last()
-    val price = pricingPhases?.formattedPrice
-    val description: String = product.description.ifEmpty { "Get 100 GB of storage for photos, files  & backup." }
+//    val subscriptionOfferDetails = product.subscriptionOfferDetails?.last()
+//    val pricingPhases = subscriptionOfferDetails?.pricingPhases?.pricingPhaseList?.last()
+//    val price = pricingPhases?.formattedPrice
+//    val description: String = product.description.ifEmpty { "Get 100 GB of storage for photos, files  & backup." }
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -380,7 +372,7 @@ fun ActualCurrentPlanCard(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = price?:"₹500",
+                        text = product.displayPrice ?: "₹500",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.W700,
                         color = MaterialTheme.colorScheme.onBackground,
@@ -388,7 +380,7 @@ fun ActualCurrentPlanCard(
                     )
 
                     Text(
-                        text = description?: "Get 50 GB of storage for photos, files & backup.",
+                        text = product.description ?: "Get 50 GB of storage for photos, files & backup.",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.W400,
                         color = MaterialTheme.colorScheme.onSecondary,
@@ -490,7 +482,7 @@ fun DemoCurrentPlanCard() {
     }
 
 @Composable
-fun OtherPlanCard(price: String, description: String, activity: ComponentActivity, product: ProductDetails, productIndex: Int) {
+fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
 
     Box(
@@ -548,7 +540,7 @@ fun OtherPlanCard(price: String, description: String, activity: ComponentActivit
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = price,
+                    text = product.displayPrice ?: "₹500",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.W700,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -556,7 +548,7 @@ fun OtherPlanCard(price: String, description: String, activity: ComponentActivit
                 )
 
                 Text(
-                    text = description,
+                    text = product.description,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.W400,
                     color = MaterialTheme.colorScheme.onSecondary,

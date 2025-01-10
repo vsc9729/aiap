@@ -18,6 +18,7 @@ import androidx.lifecycle.viewModelScope
 import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.di.PurchaseUpdateHandler
 import com.synchronoss.aiap.di.SubscriptionCancelledHandler
+import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.domain.usecases.activity.LibraryActivityManagerUseCases
 import com.synchronoss.aiap.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.domain.usecases.product.ProductManagerUseCases
@@ -25,6 +26,9 @@ import com.synchronoss.aiap.utils.Resource
 
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.scopes.ViewModelScoped
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
@@ -42,12 +46,20 @@ class SubscriptionsViewModel @Inject constructor(
     private val subscriptionCancelledHandler: SubscriptionCancelledHandler
 ) : ViewModel() {
 
+    val dialogState = mutableStateOf(false)
+    var products: List<ProductInfo>? by mutableStateOf(null)
+    var filteredProducts: List<ProductInfo>? by mutableStateOf(null)
+    var currentProductId: String? by mutableStateOf(null)
+    var selectedTab:TabOption? by  mutableStateOf(null)
+    var isConnectionStarted: Boolean = false
+    var selectedPlan: Int by mutableIntStateOf(-1)
+
     init {
         subscriptionCancelledHandler.onSubscriptionCancelled = {
             viewModelScope.launch {
                 products = null
                 filteredProducts = null
-                fetchAndLoadProducts()
+                initProducts()
             }
         }
         libraryActivityManagerUseCases.launchLibrary()
@@ -55,65 +67,55 @@ class SubscriptionsViewModel @Inject constructor(
             products = null
             filteredProducts = null
             viewModelScope.launch {
-
-                fetchAndLoadProducts()
+                initProducts()
             }
         }
     }
-    val dialogState = mutableStateOf(false)
-    var products: List<ProductDetails>? by mutableStateOf(null)
-    var filteredProducts: List<ProductDetails>? by mutableStateOf(null)
-    var currentProductId: String? by mutableStateOf(null)
-    var selectedTab:TabOption? by  mutableStateOf(null)
-     var isConnectionStarted: Boolean = false
 
-     var selectedPlan: Int by mutableIntStateOf(-1
-     )
-
-
-
-    suspend fun startConnection() {
+    fun startConnection() {
         if(!isConnectionStarted){
-            isConnectionStarted = true
-            billingManagerUseCases.startConnection(
-                {
-                    viewModelScope.launch {
-                        fetchAndLoadProducts()
-                    }
-                },
-                {
-                    Log.d("Co", "Failed to connect to billing service");
-                },
-            )
+            CoroutineScope(Dispatchers.IO).launch {
+                    billingManagerUseCases.startConnection(
+                        {
+                            Log.d("Co", "Connected to billing service");
+                            isConnectionStarted = true
+                            initProducts()
+                        },
+                        {
+                            Log.d("Co", "Failed to connect to billing service");
+                        },
+                    )
+            }
         }
-
     }
 
-
-    private fun getProductBillingPeriod(product: ProductDetails, billingPeriod: String ): Boolean? {
-        return product.subscriptionOfferDetails
-            ?.filter { it.offerId == null }
-            ?.firstOrNull()
-            ?.pricingPhases
-            ?.pricingPhaseList
-            ?.lastOrNull()
-            ?.billingPeriod?.contains(billingPeriod)
+     private fun initProducts(){
+        CoroutineScope(Dispatchers.IO).launch {
+            val active =  async { productManagerUseCases.getActiveSubscription() }
+            val activeSubscriptionResource = active.await()
+            if (activeSubscriptionResource is Resource.Success) {
+                val activeSubscriptionInfo = activeSubscriptionResource.data
+                currentProductId = activeSubscriptionInfo?.subscriptionResponseInfo?.productId
+            }
+            fetchAndLoadProducts()
+        }
     }
+
     fun  onTabSelected(tab: TabOption?) {
         print("onTabSelected: $tab")
         selectedPlan = -1
         selectedTab = tab
         if (selectedTab == TabOption.MONTHLY){
             filteredProducts = products?.filter { product ->
-                    getProductBillingPeriod(product, "P1M") == true
+                product.recurringPeriodCode.endsWith("M")
             }
         }else if(selectedTab == TabOption.YEARLY){
             filteredProducts = products?.filter { product ->
-                getProductBillingPeriod(product, "P1Y") == true
+                product.recurringPeriodCode.endsWith("Y")
             }
         }else {
             filteredProducts = products?.filter { product ->
-                getProductBillingPeriod(product, "P1W") == true
+                product.recurringPeriodCode.endsWith("W")
             }
         }
     }
@@ -122,75 +124,63 @@ class SubscriptionsViewModel @Inject constructor(
          when (val result = productManagerUseCases.getProductsApi()) {
             is Resource.Success -> {
                 if(result.data!=null){
-                    getProducts(result.data.map {  productInfo -> productInfo.productName
-                    }) {
-                        error ->
-                        Log.d("Co", "Failed to fetch products from billing: $error")
+                    products = result.data
+                    val recurringPeriodCode: String = products!!.findLast { it.productId == currentProductId }?.recurringPeriodCode ?: "P1Y"
+                    selectedTab = if (currentProductId ==null) TabOption.YEARLY else {
+                        when (recurringPeriodCode) {
+                            "P1M" -> TabOption.MONTHLY
+                            "P1Y" -> TabOption.YEARLY
+                            else -> TabOption.WEEKlY
+                        }
                     }
-                }
+                    filteredProducts = products!!.filter {
+                        it.recurringPeriodCode.endsWith(recurringPeriodCode.last())
+                    }
 
+                }
             }
             is Resource.Error -> {
                 Log.d("Co", "Failed to fetch products from API")
             }
          }
-
-//        if (productIds.isNotEmpty()) {
-//            getProducts(productIds, onError = {
-//                Log.d("Co", "Failed to fetch products from billing")
-//            })
-//        }
     }
 
-    suspend fun getProducts(
-        productIds: List<String>,
-        onError: (String) -> Unit
-    ) {
-
-        billingManagerUseCases.getProducts(
-            productIds = productIds,
-            onProductsReceived = {
-                products = it
+//    suspend fun getProductById(
+//        productId: String,
+//        onError: (String) -> Unit
+//    ) {
+//
+//        billingManagerUseCases.getProducts(
+//            productIds = listOf(productId),
+//            onProductsReceived = {
+//                products = it
+////                onTabSelected(selectedTab)
+//            },
+//            onSubscriptionFound = { current ->
+//                currentProductId = current
+//                if(current != null){
+//                    products?.findLast { it.productId == currentProductId }?.let {
+//                        selectedTab = when {
+//                            it.recurringPeriodCode == "P1M" -> TabOption.MONTHLY
+//                            it.recurringPeriodCode == "P1Y" -> TabOption.YEARLY
+//                            else -> TabOption.WEEKlY
+//                        }
+//                    }
+//
+//                }else{
+//                    selectedTab = TabOption.YEARLY
+//                }
 //                onTabSelected(selectedTab)
-            },
-            onSubscriptionFound = { current ->
-                currentProductId = current
-                if(current != null){
-                    products?.findLast { it.productId == currentProductId }?.let {
-                        selectedTab = when {
-                            getProductBillingPeriod(it, "P1M") == true -> TabOption.MONTHLY
-                            getProductBillingPeriod(it, "P1Y") == true -> TabOption.YEARLY
-                            else -> TabOption.WEEKlY
-                        }
-                    }
-
-                }else{
-                    selectedTab = TabOption.YEARLY
-                }
-                onTabSelected(selectedTab)
-                
-                print("currentProductId: $currentProductId")
-
-
-            },
-            onError = onError)
-
-
-    }
+//            },
+//            onError = onError
+//        )
+//    }
 
     suspend fun purchaseSubscription(
         activity: ComponentActivity,
-        product: ProductDetails,
+        product: ProductInfo,
         onError: (String) -> Unit
     ) {
         billingManagerUseCases.purchaseSubscription(activity, product, onError)
     }
-
-//    fun updateCurrentPlan(product: ProductDetails){
-//        _currentPlan.value = CurrentSelected(product);
-//    }
 }
-
-//data class CurrentSelected(
-//    val product: ProductDetails? = null,
-//)

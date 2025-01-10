@@ -4,9 +4,9 @@ import android.app.Application
 import com.synchronoss.aiap.data.remote.ProductApi
 import com.synchronoss.aiap.data.repository.billing.BillingManagerImpl
 import com.synchronoss.aiap.domain.usecases.billing.BillingManagerUseCases
-import com.synchronoss.aiap.domain.usecases.billing.GetProducts
 import com.synchronoss.aiap.domain.usecases.billing.PurchaseSubscription
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
+import com.synchronoss.aiap.domain.usecases.billing.CheckExistingSubscription
 import com.synchronoss.aiap.domain.usecases.billing.StartConnection
 
 
@@ -42,8 +42,8 @@ object BillingModule {
     fun provideBillingManagerUseCases(billingManager: BillingManager): BillingManagerUseCases {
         return BillingManagerUseCases(
             startConnection = StartConnection(billingManager),
-            getProducts = GetProducts(billingManager),
-            purchaseSubscription = PurchaseSubscription(billingManager)
+            purchaseSubscription = PurchaseSubscription(billingManager),
+            checkExistingSubscription = CheckExistingSubscription(billingManager)
         )
     }
 

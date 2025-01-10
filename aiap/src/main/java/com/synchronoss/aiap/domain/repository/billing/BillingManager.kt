@@ -4,25 +4,21 @@ import androidx.activity.ComponentActivity
 import com.android.billingclient.api.BillingResult
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
+import com.synchronoss.aiap.domain.models.ProductInfo
 
 interface BillingManager {
-    fun startConnection(
+    suspend fun startConnection(
         onConnected: () -> Unit,
         onDisconnected: () -> Unit
     )
 
-    suspend fun getProducts(
-        productIds: List<String>,
-        onProductsReceived: (List<ProductDetails>) -> Unit,
-        onSubscriptionFound: (String?) -> Unit,
-        onError: (String) -> Unit
-    )
-
     suspend fun purchaseSubscription(
         activity: ComponentActivity,
-        product: ProductDetails,
+        productInfo: ProductInfo,
         onError: (String) -> Unit
     )
-
+    suspend fun checkExistingSubscriptions(
+        onError: (String) -> Unit
+    )
 
 }

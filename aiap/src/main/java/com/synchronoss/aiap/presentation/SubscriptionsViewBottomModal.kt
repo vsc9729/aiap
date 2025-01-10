@@ -51,7 +51,7 @@ fun SubscriptionsViewBottomSheet(
     val coroutineScope = rememberCoroutineScope()
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
-    val sheetHeight = screenHeight * 0.85f
+    val sheetHeight = screenHeight * 0.92f
 
     // Automatically open the sheet when dialog state is true
     LaunchedEffect(subscriptionsViewModel.dialogState.value) {
