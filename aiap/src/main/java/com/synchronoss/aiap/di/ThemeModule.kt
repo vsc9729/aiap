@@ -2,12 +2,12 @@ package com.synchronoss.aiap.di
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.synchronoss.aiap.data.remote.product.ProductApi
-import com.synchronoss.aiap.data.repository.product.ProductMangerImpl
-import com.synchronoss.aiap.domain.repository.product.ProductManager
-import com.synchronoss.aiap.domain.usecases.product.GetProductsApi
-import com.synchronoss.aiap.domain.usecases.product.ProductManagerUseCases
-import com.synchronoss.aiap.utils.Constants.BASE_URL
+import com.synchronoss.aiap.data.mappers.ThemeMapper
+import com.synchronoss.aiap.data.remote.theme.ThemeApi
+import com.synchronoss.aiap.data.repository.theme.ThemeManagerImpl
+import com.synchronoss.aiap.domain.repository.theme.ThemeManager
+import com.synchronoss.aiap.domain.usecases.theme.GetThemeApi
+import com.synchronoss.aiap.domain.usecases.theme.ThemeManagerUseCases
 
 import dagger.Module
 import dagger.Provides
@@ -21,13 +21,11 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object ProductModule {
-
-
+object ThemeModule {
 
     @Provides
     @Singleton
-    fun provideProductApi(): ProductApi {
+    fun provideThemeApi(): ThemeApi {
         val moshi = Moshi.Builder()
             .add(KotlinJsonAdapterFactory())
             .build()
@@ -41,28 +39,31 @@ object ProductModule {
             .build()
 
         val retrofit = Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl("https://api.npoint.io/")
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .client(client)
             .build()
 
-        val productApi = retrofit.create(ProductApi::class.java)
-        return productApi
-    }
-
-
-
-    @Provides
-    @Singleton
-    fun provideProductManager(api: ProductApi): ProductManager {
-        return ProductMangerImpl(api)
+        return retrofit.create(ThemeApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideProductManagerUseCases(productManager: ProductManager): ProductManagerUseCases {
-        return ProductManagerUseCases(
-            getProductsApi = GetProductsApi(productManager)
+    fun provideThemeMapper(): ThemeMapper {
+        return ThemeMapper()
+    }
+
+    @Provides
+    @Singleton
+    fun provideThemeManager(api: ThemeApi, mapper : ThemeMapper): ThemeManager {
+        return ThemeManagerImpl(api,mapper)
+    }
+
+    @Provides
+    @Singleton
+    fun provideThemeManagerUseCases(themeManager: ThemeManager): ThemeManagerUseCases {
+        return ThemeManagerUseCases(
+            getThemeApi = GetThemeApi(themeManager)
         )
     }
 }

@@ -2,10 +2,8 @@ package com.synchronoss.aiap.data.repository.product
 
 
 import com.synchronoss.aiap.data.mappers.toProductInfo
-import com.synchronoss.aiap.data.remote.ProductApi
-import com.synchronoss.aiap.data.remote.ProductDataDto
-import com.synchronoss.aiap.data.remote.ProductDto
-import com.synchronoss.aiap.domain.models.ProductData
+import com.synchronoss.aiap.data.remote.product.ProductApi
+import com.synchronoss.aiap.data.remote.product.ProductDataDto
 import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.domain.repository.product.ProductManager
 import com.synchronoss.aiap.utils.Resource

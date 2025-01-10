@@ -19,6 +19,7 @@ import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.di.PurchaseUpdateHandler
 import com.synchronoss.aiap.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.domain.usecases.product.ProductManagerUseCases
+import com.synchronoss.aiap.domain.usecases.theme.ThemeManagerUseCases
 import com.synchronoss.aiap.utils.Resource
 
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,10 +36,15 @@ import javax.inject.Inject
 class SubscriptionsViewModel @Inject constructor(
     private val billingManagerUseCases: BillingManagerUseCases,
     private val productManagerUseCases: ProductManagerUseCases,
+    private val themeManagerUseCases: ThemeManagerUseCases,
     private val purchaseUpdateHandler: PurchaseUpdateHandler,
 ) : ViewModel() {
 
     init {
+        viewModelScope.launch {
+            themeManagerUseCases.getThemeApi()
+        }
+
         purchaseUpdateHandler.onPurchaseUpdated = {
             viewModelScope.launch {
                 products = null
@@ -109,6 +115,7 @@ class SubscriptionsViewModel @Inject constructor(
          when (val result = productManagerUseCases.getProductsApi()) {
             is Resource.Success -> {
                 if(result.data!=null){
+                    //parallel theme fetch
                     getProducts(result.data.map {  productInfo -> productInfo.productName
                     }) {
                         error ->
