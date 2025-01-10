@@ -1,3 +1,4 @@
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -44,7 +45,20 @@ fun SubscriptionsViewBottomSheet(
     subscriptionsViewModel: SubscriptionsViewModel = hiltViewModel(),
     vendor : Vendors?
 ) {
-    ThemeLoader.loadTheme(activity,vendor)
+    //ThemeLoader.loadTheme(activity,vendor)
+
+    val scope = rememberCoroutineScope()
+
+    // Load theme when the composable is first launched
+    LaunchedEffect(Unit) {
+//        ThemeLoader.setOnThemeLoadedListener {
+//
+//        }
+        Log.d("Co", "themeloader called")
+        ThemeLoader.loadTheme(scope)
+    }
+
+
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
     )

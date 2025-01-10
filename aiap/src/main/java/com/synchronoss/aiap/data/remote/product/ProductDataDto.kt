@@ -1,4 +1,4 @@
-package com.synchronoss.aiap.data.remote
+package com.synchronoss.aiap.data.remote.product
 
 import com.squareup.moshi.Json
 

@@ -2,6 +2,7 @@ package com.synchronoss.aiap.ui.theme
 
 import android.app.Activity
 import android.os.Build
+import android.util.Log
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -10,6 +11,10 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 
 
@@ -58,6 +63,9 @@ fun SampleAiAPTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
+//    var logoUrl:String by remember {  mutableStateOf(if (darkTheme) DarkThemeColors.outline.toString() else LightThemeColors.outline.toString() )}
+//    Log.d(null,"logoUrl: $logoUrl");
+
     val colorScheme = when {
 //        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
 //            val context = LocalContext.current

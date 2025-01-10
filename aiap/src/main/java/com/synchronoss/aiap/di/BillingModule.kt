@@ -1,7 +1,7 @@
 package com.synchronoss.aiap.di
 
 import android.app.Application
-import com.synchronoss.aiap.data.remote.ProductApi
+import com.synchronoss.aiap.data.remote.product.ProductApi
 import com.synchronoss.aiap.data.repository.billing.BillingManagerImpl
 import com.synchronoss.aiap.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.domain.usecases.billing.PurchaseSubscription

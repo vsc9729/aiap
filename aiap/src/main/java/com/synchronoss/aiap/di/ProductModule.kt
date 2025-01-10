@@ -3,7 +3,7 @@ package com.synchronoss.aiap.di
 import GetActiveSubscription
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.synchronoss.aiap.data.remote.ProductApi
+import com.synchronoss.aiap.data.remote.product.ProductApi
 import com.synchronoss.aiap.data.repository.product.ProductMangerImpl
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
 import com.synchronoss.aiap.domain.repository.product.ProductManager
@@ -20,7 +20,6 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
-import retrofit2.create
 import javax.inject.Singleton
 
 @Module
