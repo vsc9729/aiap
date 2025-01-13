@@ -89,8 +89,8 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     var logoUrl = subscriptionsViewModel.finalLogoUrl;
     val configuration = LocalConfiguration.current
 
-    val logoUrlWidth = configuration.screenWidthDp.dp * 0.25f
-    val logoUrlHeight = configuration.screenHeightDp.dp * 0.05f
+    val logoUrlWidth = 120.dp
+    val logoUrlHeight = 60.dp
 
     Log.d(null , "Logo url is $logoUrl")
 
