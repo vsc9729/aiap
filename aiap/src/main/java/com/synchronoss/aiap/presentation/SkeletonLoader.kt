@@ -42,7 +42,7 @@ fun SkeletonLoader() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = Color.White)
+                .background(color = Color.Black)
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
