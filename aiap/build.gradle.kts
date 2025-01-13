@@ -79,6 +79,8 @@ dependencies {
     implementation (libs.logging.interceptor)
     ksp(libs.moshi.kotlin.codegen)
     implementation(libs.moshi.kotlin)
+    implementation(libs.coil.compose)
+
 }
 kapt {
     correctErrorTypes = true

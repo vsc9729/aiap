@@ -12,9 +12,9 @@ fun List<ThemeDataDto>.toThemeInfo(): ThemeInfo {
     return ThemeInfo(
         light = lightTheme?.let {
             Theme(
-                logoUrl = it.logoUrl,
-                primary = it.primaryColor,
-                secondary = it.secondaryColor
+                logoUrl = it.logoUrl ?: "https://capsyl.com/wp-content/uploads/cropped-Capsyl-Logo-sm-2.png",
+                primary = it.primaryColor ?: "#0096D5",
+                secondary = it.secondaryColor ?: "#E7F8FF"
             )
         } ?: Theme(
             logoUrl = "",
@@ -24,9 +24,9 @@ fun List<ThemeDataDto>.toThemeInfo(): ThemeInfo {
         
         dark = darkTheme?.let {
             Theme(
-                logoUrl = it.logoUrl,
-                primary = it.primaryColor,
-                secondary = it.secondaryColor
+                logoUrl = it.logoUrl?: lightTheme?.logoUrl,
+                primary = it.primaryColor ?: "#0096D5",
+                secondary = it.secondaryColor ?: "#262627"
             )
         } ?: Theme(
             logoUrl = "",

@@ -44,18 +44,6 @@ fun SubscriptionsViewBottomSheet(
     activity: ComponentActivity,
     subscriptionsViewModel: SubscriptionsViewModel = hiltViewModel(),
 ) {
-//    ThemeLoader.loadTheme(activity,vendor)
-
-    val scope = rememberCoroutineScope()
-
-    // Load theme when the composable is first launched
-    LaunchedEffect(Unit) {
-//        ThemeLoader.setOnThemeLoadedListener {
-//
-//        }
-//        Log.d("Co", "themeloader called")
-    }
-
 
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
@@ -98,7 +86,6 @@ fun SubscriptionsViewBottomSheet(
                         .background(
                             color = MaterialTheme.colorScheme.background,
                         ),
-
                     horizontalArrangement = Arrangement.End,
 
 

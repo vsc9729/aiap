@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -56,6 +57,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -65,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.rememberAsyncImagePainter
 import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.R
 import com.synchronoss.aiap.domain.models.ProductInfo
@@ -77,14 +80,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.internal.OpDescriptor
 import kotlinx.coroutines.launch
-
 import kotlinx.coroutines.runBlocking
 
 @Composable
 fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
     var showDialog by remember { mutableStateOf(false) }
+    var logoUrl = subscriptionsViewModel.finalLogoUrl;
+    val configuration = LocalConfiguration.current
 
+    val logoUrlWidth = configuration.screenWidthDp.dp * 0.25f
+    val logoUrlHeight = configuration.screenHeightDp.dp * 0.05f
+
+    Log.d(null , "Logo url is $logoUrl")
 
     if(!subscriptionsViewModel.isConnectionStarted){
         CoroutineScope(Dispatchers.IO).launch {
@@ -98,10 +106,24 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
         Column(modifier = Modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.background)
-            .padding(20.dp)
+            .padding(horizontal = 20.dp)
         ) {
 
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(logoUrl),
+                        contentDescription = "Image from URL",
+                        modifier = Modifier
+                            .wrapContentSize()
+                            .width(logoUrlWidth)
+                            .height(logoUrlHeight)
 
+                    )
+                }
                 Text(
                     text = STORAGE_TAGLINE,
                     style = LocalTextStyle.current.copy(

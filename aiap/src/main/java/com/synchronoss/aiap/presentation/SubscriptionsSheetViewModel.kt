@@ -61,6 +61,9 @@ class SubscriptionsViewModel @Inject constructor(
     var selectedPlan: Int by mutableIntStateOf(-1)
     var darkThemeColors: ThemeColors? = null
     var lightThemeColors: ThemeColors? = null
+    var lightThemeLogoUrl:String? = null
+    var darkThemeLogoUrl:String? = null
+    var finalLogoUrl:String? = null
     var lightThemeColorScheme: ColorScheme? = null
     var darkThemeColorScheme: ColorScheme? = null
     var lastKnownProductTimestamp: Long? = null
@@ -82,10 +85,14 @@ class SubscriptionsViewModel @Inject constructor(
                 currentProductId = activeSubResult.data?.subscriptionResponseInfo?.productId
                 val theme = async { themeLoader.loadTheme(lastKnownThemeTimestamp?:null) }
             theme.await()
-            lightThemeColors = themeLoader.getThemeColors()
-            darkThemeColors = themeLoader.getDarkThemeColors()
-            lightThemeColorScheme = lightColorScheme(
+            lightThemeColors = themeLoader.getThemeColors().themeColors
+            lightThemeLogoUrl = themeLoader.getThemeColors().logoUrl;
+            darkThemeColors = themeLoader.getDarkThemeColors().themeColors
+            darkThemeLogoUrl = themeLoader.getDarkThemeColors().logoUrl;
 
+            finalLogoUrl = lightThemeLogoUrl
+
+            lightThemeColorScheme = lightColorScheme(
                 primary = lightThemeColors!!.primary,
                 secondary = lightThemeColors!!.secondary,
                 background = lightThemeColors!!.background,

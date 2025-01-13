@@ -18,6 +18,17 @@ fun SampleAiAPTheme(
         darkTheme -> subscriptionViewModel.darkThemeColorScheme!!
         else -> subscriptionViewModel.lightThemeColorScheme!!
     }
+    if(darkTheme){
+        if(subscriptionViewModel.darkThemeLogoUrl == null){
+            subscriptionViewModel.finalLogoUrl = subscriptionViewModel.lightThemeLogoUrl
+        }
+        else{
+            subscriptionViewModel.finalLogoUrl = subscriptionViewModel.darkThemeLogoUrl
+        }
+    }
+    else{
+        subscriptionViewModel.finalLogoUrl = subscriptionViewModel.lightThemeLogoUrl
+    }
 
     MaterialTheme(
         colorScheme = colorScheme,

@@ -6,8 +6,8 @@ data class ThemeInfo(
 )
 
 data class Theme(
-    val logoUrl: String,
-    val primary: String,
-    val secondary: String,
+    val logoUrl: String?,
+    val primary: String?,
+    val secondary: String?,
 )
 
