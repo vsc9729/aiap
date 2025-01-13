@@ -5,19 +5,13 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class ThemeDataDto(
-    @Json(name = "light")
-    val light: ThemeDto,
-    @Json(name = "dark")
-    val dark: ThemeDto
-)
-
-@JsonClass(generateAdapter = true)
-data class ThemeDto(
+    @Json(name = "themeName")
+    val themeName: String,
     @Json(name = "logoUrl")
     val logoUrl: String,
-    @Json(name = "primary")
-    val primary: String,
-    @Json(name = "secondary")
-    val secondary: String
+    @Json(name = "primaryColor")
+    val primaryColor: String,
+    @Json(name = "secondaryColor")
+    val secondaryColor: String
 )
 

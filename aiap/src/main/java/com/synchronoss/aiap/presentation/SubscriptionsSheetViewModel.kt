@@ -4,6 +4,9 @@ package com.synchronoss.aiap.presentation
 import TabOption
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Recomposer
 import androidx.compose.runtime.getValue
@@ -22,6 +25,8 @@ import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.domain.usecases.activity.LibraryActivityManagerUseCases
 import com.synchronoss.aiap.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.domain.usecases.product.ProductManagerUseCases
+import com.synchronoss.aiap.ui.theme.ThemeColors
+import com.synchronoss.aiap.ui.theme.ThemeLoader
 import com.synchronoss.aiap.utils.Resource
 
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,6 +46,7 @@ import javax.inject.Inject
 class SubscriptionsViewModel @Inject constructor(
     private val billingManagerUseCases: BillingManagerUseCases,
     private val productManagerUseCases: ProductManagerUseCases,
+    private val themeLoader: ThemeLoader,
     private val libraryActivityManagerUseCases: LibraryActivityManagerUseCases,
     private val purchaseUpdateHandler: PurchaseUpdateHandler,
     private val subscriptionCancelledHandler: SubscriptionCancelledHandler
@@ -53,8 +59,67 @@ class SubscriptionsViewModel @Inject constructor(
     var selectedTab:TabOption? by  mutableStateOf(null)
     var isConnectionStarted: Boolean = false
     var selectedPlan: Int by mutableIntStateOf(-1)
+    var darkThemeColors: ThemeColors? = null
+    var lightThemeColors: ThemeColors? = null
+    var lightThemeColorScheme: ColorScheme? = null
+    var darkThemeColorScheme: ColorScheme? = null
+    var lastKnownProductTimestamp: Long? = null
+    var lastKnownThemeTimestamp: Long? = null
+
+
+
+
 
     init {
+
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription() }
+            val activeSubResult =  activeSubResultDeferred.await()
+            if (activeSubResult is Resource.Success) {
+                lastKnownProductTimestamp = activeSubResult.data?.productUpdateTimeStamp
+                lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
+                currentProductId = activeSubResult.data?.subscriptionResponseInfo?.productId
+                val theme = async { themeLoader.loadTheme(lastKnownThemeTimestamp?:null) }
+            theme.await()
+            lightThemeColors = themeLoader.getThemeColors()
+            darkThemeColors = themeLoader.getDarkThemeColors()
+            lightThemeColorScheme = lightColorScheme(
+
+                primary = lightThemeColors!!.primary,
+                secondary = lightThemeColors!!.secondary,
+                background = lightThemeColors!!.background,
+                onPrimary = lightThemeColors!!.textHeading,
+                onSecondary = lightThemeColors!!.textBody,
+                onBackground = lightThemeColors!!.textBodyAlt,
+                surface = lightThemeColors!!.surface,
+                onSurface = lightThemeColors!!.onSurface,
+                outline = lightThemeColors!!.outline,
+                outlineVariant = lightThemeColors!!.outlineVariant,
+                tertiary = lightThemeColors!!.tertiary,
+                onTertiary = lightThemeColors!!.onTertiary
+
+            )
+            darkThemeColorScheme = darkColorScheme(
+                primary = darkThemeColors!!.primary,
+                secondary = darkThemeColors!!.secondary,
+                background = darkThemeColors!!.background,
+                onPrimary = darkThemeColors!!.textHeading,
+                onSecondary = darkThemeColors!!.textBody,
+                onBackground = darkThemeColors!!.textBodyAlt,
+                surface = darkThemeColors!!.surface,
+                onSurface = darkThemeColors!!.onSurface,
+                outline = darkThemeColors!!.outline,
+                outlineVariant = darkThemeColors!!.outlineVariant,
+                tertiary = darkThemeColors!!.tertiary,
+                onTertiary = darkThemeColors!!.onTertiary
+            )
+            }
+            
+        }
+
+
+
         subscriptionCancelledHandler.onSubscriptionCancelled = {
             viewModelScope.launch {
                 products = null
@@ -91,12 +156,6 @@ class SubscriptionsViewModel @Inject constructor(
 
      private fun initProducts(){
         CoroutineScope(Dispatchers.IO).launch {
-            val active =  async { productManagerUseCases.getActiveSubscription() }
-            val activeSubscriptionResource = active.await()
-            if (activeSubscriptionResource is Resource.Success) {
-                val activeSubscriptionInfo = activeSubscriptionResource.data
-                currentProductId = activeSubscriptionInfo?.subscriptionResponseInfo?.productId
-            }
             fetchAndLoadProducts()
         }
     }
@@ -121,7 +180,7 @@ class SubscriptionsViewModel @Inject constructor(
     }
 
     private suspend fun fetchAndLoadProducts() {
-         when (val result = productManagerUseCases.getProductsApi()) {
+         when (val result = productManagerUseCases.getProductsApi(lastKnownProductTimestamp)) {
             is Resource.Success -> {
                 if(result.data!=null){
                     products = result.data

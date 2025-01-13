@@ -1,7 +1,7 @@
 package com.synchronoss.aiap.data.repository.theme
 
 import android.util.Log
-import com.synchronoss.aiap.data.mappers.ThemeMapper
+import com.synchronoss.aiap.data.mappers.toThemeInfo
 import com.synchronoss.aiap.data.remote.theme.ThemeApi
 import com.synchronoss.aiap.domain.models.theme.ThemeInfo
 import com.synchronoss.aiap.domain.repository.theme.ThemeManager
@@ -10,12 +10,11 @@ import javax.inject.Inject
 
 class ThemeManagerImpl @Inject constructor(
     private val api: ThemeApi,
-    private val themeMapper: ThemeMapper  // Inject the mapper
 ) : ThemeManager {
     override suspend fun getTheme(): Resource<ThemeInfo> {  // Change return type to ThemeInfo
         return try {
             val themeData = api.getTheme()
-            val themeInfo = themeMapper.mapToDomain(themeData)
+            val themeInfo =themeData.toThemeInfo()
 
             Log.d("ThemeData", "data ${themeInfo}")
 

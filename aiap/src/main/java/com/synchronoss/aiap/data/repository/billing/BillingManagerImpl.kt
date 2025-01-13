@@ -6,8 +6,6 @@ import android.content.Context
 import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
-import com.android.billingclient.api.AccountIdentifiers
-import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
@@ -15,33 +13,21 @@ import com.android.billingclient.api.BillingResult
 import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
-import com.android.billingclient.api.Purchase.PendingPurchaseUpdate
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
-import com.synchronoss.aiap.common.UuidGenerator
-import com.synchronoss.aiap.data.remote.HandlePurchaseRequest
-import com.synchronoss.aiap.data.remote.HandlePurchaseResponse
-import com.synchronoss.aiap.data.remote.ProductApi
+import com.synchronoss.aiap.data.remote.product.HandlePurchaseRequest
+import com.synchronoss.aiap.data.remote.product.ProductApi
 import com.synchronoss.aiap.di.PurchaseUpdateHandler
 import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
 import com.synchronoss.aiap.utils.Constants.PPI_USER_ID
-import com.synchronoss.aiap.utils.Constants.PURCHASE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
-import org.json.JSONException
-import org.json.JSONObject
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.temporal.ChronoUnit
 
 
 class BillingManagerImpl(

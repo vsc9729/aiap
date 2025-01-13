@@ -43,9 +43,8 @@ fun SubscriptionsViewBottomSheet(
     onDismissRequest: () -> Unit,
     activity: ComponentActivity,
     subscriptionsViewModel: SubscriptionsViewModel = hiltViewModel(),
-    vendor : Vendors?
 ) {
-    //ThemeLoader.loadTheme(activity,vendor)
+//    ThemeLoader.loadTheme(activity,vendor)
 
     val scope = rememberCoroutineScope()
 
@@ -54,8 +53,7 @@ fun SubscriptionsViewBottomSheet(
 //        ThemeLoader.setOnThemeLoadedListener {
 //
 //        }
-        Log.d("Co", "themeloader called")
-        ThemeLoader.loadTheme(scope)
+//        Log.d("Co", "themeloader called")
     }
 
 

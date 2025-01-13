@@ -3,8 +3,8 @@ import ActiveSubscriptionInfo
 import android.util.Log
 import com.synchronoss.aiap.data.mappers.toActiveSubscriptionInfo
 import com.synchronoss.aiap.data.mappers.toProductInfo
-import com.synchronoss.aiap.data.remote.ProductApi
-import com.synchronoss.aiap.data.remote.ProductDataDto
+import com.synchronoss.aiap.data.remote.product.ProductApi
+import com.synchronoss.aiap.data.remote.product.ProductDataDto
 import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
 import com.synchronoss.aiap.domain.repository.product.ProductManager
@@ -36,17 +36,13 @@ class ProductMangerImpl @Inject constructor(
     )
     private val jsonAdapter = moshi.adapter<List<ProductInfo>>(listType).lenient()
 
-    private var lastKnownProductTimestamp: Long? = null
 
-    override suspend fun getProducts(): Resource<List<ProductInfo>> {
-        val activeSubResult = getActiveSubscription()
-        if (activeSubResult is Resource.Success) {
-            lastKnownProductTimestamp = activeSubResult.data?.productUpdateTimeStamp
-        }
+    override suspend fun getProducts(timestamp: Long?): Resource<List<ProductInfo>> {
+
 
         return cacheManager.getCachedDataWithTimestamp(
             key = PRODUCTS_CACHE_KEY,
-            currentTimestamp = lastKnownProductTimestamp,
+            currentTimestamp = timestamp,
             fetchFromNetwork = {
                 try {
                     var productInfos: MutableList<ProductInfo> = mutableListOf()

@@ -1,25 +1,37 @@
 package com.synchronoss.aiap.data.mappers
 
 import com.synchronoss.aiap.data.remote.theme.ThemeDataDto
-import com.synchronoss.aiap.data.remote.theme.ThemeDto
-import com.synchronoss.aiap.domain.models.theme.Theme
 import com.synchronoss.aiap.domain.models.theme.ThemeInfo
+import com.synchronoss.aiap.domain.models.theme.Theme
 
+fun List<ThemeDataDto>.toThemeInfo(): ThemeInfo {
+    // Find Light and Dark themes
+    val lightTheme = this.find { it.themeName == "Light" }
+    val darkTheme = this.find { it.themeName == "Dark" }
 
-class ThemeMapper {
-    fun mapToDomain(themeDataDto: ThemeDataDto): ThemeInfo {
-        return ThemeInfo(
-            light = mapThemeToDomain(themeDataDto.light),
-            dark = mapThemeToDomain(themeDataDto.dark)
+    return ThemeInfo(
+        light = lightTheme?.let {
+            Theme(
+                logoUrl = it.logoUrl,
+                primary = it.primaryColor,
+                secondary = it.secondaryColor
+            )
+        } ?: Theme(
+            logoUrl = "",
+            primary = "#ffffff",
+            secondary = "#000000"
+        ),
+        
+        dark = darkTheme?.let {
+            Theme(
+                logoUrl = it.logoUrl,
+                primary = it.primaryColor,
+                secondary = it.secondaryColor
+            )
+        } ?: Theme(
+            logoUrl = "",
+            primary = "#000000",
+            secondary = "#ffffff"
         )
-    }
-
-    private fun mapThemeToDomain(themeDto: ThemeDto): Theme {
-        return Theme(
-            logoUrl = themeDto.logoUrl,
-            primary = themeDto.primary,
-            secondary = themeDto.secondary,
-        )
-    }
-
+    )
 }

@@ -1,6 +1,7 @@
 package com.geekyants.synchronoss
 
 
+
 import SubscriptionsViewBottomSheet
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -46,8 +47,8 @@ import com.geekyants.synchronoss.ui.theme.Poppins
 import com.geekyants.synchronoss.ui.theme.Roboto
 import com.geekyants.synchronoss.ui.theme.SynchronossTheme
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
-import com.synchronoss.aiap.ui.theme.ThemeLoader
 import com.synchronoss.aiap.utils.Vendors
+
 import dagger.hilt.android.AndroidEntryPoint
 
 
@@ -75,6 +76,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding),
                         onClickSubscribe = {
                             subscriptionsViewModel.dialogState.value = true
+
                         }
                     )
                     SubscriptionsViewBottomSheet(
@@ -82,7 +84,6 @@ class MainActivity : ComponentActivity() {
                             //TODO: If the implementor wants to do something on dismissal
                         },
                         activity = this,
-                        vendor = Vendors.Capsyl
 
                     )
 

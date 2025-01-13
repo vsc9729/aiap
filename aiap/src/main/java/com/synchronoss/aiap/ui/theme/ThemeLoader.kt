@@ -2,72 +2,19 @@ package com.synchronoss.aiap.ui.theme
 
 import android.util.Log
 import androidx.compose.ui.graphics.Color
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.domain.models.theme.ThemeInfo
 import com.synchronoss.aiap.domain.usecases.theme.ThemeManagerUseCases
 import com.synchronoss.aiap.utils.Resource
+import com.synchronoss.aiap.utils.CacheManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-
-//@JsonClass(generateAdapter = true)
-//data class ThemeConfig(
-//    @Json(name = "shared") val shared: SharedConfig,
-//    @Json(name = "themes") val themes: ThemesConfig
-//)
-//
-//@JsonClass(generateAdapter = true)
-//data class SharedConfig(
-//    @Json(name = "logoUrl") val logoUrl: String
-//)
-//
-//@JsonClass(generateAdapter = true)
-//data class ThemesConfig(
-//    @Json(name = "light") val light: ThemeColorConfig,
-//    @Json(name = "dark") val dark: ThemeColorConfig
-//)
-//
-//@JsonClass(generateAdapter = true)
-//data class ThemeColorConfig(
-//    @Json(name = "colors") val colors: Colors
-//)
-//
-//@JsonClass(generateAdapter = true)
-//data class Colors(
-//    @Json(name = "primary") val primary: String,
-//    @Json(name = "secondary") val secondary: String,
-//    @Json(name = "background") val background: String,
-//    @Json(name = "text") val text: TextColors,
-//    @Json(name = "surface") val surface: SurfaceColors,
-//    @Json(name = "outline") val outline: OutlineColors,
-//    @Json(name = "tertiary") val tertiary: TertiaryColors
-//)
-//
-//@JsonClass(generateAdapter = true)
-//data class TextColors(
-//    @Json(name = "heading") val heading: String,
-//    @Json(name = "body") val body: String,
-//    @Json(name = "bodyAlt") val bodyAlt: String
-//)
-//
-//@JsonClass(generateAdapter = true)
-//data class SurfaceColors(
-//    @Json(name = "base") val base: String,
-//    @Json(name = "onSurface") val onSurface: String
-//)
-//
-//@JsonClass(generateAdapter = true)
-//data class OutlineColors(
-//    @Json(name = "defaultColor") val defaultColor: String,
-//    @Json(name = "variant") val variant: String
-//)
-//
-//@JsonClass(generateAdapter = true)
-//data class TertiaryColors(
-//    @Json(name = "base") val base: String,
-//    @Json(name = "onTertiary") val onTertiary: String
-//)
-//
+import javax.inject.Inject
 
 open class ThemeColors(
     val primary: Color,
@@ -84,35 +31,48 @@ open class ThemeColors(
     val onTertiary: Color
 )
 
-object ThemeLoader {
+class ThemeLoader @Inject constructor(
+    private var themeManagerUseCases: ThemeManagerUseCases,
+    private val cacheManager: CacheManager,
+) {
     private var themeConfig: ThemeInfo? = null
-    private lateinit var themeManagerUseCases: ThemeManagerUseCases
-    private var onThemeLoaded: (() -> Unit)? = null
+    private companion object {
+        const val THEME_CACHE_KEY = "theme_cache"
+    }
+    private val moshi = Moshi.Builder()
+        .addLast(KotlinJsonAdapterFactory())
+        .build()
+    private val jsonAdapter = moshi.adapter(ThemeInfo::class.java).lenient()
 
-//    fun setOnThemeLoadedListener(listener: () -> Unit) {
-//        onThemeLoaded = listener
-//    }
+    suspend fun loadTheme(timestamp: Long?) {
+        try {
+            val result = cacheManager.getCachedDataWithTimestamp(
+                key = THEME_CACHE_KEY,
+                currentTimestamp = timestamp,
+                fetchFromNetwork = {
+                    themeManagerUseCases.getThemeApi()
+                },
+                serialize = { theme ->
+                    jsonAdapter.toJson(theme)
+                },
+                deserialize = { jsonString ->
+                    jsonAdapter.fromJson(jsonString)!!
+                }
+            )
 
-    fun loadTheme(scope: CoroutineScope) {
-        scope.launch(Dispatchers.IO) {
-            try {
-                when (val result = themeManagerUseCases.getThemeApi()) {
-                    is Resource.Success -> {
-                        if(result.data !=null){
-                            Log.d("ThemeLoader", "Loaded theme yooo boii: ${result.data}")
-                        }
+            when (result) {
+                is Resource.Success -> {
+                    if (result.data != null) {
+                        Log.d("ThemeLoader", "Loaded theme: ${result.data}")
                         themeConfig = result.data
-//                        withContext(Dispatchers.Main) {
-//                            onThemeLoaded?.invoke()
-//                        }
-                    }
-                    is Resource.Error -> {
-                        Log.e("ThemeLoader", "Failed to fetch theme: ${result.message}")
                     }
                 }
-            } catch (e: Exception) {
-                Log.e("ThemeLoader", "Error loading theme", e)
+                is Resource.Error -> {
+                    Log.e("ThemeLoader", "Failed to fetch theme: ${result.message}")
+                }
             }
+        } catch (e: Exception) {
+            Log.e("ThemeLoader", "Error loading theme", e)
         }
     }
 

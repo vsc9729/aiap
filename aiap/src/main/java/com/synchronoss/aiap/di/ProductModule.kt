@@ -57,7 +57,7 @@ object ProductModule {
 
     @Provides
     @Singleton
-    fun provideProductManager(api: ProductApi, billingManager: BillingManager,cacheManager: CacheManager ): ProductManager {
+    fun provideProductManager(api: ProductApi, billingManager: BillingManager, cacheManager: CacheManager ): ProductManager {
         return ProductMangerImpl(api, billingManager, cacheManager)
     }
 

@@ -2,12 +2,13 @@ package com.synchronoss.aiap.di
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.synchronoss.aiap.data.mappers.ThemeMapper
 import com.synchronoss.aiap.data.remote.theme.ThemeApi
 import com.synchronoss.aiap.data.repository.theme.ThemeManagerImpl
 import com.synchronoss.aiap.domain.repository.theme.ThemeManager
 import com.synchronoss.aiap.domain.usecases.theme.GetThemeApi
 import com.synchronoss.aiap.domain.usecases.theme.ThemeManagerUseCases
+import com.synchronoss.aiap.ui.theme.ThemeLoader
+import com.synchronoss.aiap.utils.CacheManager
 
 import dagger.Module
 import dagger.Provides
@@ -39,7 +40,7 @@ object ThemeModule {
             .build()
 
         val retrofit = Retrofit.Builder()
-            .baseUrl("https://api.npoint.io/")
+            .baseUrl("https://sync-api.blr0.geekydev.com/")
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .client(client)
             .build()
@@ -47,16 +48,16 @@ object ThemeModule {
         return retrofit.create(ThemeApi::class.java)
     }
 
-    @Provides
-    @Singleton
-    fun provideThemeMapper(): ThemeMapper {
-        return ThemeMapper()
-    }
+//    @Provides
+//    @Singleton
+//    fun provideThemeMapper(): ThemeMapper {
+//        return ThemeMapper()
+//    }
 
     @Provides
     @Singleton
-    fun provideThemeManager(api: ThemeApi, mapper : ThemeMapper): ThemeManager {
-        return ThemeManagerImpl(api,mapper)
+    fun provideThemeManager(api: ThemeApi,): ThemeManager {
+        return ThemeManagerImpl(api)
     }
 
     @Provides
@@ -66,4 +67,14 @@ object ThemeModule {
             getThemeApi = GetThemeApi(themeManager)
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideThemeLoader(
+        themeManagerUseCases: ThemeManagerUseCases,
+        cacheManager: CacheManager
+    ): ThemeLoader {
+        return ThemeLoader(themeManagerUseCases, cacheManager)
+    }
+
 }

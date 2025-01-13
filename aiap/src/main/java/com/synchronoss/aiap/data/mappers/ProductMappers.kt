@@ -2,12 +2,10 @@ package com.synchronoss.aiap.data.mappers
 
 import ActiveSubscriptionInfo
 import SubscriptionResponseInfo
-import com.synchronoss.aiap.data.remote.ProductDataDto
-import com.synchronoss.aiap.data.remote.ProductDto
-import com.synchronoss.aiap.domain.models.ProductData
+import com.synchronoss.aiap.data.remote.product.ProductDataDto
 import com.synchronoss.aiap.domain.models.ProductInfo
-import com.synchronoss.aiap.data.remote.ActiveSubscriptionResponse
-import com.synchronoss.aiap.data.remote.SubscriptionResponseDTO
+import com.synchronoss.aiap.data.remote.product.ActiveSubscriptionResponse
+import com.synchronoss.aiap.data.remote.product.SubscriptionResponseDTO
 
 fun ProductDataDto.toProductInfo(): ProductInfo {
     return ProductInfo(

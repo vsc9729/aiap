@@ -72,6 +72,8 @@ import com.synchronoss.aiap.presentation.SubscriptionsViewModel
 import com.synchronoss.aiap.utils.AppColors
 import com.synchronoss.aiap.utils.Constants.PURCHASE_REQUIRED
 import com.synchronoss.aiap.utils.Constants.STORAGE_TAGLINE
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.internal.OpDescriptor
 import kotlinx.coroutines.launch
@@ -85,7 +87,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 
 
     if(!subscriptionsViewModel.isConnectionStarted){
-        runBlocking {
+        CoroutineScope(Dispatchers.IO).launch {
             subscriptionsViewModel.startConnection()
         }
     }
@@ -241,6 +243,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 
     ) {
         //Loader here
+        //Add skeleton loader here
         CircularProgressIndicator(
             modifier = Modifier.size(50.dp),
             color = MaterialTheme.colorScheme.primary
