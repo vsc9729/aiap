@@ -259,18 +259,14 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
         modifier = Modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.background)
-            .padding(20.dp),
+            .padding(vertical = 16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
 
     ) {
         //Loader here
         //Add skeleton loader here
-        CircularProgressIndicator(
-            modifier = Modifier.size(50.dp),
-            color = MaterialTheme.colorScheme.primary
-        )
-
+        SkeletonLoader()
     }
     if(showDialog){
         DialogBox(

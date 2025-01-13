@@ -15,6 +15,7 @@ import kotlinx.coroutines.coroutineScope
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.squareup.moshi.Types
+import kotlinx.coroutines.delay
 import javax.inject.Inject
 
 class ProductMangerImpl @Inject constructor(
@@ -38,7 +39,6 @@ class ProductMangerImpl @Inject constructor(
 
 
     override suspend fun getProducts(timestamp: Long?): Resource<List<ProductInfo>> {
-
 
         return cacheManager.getCachedDataWithTimestamp(
             key = PRODUCTS_CACHE_KEY,
