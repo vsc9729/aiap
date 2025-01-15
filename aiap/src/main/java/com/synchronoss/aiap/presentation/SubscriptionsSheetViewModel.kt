@@ -63,16 +63,15 @@ class SubscriptionsViewModel @Inject constructor(
     var lightThemeColors: ThemeColors? = null
     var lightThemeColorScheme: ColorScheme? = null
     var darkThemeColorScheme: ColorScheme? = null
-    var lastKnownProductTimestamp: Long? = null
-    var lastKnownThemeTimestamp: Long? = null
+    private var lastKnownProductTimestamp: Long? = null
+    private var lastKnownThemeTimestamp: Long? = null
+    var isPurchaseOngoing: Boolean = false
 
 
 
 
 
     init {
-
-
         CoroutineScope(Dispatchers.IO).launch {
             val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription() }
             val activeSubResult =  activeSubResultDeferred.await()
@@ -85,7 +84,6 @@ class SubscriptionsViewModel @Inject constructor(
             lightThemeColors = themeLoader.getThemeColors()
             darkThemeColors = themeLoader.getDarkThemeColors()
             lightThemeColorScheme = lightColorScheme(
-
                 primary = lightThemeColors!!.primary,
                 secondary = lightThemeColors!!.secondary,
                 background = lightThemeColors!!.background,
@@ -120,44 +118,87 @@ class SubscriptionsViewModel @Inject constructor(
 
 
 
+
         subscriptionCancelledHandler.onSubscriptionCancelled = {
             viewModelScope.launch {
                 products = null
                 filteredProducts = null
-                initProducts()
+                initProducts(subscriptionCancelled =  true)
             }
         }
         libraryActivityManagerUseCases.launchLibrary()
-        purchaseUpdateHandler.onPurchaseUpdated = {
+        purchaseUpdateHandler.onPurchaseStarted = {
             products = null
             filteredProducts = null
+            isPurchaseOngoing = false
+        }
+        purchaseUpdateHandler.onPurchaseUpdated = {
             viewModelScope.launch {
-                initProducts()
+                initProducts(purchaseUpdate =  true)
             }
         }
+
     }
 
     fun startConnection() {
         if(!isConnectionStarted){
             CoroutineScope(Dispatchers.IO).launch {
-                    billingManagerUseCases.startConnection(
-                        {
-                            Log.d("Co", "Connected to billing service");
-                            isConnectionStarted = true
+                billingManagerUseCases.startConnection(
+                    {
+                        Log.d("Co", "Connected to billing service")
+                        isConnectionStarted = true
+                        CoroutineScope(Dispatchers.IO).launch {
+                            // Create async operation and wait for it
+                            val checkSubscriptionDeferred = async { 
+                                billingManagerUseCases.checkExistingSubscription(
+                                    onError = {
+                                        Log.d("Co", "Error checking subscriptions: $it")
+                                    }
+                                )
+                            }
+                            
+                            // Wait for the check to complete
+                            checkSubscriptionDeferred.await()
+                            
+                            // Only runs after subscription check is complete
                             initProducts()
-                        },
-                        {
-                            Log.d("Co", "Failed to connect to billing service");
-                        },
-                    )
+                        }
+                    },
+                    {
+                        Log.d("Co", "Failed to connect to billing service")
+                    }
+                )
             }
         }
     }
 
-     private fun initProducts(){
-        CoroutineScope(Dispatchers.IO).launch {
-            fetchAndLoadProducts()
-        }
+     private suspend fun initProducts(purchaseUpdate: Boolean = false, subscriptionCancelled: Boolean = false) {
+         if(purchaseUpdate || subscriptionCancelled){
+             products = null
+             filteredProducts = null
+             CoroutineScope(Dispatchers.IO).launch {
+                 val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription() }
+                 val activeSubResult = activeSubResultDeferred.await()
+                 val checkSubscriptionDeferred = async {
+                     billingManagerUseCases.checkExistingSubscription(
+                         onError = {
+                             Log.d("Co", "Error checking subscriptions: $it")
+                         }
+                     )
+                 }
+
+                 // Wait for the check to complete
+                 checkSubscriptionDeferred.await()
+                 currentProductId = activeSubResult.data?.subscriptionResponseInfo?.productId
+                 fetchAndLoadProducts()
+             }
+         }else{
+             fetchAndLoadProducts()
+         }
+
+
+
+
     }
 
     fun  onTabSelected(tab: TabOption?) {
@@ -240,6 +281,7 @@ class SubscriptionsViewModel @Inject constructor(
         product: ProductInfo,
         onError: (String) -> Unit
     ) {
+        isPurchaseOngoing = true;
         billingManagerUseCases.purchaseSubscription(activity, product, onError)
     }
 }

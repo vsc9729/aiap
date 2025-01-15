@@ -15,6 +15,7 @@ import kotlinx.coroutines.coroutineScope
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.squareup.moshi.Types
+import com.synchronoss.aiap.data.remote.common.ApiResponse
 import javax.inject.Inject
 
 class ProductMangerImpl @Inject constructor(
@@ -46,7 +47,8 @@ class ProductMangerImpl @Inject constructor(
             fetchFromNetwork = {
                 try {
                     var productInfos: MutableList<ProductInfo> = mutableListOf()
-                    val productDataDtos: List<ProductDataDto> = api.getProducts()
+                    val apiResponse: ApiResponse<List<ProductDataDto>> = api.getProducts()
+                    val productDataDtos: List<ProductDataDto> = apiResponse.data
                     for (productDataDto in productDataDtos) {
                         val productInfo: ProductInfo = productDataDto.toProductInfo()
                         productInfos.add(productInfo)
@@ -70,18 +72,11 @@ class ProductMangerImpl @Inject constructor(
         return try {
             coroutineScope {
                 val activeSubDeferred = async { api.getActiveSubscription() }
-                val billingCheckDeferred = async {
-                    billingManager.checkExistingSubscriptions { error ->
-                        Log.d("ProductManagerImpl", "Error: $error")
-                    }
-                }
                 // Wait for both operations to complete
                 val response = activeSubDeferred.await()
-                billingCheckDeferred.await()
-
                 if (response.isSuccessful) {
                     response.body()?.let { activeSubscriptionResponse ->
-                        Resource.Success(activeSubscriptionResponse.toActiveSubscriptionInfo())
+                        Resource.Success(activeSubscriptionResponse.data.toActiveSubscriptionInfo())
                     } ?: Resource.Error("Empty response body")
                 } else {
                     Resource.Error("Failed to fetch active subscription: ${response.message()}")

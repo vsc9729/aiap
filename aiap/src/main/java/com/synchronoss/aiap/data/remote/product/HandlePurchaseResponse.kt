@@ -27,6 +27,4 @@ data class HandlePurchaseResponse(
     val status: String,
     @Json(name = "type")
     val type: String,
-    @Json(name = "message")
-    val message: String?
 )

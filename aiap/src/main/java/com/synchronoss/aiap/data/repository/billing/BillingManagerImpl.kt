@@ -27,6 +27,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
@@ -164,8 +165,9 @@ class BillingManagerImpl(
     @OptIn(DelicateCoroutinesApi::class)
     override fun onPurchasesUpdated(
         billingResult: BillingResult,
-        purchases: MutableList<Purchase>?
+        purchases: MutableList<Purchase>?,
     ) {
+        purchaseUpdateHandler.handlePurchaseStarted()
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
             val handleRequest = HandlePurchaseRequest(
                 productId = purchases[0].products.first().toString(),
@@ -182,20 +184,21 @@ class BillingManagerImpl(
                 }
                 handlePurchaseResponse.await(
                 ).let { response ->
-                    if (response.isSuccessful) {
-                        purchaseUpdateHandler.handlePurchaseUpdate()
-
-                    }
+                    purchaseUpdateHandler.handlePurchaseUpdate()
                 }
             }
 
         } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
+            purchaseUpdateHandler.handlePurchaseUpdate()
             // Handle an error caused by a user canceling the purchase flow.
         } else if (billingResult.responseCode == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED ) {
+            purchaseUpdateHandler.handlePurchaseUpdate()
             // Handle an error caused by a user already owning this item
         } else if (billingResult.responseCode == BillingClient.BillingResponseCode.ITEM_UNAVAILABLE) {
+            purchaseUpdateHandler.handlePurchaseUpdate()
             // Handle an error caused by the item being unavailable
         } else if (billingResult.responseCode == BillingClient.BillingResponseCode.SERVICE_DISCONNECTED) {
+            purchaseUpdateHandler.handlePurchaseUpdate()
             // Handle an error caused by the service being disconnected
         } else if (billingResult.responseCode == BillingClient.BillingResponseCode.NETWORK_ERROR) {
             // Handle an error caused by a timeout

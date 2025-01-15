@@ -25,6 +25,7 @@ object BillingModule {
     fun providePurchaseUpdateHandler(): PurchaseUpdateHandler {
         return PurchaseUpdateHandler(
             onPurchaseUpdated = { /* Do nothing */ },
+            onPurchaseStarted = { /* Do nothing */ }
         )
     }
     @Provides

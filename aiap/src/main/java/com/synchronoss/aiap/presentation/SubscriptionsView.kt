@@ -84,15 +84,12 @@ import kotlinx.coroutines.runBlocking
 fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
     var showDialog by remember { mutableStateOf(false) }
-
-
     if(!subscriptionsViewModel.isConnectionStarted){
         CoroutineScope(Dispatchers.IO).launch {
             subscriptionsViewModel.startConnection()
         }
     }
     val filteredProducts: List<ProductInfo>? = subscriptionsViewModel.filteredProducts
-
     if(subscriptionsViewModel.isConnectionStarted && subscriptionsViewModel.filteredProducts != null && subscriptionsViewModel.selectedTab != null)
     Box {
         Column(modifier = Modifier
@@ -100,8 +97,6 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
             .background(color = MaterialTheme.colorScheme.background)
             .padding(20.dp)
         ) {
-
-
                 Text(
                     text = STORAGE_TAGLINE,
                     style = LocalTextStyle.current.copy(
@@ -111,8 +106,6 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                         textAlign = TextAlign.Center
                     )
                 )
-
-
                 Spacer(modifier = Modifier.height(8.dp))
                 TabSelector(
                     selectedTab = subscriptionsViewModel.selectedTab?:TabOption.YEARLY,
@@ -123,8 +116,6 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
-
-
             TextButton(
                 onClick = { /* Handle restore */ },
                 modifier = Modifier
@@ -142,12 +133,10 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     )
                 )
             }
-
             Spacer(modifier = Modifier.height(8.dp))
             ScrollablePlans(activity = activity)
             Spacer(modifier = modifier.height(4.dp))
         }
-
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -156,7 +145,6 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     shape = RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp),
                     spotColor = Color.Black.copy(alpha = 0.1f),
                     ambientColor = Color.Black.copy(alpha = 0.1f)
-
                 )
                 .fillMaxWidth()
                 .height(170.dp)
@@ -263,7 +251,6 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 @Composable
 fun ScrollablePlans(
     activity: ComponentActivity
-
 ) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
 
