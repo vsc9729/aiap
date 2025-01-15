@@ -17,8 +17,8 @@ android {
         applicationId = "com.geekyants.synchronoss"
         minSdk = 21
         targetSdk = 34
-        versionCode = 10
-        versionName = "4.0.3"
+        versionCode = 14
+        versionName = "5.0.1"
 
 
 
