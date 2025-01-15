@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -56,6 +57,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -65,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.rememberAsyncImagePainter
 import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.R
 import com.synchronoss.aiap.domain.models.ProductInfo
@@ -84,19 +87,44 @@ import kotlinx.coroutines.runBlocking
 fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
     var showDialog by remember { mutableStateOf(false) }
+    var logoUrl = subscriptionsViewModel.finalLogoUrl;
+    val configuration = LocalConfiguration.current
+
+    val logoUrlWidth = 120.dp
+    val logoUrlHeight = 60.dp
+
+    Log.d(null , "Logo url is $logoUrl")
+
     if(!subscriptionsViewModel.isConnectionStarted){
         CoroutineScope(Dispatchers.IO).launch {
             subscriptionsViewModel.startConnection()
         }
     }
     val filteredProducts: List<ProductInfo>? = subscriptionsViewModel.filteredProducts
+
     if(subscriptionsViewModel.isConnectionStarted && subscriptionsViewModel.filteredProducts != null && subscriptionsViewModel.selectedTab != null)
     Box {
         Column(modifier = Modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.background)
-            .padding(20.dp)
+            .padding(horizontal = 20.dp)
         ) {
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(logoUrl),
+                        contentDescription = "Image from URL",
+                        modifier = Modifier
+                            .wrapContentSize()
+                            .width(logoUrlWidth)
+                            .height(logoUrlHeight)
+
+                    )
+                }
                 Text(
                     text = STORAGE_TAGLINE,
                     style = LocalTextStyle.current.copy(
@@ -106,6 +134,8 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                         textAlign = TextAlign.Center
                     )
                 )
+
+
                 Spacer(modifier = Modifier.height(8.dp))
                 TabSelector(
                     selectedTab = subscriptionsViewModel.selectedTab?:TabOption.YEARLY,
@@ -116,6 +146,8 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
+
+
             TextButton(
                 onClick = { /* Handle restore */ },
                 modifier = Modifier
@@ -133,10 +165,12 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     )
                 )
             }
+
             Spacer(modifier = Modifier.height(8.dp))
             ScrollablePlans(activity = activity)
             Spacer(modifier = modifier.height(4.dp))
         }
+
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -145,6 +179,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     shape = RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp),
                     spotColor = Color.Black.copy(alpha = 0.1f),
                     ambientColor = Color.Black.copy(alpha = 0.1f)
+
                 )
                 .fillMaxWidth()
                 .height(170.dp)
@@ -251,6 +286,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 @Composable
 fun ScrollablePlans(
     activity: ComponentActivity
+
 ) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
 

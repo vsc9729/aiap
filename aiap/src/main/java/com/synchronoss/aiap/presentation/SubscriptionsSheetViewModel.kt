@@ -61,6 +61,9 @@ class SubscriptionsViewModel @Inject constructor(
     var selectedPlan: Int by mutableIntStateOf(-1)
     var darkThemeColors: ThemeColors? = null
     var lightThemeColors: ThemeColors? = null
+    var lightThemeLogoUrl:String? = null
+    var darkThemeLogoUrl:String? = null
+    var finalLogoUrl:String? = null
     var lightThemeColorScheme: ColorScheme? = null
     var darkThemeColorScheme: ColorScheme? = null
     private var lastKnownProductTimestamp: Long? = null
@@ -72,6 +75,8 @@ class SubscriptionsViewModel @Inject constructor(
 
 
     init {
+
+
         CoroutineScope(Dispatchers.IO).launch {
             val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription() }
             val activeSubResult =  activeSubResultDeferred.await()
@@ -81,9 +86,15 @@ class SubscriptionsViewModel @Inject constructor(
                 currentProductId = activeSubResult.data?.subscriptionResponseInfo?.productId
                 val theme = async { themeLoader.loadTheme(lastKnownThemeTimestamp?:null) }
             theme.await()
-            lightThemeColors = themeLoader.getThemeColors()
-            darkThemeColors = themeLoader.getDarkThemeColors()
+            lightThemeColors = themeLoader.getThemeColors().themeColors
+            lightThemeLogoUrl = themeLoader.getThemeColors().logoUrl;
+            darkThemeColors = themeLoader.getDarkThemeColors().themeColors
+            darkThemeLogoUrl = themeLoader.getDarkThemeColors().logoUrl;
+
+            finalLogoUrl = lightThemeLogoUrl
+
             lightThemeColorScheme = lightColorScheme(
+
                 primary = lightThemeColors!!.primary,
                 secondary = lightThemeColors!!.secondary,
                 background = lightThemeColors!!.background,
@@ -118,7 +129,6 @@ class SubscriptionsViewModel @Inject constructor(
 
 
 
-
         subscriptionCancelledHandler.onSubscriptionCancelled = {
             viewModelScope.launch {
                 products = null
@@ -137,7 +147,6 @@ class SubscriptionsViewModel @Inject constructor(
                 initProducts(purchaseUpdate =  true)
             }
         }
-
     }
 
     fun startConnection() {
@@ -149,17 +158,17 @@ class SubscriptionsViewModel @Inject constructor(
                         isConnectionStarted = true
                         CoroutineScope(Dispatchers.IO).launch {
                             // Create async operation and wait for it
-                            val checkSubscriptionDeferred = async { 
+                            val checkSubscriptionDeferred = async {
                                 billingManagerUseCases.checkExistingSubscription(
                                     onError = {
                                         Log.d("Co", "Error checking subscriptions: $it")
                                     }
                                 )
                             }
-                            
+
                             // Wait for the check to complete
                             checkSubscriptionDeferred.await()
-                            
+
                             // Only runs after subscription check is complete
                             initProducts()
                         }
@@ -281,7 +290,6 @@ class SubscriptionsViewModel @Inject constructor(
         product: ProductInfo,
         onError: (String) -> Unit
     ) {
-        isPurchaseOngoing = true;
         billingManagerUseCases.purchaseSubscription(activity, product, onError)
     }
 }

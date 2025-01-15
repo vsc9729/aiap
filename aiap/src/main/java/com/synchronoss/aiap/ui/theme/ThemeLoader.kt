@@ -36,6 +36,10 @@ class ThemeLoader @Inject constructor(
     private val cacheManager: CacheManager,
 ) {
     private var themeConfig: ThemeInfo? = null
+    var logoUrlLight:String? = null
+    var logoUrlDark:String? = null
+
+
     private companion object {
         const val THEME_CACHE_KEY = "theme_cache"
     }
@@ -64,7 +68,10 @@ class ThemeLoader @Inject constructor(
                 is Resource.Success -> {
                     if (result.data != null) {
                         Log.d("ThemeLoader", "Loaded theme: ${result.data}")
-                        themeConfig = result.data
+                        themeConfig = result.data;
+                        logoUrlLight = themeConfig!!.light.logoUrl
+                        logoUrlDark = themeConfig!!.dark.logoUrl
+                       // Log.d(null,"logoUrl where it is called : $logoUrl")
                     }
                 }
                 is Resource.Error -> {
@@ -80,8 +87,8 @@ class ThemeLoader @Inject constructor(
         return Color(android.graphics.Color.parseColor(this))
     }
 
-    fun getThemeColors(): ThemeColors {
-        return object : ThemeColors(
+    fun getThemeColors(): ThemeWithLogo {
+        val themeObj = object : ThemeColors(
             primary = themeConfig?.light?.primary?.toColor() ?: Color(0xFF0096D5),
             secondary = themeConfig?.light?.secondary?.toColor() ?: Color(0xFFE7F8FF),
             background = Color.White,
@@ -94,11 +101,15 @@ class ThemeLoader @Inject constructor(
             outlineVariant = Color(0xFF0096D5),
             tertiary = Color.White,
             onTertiary = Color(0xFF6B7280)
-        ) {}
+        ){}
+        return ThemeWithLogo(
+            themeColors = themeObj,
+            logoUrl = logoUrlLight
+        )
     }
 
-    fun getDarkThemeColors(): ThemeColors {
-        return object : ThemeColors(
+    fun getDarkThemeColors(): ThemeWithLogo {
+        val themeObj =  object : ThemeColors(
             primary = themeConfig?.dark?.primary?.toColor() ?: Color(0xFF0096D5),
             secondary = themeConfig?.dark?.secondary?.toColor() ?: Color(0xFF262627),
             background = Color(0xFF0D0D0D),
@@ -112,5 +123,14 @@ class ThemeLoader @Inject constructor(
             tertiary = Color(0xFF212121),
             onTertiary = Color(0xFFFEFEFF)
         ) {}
+        return ThemeWithLogo(
+            themeColors = themeObj,
+            logoUrl = logoUrlDark
+        )
     }
 }
+
+data class ThemeWithLogo(
+    val themeColors: ThemeColors,
+    val logoUrl: String?
+)
