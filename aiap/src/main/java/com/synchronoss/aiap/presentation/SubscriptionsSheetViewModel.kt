@@ -56,6 +56,7 @@ class SubscriptionsViewModel @Inject constructor(
     var products: List<ProductInfo>? by mutableStateOf(null)
     var filteredProducts: List<ProductInfo>? by mutableStateOf(null)
     var currentProductId: String? by mutableStateOf(null)
+    var currentProduct: ProductInfo? by mutableStateOf(null)
     var selectedTab:TabOption? by  mutableStateOf(null)
     var isConnectionStarted: Boolean = false
     var selectedPlan: Int by mutableIntStateOf(-1)
@@ -83,9 +84,8 @@ class SubscriptionsViewModel @Inject constructor(
             if (activeSubResult is Resource.Success) {
                 lastKnownProductTimestamp = activeSubResult.data?.productUpdateTimeStamp
                 lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
-                currentProductId = activeSubResult.data?.subscriptionResponseInfo?.productId
-                val theme = async { themeLoader.loadTheme(lastKnownThemeTimestamp?:null) }
-            theme.await()
+                currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
+                currentProduct = activeSubResult.data?.subscriptionResponseInfo?.product
             lightThemeColors = themeLoader.getThemeColors().themeColors
             lightThemeLogoUrl = themeLoader.getThemeColors().logoUrl;
             darkThemeColors = themeLoader.getDarkThemeColors().themeColors
@@ -198,7 +198,8 @@ class SubscriptionsViewModel @Inject constructor(
 
                  // Wait for the check to complete
                  checkSubscriptionDeferred.await()
-                 currentProductId = activeSubResult.data?.subscriptionResponseInfo?.productId
+                 currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
+                 currentProduct = activeSubResult.data?.subscriptionResponseInfo?.product
                  fetchAndLoadProducts()
              }
          }else{
@@ -234,6 +235,9 @@ class SubscriptionsViewModel @Inject constructor(
             is Resource.Success -> {
                 if(result.data!=null){
                     products = result.data
+                    if(currentProduct != null && (products?.contains(currentProduct) != true)){
+                        products = products?.plus(currentProduct!!)
+                    }
                     val recurringPeriodCode: String = products!!.findLast { it.productId == currentProductId }?.recurringPeriodCode ?: "P1Y"
                     selectedTab = if (currentProductId ==null) TabOption.YEARLY else {
                         when (recurringPeriodCode) {

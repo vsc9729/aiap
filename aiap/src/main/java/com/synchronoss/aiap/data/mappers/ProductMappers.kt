@@ -2,6 +2,7 @@ package com.synchronoss.aiap.data.mappers
 
 import ActiveSubscriptionInfo
 import SubscriptionResponseInfo
+import com.squareup.moshi.Json
 import com.synchronoss.aiap.data.remote.product.ProductDataDto
 import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.data.remote.product.ActiveSubscriptionResponse
@@ -35,8 +36,7 @@ fun ActiveSubscriptionResponse.toActiveSubscriptionInfo(): ActiveSubscriptionInf
 
 fun SubscriptionResponseDTO.toSubscriptionResponseInfo(): SubscriptionResponseInfo {
     return SubscriptionResponseInfo(
-        productId = productId,
-        serviceLevel = serviceLevel,
+        product = product?.toProductInfo(),
         vendorName = vendorName,
         appName = appName,
         appPlatformID = appPlatformID,
@@ -46,7 +46,6 @@ fun SubscriptionResponseDTO.toSubscriptionResponseInfo(): SubscriptionResponseIn
         endDate = endDate,
         status = status,
         type = type,
-        message = message
     )
 }
 

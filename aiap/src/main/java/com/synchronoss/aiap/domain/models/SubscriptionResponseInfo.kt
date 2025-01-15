@@ -1,6 +1,7 @@
+import com.synchronoss.aiap.domain.models.ProductInfo
+
 data class SubscriptionResponseInfo(
-    val productId: String,
-    val serviceLevel: String,
+    val product: ProductInfo?,
     val vendorName: String,
     val appName: String,
     val appPlatformID: String,
@@ -9,6 +10,5 @@ data class SubscriptionResponseInfo(
     val startDate: Long,
     val endDate: Long,
     val status: String,
-    val type: String,
-    val message: String?
-) 
+    val type: String
+)

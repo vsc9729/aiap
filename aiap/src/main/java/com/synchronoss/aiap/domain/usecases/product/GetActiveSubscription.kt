@@ -5,7 +5,7 @@ import javax.inject.Inject
 class GetActiveSubscription @Inject constructor(
     private val repository: ProductManager
 ) {
-    suspend operator fun invoke(): Resource<ActiveSubscriptionInfo> {
+    suspend operator fun invoke(): Resource<ActiveSubscriptionInfo?> {
         return repository.getActiveSubscription()
     }
 }
