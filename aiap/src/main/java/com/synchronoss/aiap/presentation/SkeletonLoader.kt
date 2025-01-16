@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
+// hello sonarqube
+
 @Composable
 fun SkeletonLoader() {
     val transition = rememberInfiniteTransition(label = "shimmer")
