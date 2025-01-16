@@ -603,9 +603,9 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
 }
 
 enum class TabOption {
-    YEARLY,
     MONTHLY,
     WEEKlY,
+    YEARLY,
 }
 
 @Composable
