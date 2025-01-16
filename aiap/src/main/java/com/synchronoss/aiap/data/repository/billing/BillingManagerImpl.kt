@@ -102,6 +102,8 @@ class BillingManagerImpl(
 
                             val flowParams = BillingFlowParams.newBuilder()
                                 .setProductDetailsParamsList(productDetailsParams)
+                                .setObfuscatedAccountId(PPI_USER_ID)
+                                .setObfuscatedProfileId(PPI_USER_ID)
                                 .setSubscriptionUpdateParams(subscriptionParams)
                                 .build()
 
