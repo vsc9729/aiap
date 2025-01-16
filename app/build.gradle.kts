@@ -17,8 +17,8 @@ android {
         applicationId = "com.geekyants.synchronoss"
         minSdk = 21
         targetSdk = 34
-        versionCode = 15
-        versionName = "5.0.2"
+        versionCode = 16
+        versionName = "5.1.0"
 
 
 
@@ -75,6 +75,7 @@ android {
         implementation(libs.androidx.compose.ui.google.fonts)
         implementation(libs.android.billing.client)
         testImplementation(libs.junit)
+        testImplementation(libs.mockwebserver)
         androidTestImplementation(libs.androidx.junit)
         androidTestImplementation(libs.androidx.espresso.core)
         androidTestImplementation(platform(libs.androidx.compose.bom))
