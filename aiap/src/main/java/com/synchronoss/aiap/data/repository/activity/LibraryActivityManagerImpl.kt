@@ -23,11 +23,11 @@ class LibraryActivityManagerImpl (
 
     override fun launchLibrary() {
         if (!isInitialized) {
-            initialize(appContext = context)
+            initialize()
         }
     }
 
-    private fun initialize(appContext: Context) {
+    private fun initialize() {
         lifecycleObserver = LibraryLifecycleObserver(
             libraryActivityManagerImpl = this
         )

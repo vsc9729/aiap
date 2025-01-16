@@ -64,8 +64,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-import kotlinx.coroutines.runBlocking
-
 @Composable
 fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
@@ -149,7 +147,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            ScrollablePlans(activity = activity)
+            ScrollablePlans()
             Spacer(modifier = modifier.height(4.dp))
         }
 
@@ -201,10 +199,10 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     ),
 //                    shape = RoundedCornerShape(10.dp),
                     onClick = {
-                        runBlocking {
+                        CoroutineScope(Dispatchers.IO).launch {
                             subscriptionsViewModel.purchaseSubscription(
                                 activity = activity,
-                                product = filteredProducts?.get(subscriptionsViewModel.selectedPlan) ?: return@runBlocking,
+                                product = filteredProducts?.get(subscriptionsViewModel.selectedPlan) ?: return@launch,
                                 onError = { error ->
                                     // Handle error
                                     println("Error: $error")
@@ -261,21 +259,19 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 
 
 @Composable
-fun ScrollablePlans(
-    activity: ComponentActivity
-
-) {
+fun ScrollablePlans() {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
+    val filteredProducts = subscriptionsViewModel.filteredProducts
+    val currentProductId = subscriptionsViewModel.currentProductId
+    val currentProduct = subscriptionsViewModel.products?.find { it.productId == currentProductId }
 
-    val filteredProducts: List<ProductInfo>? = subscriptionsViewModel.filteredProducts
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()) // Enables scrolling
+            .verticalScroll(rememberScrollState())
             .padding(bottom = 16.dp)
-
     ) {
-        if (subscriptionsViewModel.filteredProducts.isNullOrEmpty()) {
+        if (filteredProducts.isNullOrEmpty()) {
             Text(
                 text = "No products available",
                 style = LocalTextStyle.current.copy(
@@ -285,35 +281,25 @@ fun ScrollablePlans(
                     textAlign = TextAlign.Center
                 )
             )
-        } else {
-            val currentProductIndex: Int? =
-                subscriptionsViewModel.products?.indexOfFirst { it.productId == subscriptionsViewModel.currentProductId }
-
-            val currentProduct =
-                if (currentProductIndex != -1) subscriptionsViewModel.products?.get(currentProductIndex!!) else null
-
-            if (currentProduct == null) DemoCurrentPlanCard()
-            if(currentProduct != null && (filteredProducts?: mutableListOf()).contains(currentProduct)){
-                ActualCurrentPlanCard(
-                    product = currentProduct
-                )
-            }
-
-            // Add multiple cards for testing
-
-            Spacer(modifier = Modifier.height(16.dp)) // Spacing between cards
-            filteredProducts?.forEachIndexed { index, product ->
-                if (product.productId == subscriptionsViewModel.currentProductId) return@forEachIndexed
-                OtherPlanCard(
-                    product = product,
-                    productIndex = index
-                )
-                Spacer(modifier = Modifier.height(16.dp)) // Spacing between cards
-
-            }
-            Spacer(modifier = Modifier.height(135.dp)) // Spacing at the end of the list
-
+            return@Column
         }
+
+        // Display current plan
+        when {
+            currentProduct == null -> DemoCurrentPlanCard()
+            filteredProducts.contains(currentProduct) -> ActualCurrentPlanCard(product = currentProduct)
+        }
+
+        // Display other plans
+        Spacer(modifier = Modifier.height(16.dp))
+        filteredProducts.forEachIndexed { index, product ->
+            if (product.productId != currentProductId) {
+                OtherPlanCard(product = product, productIndex = index)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(135.dp))
     }
 }
 
@@ -321,10 +307,6 @@ fun ScrollablePlans(
 fun ActualCurrentPlanCard(
     product: ProductInfo
 ) {
-//    val subscriptionOfferDetails = product.subscriptionOfferDetails?.last()
-//    val pricingPhases = subscriptionOfferDetails?.pricingPhases?.pricingPhaseList?.last()
-//    val price = pricingPhases?.formattedPrice
-//    val description: String = product.description.ifEmpty { "Get 100 GB of storage for photos, files  & backup." }
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -375,7 +357,7 @@ fun ActualCurrentPlanCard(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = product.displayPrice ?: "₹500",
+                        text = product.displayPrice,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.W700,
                         color = MaterialTheme.colorScheme.onBackground,
@@ -383,7 +365,7 @@ fun ActualCurrentPlanCard(
                     )
 
                     Text(
-                        text = product.description ?: "Get 50 GB of storage for photos, files & backup.",
+                        text = product.description,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.W400,
                         color = MaterialTheme.colorScheme.onSecondary,
@@ -543,7 +525,7 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = product.displayPrice ?: "₹500",
+                    text = product.displayPrice,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.W700,
                     color = MaterialTheme.colorScheme.onBackground,

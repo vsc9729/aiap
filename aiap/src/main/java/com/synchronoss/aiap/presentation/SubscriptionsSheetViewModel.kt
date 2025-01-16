@@ -247,11 +247,13 @@ class SubscriptionsViewModel @Inject constructor(
          }
     }
 
-    suspend fun purchaseSubscription(
+    fun purchaseSubscription(
         activity: ComponentActivity,
         product: ProductInfo,
         onError: (String) -> Unit
     ) {
-        billingManagerUseCases.purchaseSubscription(activity, product, onError)
+        viewModelScope.launch {
+            billingManagerUseCases.purchaseSubscription(activity, product, onError)
+        }
     }
 }

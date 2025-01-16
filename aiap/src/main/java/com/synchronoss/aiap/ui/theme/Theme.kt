@@ -10,7 +10,6 @@ import com.synchronoss.aiap.presentation.SubscriptionsViewModel
 @Composable
 fun SampleAiAPTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val subscriptionViewModel = hiltViewModel<SubscriptionsViewModel>()

@@ -1,5 +1,5 @@
 package com.synchronoss.aiap.domain.repository.activity
 
-interface LibraryActivityManager {
+fun interface LibraryActivityManager {
     fun launchLibrary()
 }

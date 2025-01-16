@@ -187,26 +187,24 @@ class BillingManagerImpl(
             }
 
         } else {
-            when (billingResult.responseCode) {
-                BillingClient.BillingResponseCode.USER_CANCELED -> {
-                    purchaseUpdateHandler.handlePurchaseUpdate()
-                    // Handle an error caused by a user canceling the purchase flow.
-                }
-                BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
-                    purchaseUpdateHandler.handlePurchaseUpdate()
-                    // Handle an error caused by a user already owning this item
-                }
-                BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> {
-                    purchaseUpdateHandler.handlePurchaseUpdate()
-                    // Handle an error caused by the item being unavailable
-                }
-                else -> {
-                    purchaseUpdateHandler.handlePurchaseUpdate()
-                }
+         //   when (billingResult.responseCode) {
+//                BillingClient.BillingResponseCode.USER_CANCELED -> {
+//                    purchaseUpdateHandler.handlePurchaseUpdate()
+//                    // Handle an error caused by a user canceling the purchase flow.
+//                }
+//                BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
+//                    purchaseUpdateHandler.handlePurchaseUpdate()
+//                    // Handle an error caused by a user already owning this item
+//                }
+//                BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> {
+//                    purchaseUpdateHandler.handlePurchaseUpdate()
+//                    // Handle an error caused by the item being unavailable
+//                }
+//                else -> {
+//                    purchaseUpdateHandler.handlePurchaseUpdate()
+//                }
+                purchaseUpdateHandler.handlePurchaseUpdate()
             }
         }
     }
 
-
-
-}
