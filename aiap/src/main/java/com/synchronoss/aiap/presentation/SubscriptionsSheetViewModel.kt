@@ -75,6 +75,8 @@ class SubscriptionsViewModel @Inject constructor(
                 lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
                 currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
                 currentProduct = activeSubResult.data?.subscriptionResponseInfo?.product
+                val theme =  async { themeLoader.loadTheme(lastKnownThemeTimestamp) }
+                theme.await()
             lightThemeColors = themeLoader.getThemeColors().themeColors
             lightThemeLogoUrl = themeLoader.getThemeColors().logoUrl;
             darkThemeColors = themeLoader.getDarkThemeColors().themeColors

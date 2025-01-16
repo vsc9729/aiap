@@ -194,8 +194,8 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary, // Normal state color
                         contentColor = Color.White, // Normal text/icon color
-                        disabledContainerColor = AppColors.lightGray.copy(alpha = 0.6f),
-                        disabledContentColor = Color.White.copy(alpha = 0.6f)
+                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                        disabledContentColor = Color.White.copy(alpha = 0.4f)
                     ),
 //                    shape = RoundedCornerShape(10.dp),
                     onClick = {
