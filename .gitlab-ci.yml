@@ -1,5 +1,6 @@
 stages:
   - test
+  - sonar
   - build
   - deploy
 
@@ -26,6 +27,8 @@ before_script:
   - gem install bundler:2.5.23 || gem install bundler -v "~> 2.3.0"
   - bundle install --path=vendor/bundle
   - bundle install
+
+
 
 test:
   stage: test
@@ -83,3 +86,16 @@ deploy_internal:
   only:
     - master
   when: manual
+
+sonarqube-check:
+  stage: sonar
+  script:
+    - ./gradlew sonar \
+        -Dsonar.projectKey=AIAPkey \
+        -Dsonar.projectName='AIAP' \
+        -Dsonar.host.url=http://localhost:9000 \
+        -Dsonar.token=$SONAR_TOKEN
+  only:
+    - branches
+    - merge_requests
+  allow_failure: true
