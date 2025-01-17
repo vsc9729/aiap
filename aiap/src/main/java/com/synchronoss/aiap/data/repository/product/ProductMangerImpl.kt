@@ -1,8 +1,11 @@
 package com.synchronoss.aiap.data.repository.product
 import ActiveSubscriptionInfo
-import android.util.Log
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.synchronoss.aiap.data.mappers.toActiveSubscriptionInfo
 import com.synchronoss.aiap.data.mappers.toProductInfo
+import com.synchronoss.aiap.data.remote.common.ApiResponse
 import com.synchronoss.aiap.data.remote.product.ProductApi
 import com.synchronoss.aiap.data.remote.product.ProductDataDto
 import com.synchronoss.aiap.domain.models.ProductInfo
@@ -12,10 +15,6 @@ import com.synchronoss.aiap.utils.CacheManager
 import com.synchronoss.aiap.utils.Resource
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.squareup.moshi.Types
-import com.synchronoss.aiap.data.remote.common.ApiResponse
 import javax.inject.Inject
 
 class ProductMangerImpl @Inject constructor(

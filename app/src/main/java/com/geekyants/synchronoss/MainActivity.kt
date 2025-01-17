@@ -71,7 +71,7 @@ class MainActivity : ComponentActivity() {
                     )
                     SubscriptionsViewBottomSheet(
                         onDismissRequest = {
-                            //TODO: If the implementor wants to do something on dismissal
+                            //If the implementor wants to do something on dismissal
                         },
                         activity = this,
 
@@ -96,8 +96,6 @@ private fun SetupSystemBars() {
     DisposableEffect(view) {
         val window = (view.context as ComponentActivity).window
         WindowCompat.setDecorFitsSystemWindows(window, false)
-      //  window.setStatusBarColor(android.graphics.Color.TRANSPARENT)
-        
         onDispose {}
     }
 }

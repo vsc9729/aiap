@@ -58,7 +58,6 @@ import coil.compose.rememberAsyncImagePainter
 import com.synchronoss.aiap.R
 import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
-import com.synchronoss.aiap.utils.AppColors
 import com.synchronoss.aiap.utils.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,7 +68,6 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
     var showDialog by remember { mutableStateOf(false) }
     val logoUrl = subscriptionsViewModel.finalLogoUrl;
-    val contentDescription = Constants.SELECTED_PLAN_INDICATOR
 
     val logoUrlWidth = 120.dp
     val logoUrlHeight = 60.dp
