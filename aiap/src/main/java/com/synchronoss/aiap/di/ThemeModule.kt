@@ -48,12 +48,6 @@ object ThemeModule {
         return retrofit.create(ThemeApi::class.java)
     }
 
-//    @Provides
-//    @Singleton
-//    fun provideThemeMapper(): ThemeMapper {
-//        return ThemeMapper()
-//    }
-
     @Provides
     @Singleton
     fun provideThemeManager(api: ThemeApi,): ThemeManager {

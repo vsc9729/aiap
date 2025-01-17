@@ -90,7 +90,7 @@ deploy_internal:
 sonarqube-check:
   stage: sonar
   script:
-    - ./gradlew sonar -Dsonar.projectKey=AIAPkey -Dsonar.projectName='AIAP' -Dsonar.host.url=http://localhost:9000 -Dsonar.token=$SONAR_TOKEN
+    - ./gradlew sonar -Dsonar.projectKey=client-projects_synchronous_android-sample-app_24341a67-70d3-4254-b625-38292098206d -Dsonar.projectName='android-sample-app' -Dsonar.host.url=https://sonarqube.blr0.geekydev.com -Dsonar.token=$SONAR_TOKEN
   only:
     - branches
     - merge_requests

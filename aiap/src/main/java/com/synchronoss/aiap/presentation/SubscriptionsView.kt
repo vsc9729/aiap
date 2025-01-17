@@ -15,23 +15,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -40,8 +34,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,14 +42,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -68,27 +55,20 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
-import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.R
 import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
 import com.synchronoss.aiap.utils.AppColors
-import com.synchronoss.aiap.utils.Constants.PURCHASE_REQUIRED
 import com.synchronoss.aiap.utils.Constants.STORAGE_TAGLINE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.internal.OpDescriptor
 import kotlinx.coroutines.launch
-
-import kotlinx.coroutines.runBlocking
 
 @Composable
 fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
     var showDialog by remember { mutableStateOf(false) }
-    var logoUrl = subscriptionsViewModel.finalLogoUrl;
-    val configuration = LocalConfiguration.current
+    val logoUrl = subscriptionsViewModel.finalLogoUrl;
 
     val logoUrlWidth = 120.dp
     val logoUrlHeight = 60.dp
@@ -167,7 +147,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            ScrollablePlans(activity = activity)
+            ScrollablePlans()
             Spacer(modifier = modifier.height(4.dp))
         }
 
@@ -214,15 +194,15 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary, // Normal state color
                         contentColor = Color.White, // Normal text/icon color
-                        disabledContainerColor = AppColors.lightGray.copy(alpha = 0.6f),
-                        disabledContentColor = Color.White.copy(alpha = 0.6f)
+                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                        disabledContentColor = Color.White.copy(alpha = 0.4f)
                     ),
 //                    shape = RoundedCornerShape(10.dp),
                     onClick = {
-                        runBlocking {
+                        CoroutineScope(Dispatchers.IO).launch {
                             subscriptionsViewModel.purchaseSubscription(
                                 activity = activity,
-                                product = filteredProducts?.get(subscriptionsViewModel.selectedPlan) ?: return@runBlocking,
+                                product = filteredProducts?.get(subscriptionsViewModel.selectedPlan) ?: return@launch,
                                 onError = { error ->
                                     // Handle error
                                     println("Error: $error")
@@ -265,7 +245,6 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
         horizontalAlignment = Alignment.CenterHorizontally
 
     ) {
-        //Loader here
         //Add skeleton loader here
         SkeletonLoader()
     }
@@ -280,21 +259,19 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 
 
 @Composable
-fun ScrollablePlans(
-    activity: ComponentActivity
-
-) {
+fun ScrollablePlans() {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
+    val filteredProducts = subscriptionsViewModel.filteredProducts
+    val currentProductId = subscriptionsViewModel.currentProductId
+    val currentProduct = subscriptionsViewModel.products?.find { it.productId == currentProductId }
 
-    val filteredProducts: List<ProductInfo>? = subscriptionsViewModel.filteredProducts
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()) // Enables scrolling
+            .verticalScroll(rememberScrollState())
             .padding(bottom = 16.dp)
-
     ) {
-        if (subscriptionsViewModel.filteredProducts.isNullOrEmpty()) {
+        if (filteredProducts.isNullOrEmpty()) {
             Text(
                 text = "No products available",
                 style = LocalTextStyle.current.copy(
@@ -304,35 +281,25 @@ fun ScrollablePlans(
                     textAlign = TextAlign.Center
                 )
             )
-        } else {
-            val currentProductIndex: Int? =
-                subscriptionsViewModel.products?.indexOfFirst { it.productId == subscriptionsViewModel.currentProductId }
-
-            val currentProduct =
-                if (currentProductIndex != -1) subscriptionsViewModel.products?.get(currentProductIndex!!) else null
-
-            if (currentProduct == null) DemoCurrentPlanCard()
-            if(currentProduct != null && (filteredProducts?: mutableListOf()).contains(currentProduct)){
-                ActualCurrentPlanCard(
-                    product = currentProduct
-                )
-            }
-
-            // Add multiple cards for testing
-
-            Spacer(modifier = Modifier.height(16.dp)) // Spacing between cards
-            filteredProducts?.forEachIndexed { index, product ->
-                if (product.productId == subscriptionsViewModel.currentProductId) return@forEachIndexed
-                OtherPlanCard(
-                    product = product,
-                    productIndex = index
-                )
-                Spacer(modifier = Modifier.height(16.dp)) // Spacing between cards
-
-            }
-            Spacer(modifier = Modifier.height(135.dp)) // Spacing at the end of the list
-
+            return@Column
         }
+
+        // Display current plan
+        when {
+            currentProduct == null -> DemoCurrentPlanCard()
+            filteredProducts.contains(currentProduct) -> ActualCurrentPlanCard(product = currentProduct)
+        }
+
+        // Display other plans
+        Spacer(modifier = Modifier.height(16.dp))
+        filteredProducts.forEachIndexed { index, product ->
+            if (product.productId != currentProductId) {
+                OtherPlanCard(product = product, productIndex = index)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(135.dp))
     }
 }
 
@@ -340,10 +307,6 @@ fun ScrollablePlans(
 fun ActualCurrentPlanCard(
     product: ProductInfo
 ) {
-//    val subscriptionOfferDetails = product.subscriptionOfferDetails?.last()
-//    val pricingPhases = subscriptionOfferDetails?.pricingPhases?.pricingPhaseList?.last()
-//    val price = pricingPhases?.formattedPrice
-//    val description: String = product.description.ifEmpty { "Get 100 GB of storage for photos, files  & backup." }
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -394,7 +357,7 @@ fun ActualCurrentPlanCard(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = product.displayPrice ?: "₹500",
+                        text = product.displayPrice,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.W700,
                         color = MaterialTheme.colorScheme.onBackground,
@@ -402,7 +365,7 @@ fun ActualCurrentPlanCard(
                     )
 
                     Text(
-                        text = product.description ?: "Get 50 GB of storage for photos, files & backup.",
+                        text = product.description,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.W400,
                         color = MaterialTheme.colorScheme.onSecondary,
@@ -562,7 +525,7 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = product.displayPrice ?: "₹500",
+                    text = product.displayPrice,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.W700,
                     color = MaterialTheme.colorScheme.onBackground,

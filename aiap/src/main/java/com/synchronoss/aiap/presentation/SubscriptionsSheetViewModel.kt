@@ -7,18 +7,12 @@ import androidx.activity.ComponentActivity
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.Recomposer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.di.PurchaseUpdateHandler
 import com.synchronoss.aiap.di.SubscriptionCancelledHandler
 import com.synchronoss.aiap.domain.models.ProductInfo
@@ -30,15 +24,10 @@ import com.synchronoss.aiap.ui.theme.ThemeLoader
 import com.synchronoss.aiap.utils.Resource
 
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
 import javax.inject.Inject
 
 
@@ -86,6 +75,8 @@ class SubscriptionsViewModel @Inject constructor(
                 lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
                 currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
                 currentProduct = activeSubResult.data?.subscriptionResponseInfo?.product
+                val theme =  async { themeLoader.loadTheme(lastKnownThemeTimestamp) }
+                theme.await()
             lightThemeColors = themeLoader.getThemeColors().themeColors
             lightThemeLogoUrl = themeLoader.getThemeColors().logoUrl;
             darkThemeColors = themeLoader.getDarkThemeColors().themeColors
@@ -258,42 +249,13 @@ class SubscriptionsViewModel @Inject constructor(
          }
     }
 
-//    suspend fun getProductById(
-//        productId: String,
-//        onError: (String) -> Unit
-//    ) {
-//
-//        billingManagerUseCases.getProducts(
-//            productIds = listOf(productId),
-//            onProductsReceived = {
-//                products = it
-////                onTabSelected(selectedTab)
-//            },
-//            onSubscriptionFound = { current ->
-//                currentProductId = current
-//                if(current != null){
-//                    products?.findLast { it.productId == currentProductId }?.let {
-//                        selectedTab = when {
-//                            it.recurringPeriodCode == "P1M" -> TabOption.MONTHLY
-//                            it.recurringPeriodCode == "P1Y" -> TabOption.YEARLY
-//                            else -> TabOption.WEEKlY
-//                        }
-//                    }
-//
-//                }else{
-//                    selectedTab = TabOption.YEARLY
-//                }
-//                onTabSelected(selectedTab)
-//            },
-//            onError = onError
-//        )
-//    }
-
-    suspend fun purchaseSubscription(
+    fun purchaseSubscription(
         activity: ComponentActivity,
         product: ProductInfo,
         onError: (String) -> Unit
     ) {
-        billingManagerUseCases.purchaseSubscription(activity, product, onError)
+        viewModelScope.launch {
+            billingManagerUseCases.purchaseSubscription(activity, product, onError)
+        }
     }
 }

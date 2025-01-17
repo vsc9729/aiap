@@ -1,9 +1,6 @@
 package com.synchronoss.aiap.domain.repository.billing
 
 import androidx.activity.ComponentActivity
-import com.android.billingclient.api.BillingResult
-import com.android.billingclient.api.ProductDetails
-import com.android.billingclient.api.Purchase
 import com.synchronoss.aiap.domain.models.ProductInfo
 
 interface BillingManager {
