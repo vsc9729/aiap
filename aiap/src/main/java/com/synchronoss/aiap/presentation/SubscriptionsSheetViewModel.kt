@@ -54,8 +54,10 @@ class SubscriptionsViewModel @Inject constructor(
     var lightThemeLogoUrl:String? = null
     var darkThemeLogoUrl:String? = null
     var finalLogoUrl:String? = null
-    var lightThemeColorScheme: ColorScheme? = null
-    var darkThemeColorScheme: ColorScheme? = null
+    var lightThemeColorScheme: ColorScheme? by mutableStateOf(null)
+    var darkThemeColorScheme: ColorScheme? by mutableStateOf(null)
+//    var lightThemeColorScheme: ColorScheme? = null
+//    var darkThemeColorScheme: ColorScheme? = null
     private var lastKnownProductTimestamp: Long? = null
     private var lastKnownThemeTimestamp: Long? = null
     var isPurchaseOngoing: Boolean = false

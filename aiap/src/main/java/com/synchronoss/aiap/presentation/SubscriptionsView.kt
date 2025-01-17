@@ -81,11 +81,12 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     }
     val filteredProducts: List<ProductInfo>? = subscriptionsViewModel.filteredProducts
 
-    if(subscriptionsViewModel.isConnectionStarted && subscriptionsViewModel.filteredProducts != null && subscriptionsViewModel.selectedTab != null)
+    if(subscriptionsViewModel.currentProductId != null && subscriptionsViewModel.lightThemeColorScheme !=null && subscriptionsViewModel.darkThemeColorScheme!=null&& subscriptionsViewModel.isConnectionStarted && subscriptionsViewModel.filteredProducts != null && subscriptionsViewModel.selectedTab != null)
     Box {
         Column(modifier = Modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp)
         ) {
 
@@ -264,12 +265,12 @@ fun ScrollablePlans() {
     val currentProductId = subscriptionsViewModel.currentProductId
     val currentProduct = subscriptionsViewModel.products?.find { it.productId == currentProductId }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(bottom = 16.dp)
-    ) {
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//
+//            .padding(bottom = 16.dp)
+//    ) {
         if (filteredProducts.isNullOrEmpty()) {
             Text(
                 text = "No products available",
@@ -280,7 +281,7 @@ fun ScrollablePlans() {
                     textAlign = TextAlign.Center
                 )
             )
-            return@Column
+            return
         }
 
         // Display current plan
@@ -299,7 +300,7 @@ fun ScrollablePlans() {
         }
 
         Spacer(modifier = Modifier.height(135.dp))
-    }
+//    }
 }
 
 @Composable
