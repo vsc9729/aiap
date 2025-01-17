@@ -1,68 +1,58 @@
 package com.geekyants.synchronoss
 
-
-
 import SubscriptionsViewBottomSheet
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-
-
 import com.geekyants.synchronoss.ui.theme.Poppins
 import com.geekyants.synchronoss.ui.theme.Roboto
 import com.geekyants.synchronoss.ui.theme.SynchronossTheme
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
-import com.synchronoss.aiap.utils.Vendors
-
 import dagger.hilt.android.AndroidEntryPoint
 
-
-//Implementors need to implement the following annotation
-// in their app and create an application class with the
-// annotation @HiltAndroidApp because the library uses
-// Dagger Hilt for dependency injection
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        makeStatusBarTransparent()
+        enableEdgeToEdge()
         setContent {
             SynchronossTheme {
+                SetupSystemBars()
                 Scaffold(
                     modifier = Modifier
                         .fillMaxSize()
@@ -98,12 +88,19 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private fun makeStatusBarTransparent() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.statusBarColor = androidx.compose.ui.graphics.Color.Transparent.toArgb()
-    }
 }
 
+@Composable
+private fun SetupSystemBars() {
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val window = (view.context as ComponentActivity).window
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+      //  window.setStatusBarColor(android.graphics.Color.TRANSPARENT)
+        
+        onDispose {}
+    }
+}
 
 @Composable
 fun SubscriptionScreen(

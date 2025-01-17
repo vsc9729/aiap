@@ -2,9 +2,8 @@ package com.synchronoss.aiap.data.repository.activity
 
 import android.content.Context
 import android.util.Log
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.synchronoss.aiap.di.SubscriptionCancelledHandler
 import com.synchronoss.aiap.domain.repository.activity.LibraryActivityManager
@@ -12,14 +11,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class LibraryActivityManagerImpl (
+class LibraryActivityManagerImpl(
     private val context: Context,
     private val subscriptionCancelledHandler: SubscriptionCancelledHandler
-): LibraryActivityManager{
+) : LibraryActivityManager {
 
     private var isInitialized = false
     private lateinit var lifecycleObserver: LibraryLifecycleObserver
-
 
     override fun launchLibrary() {
         if (!isInitialized) {
@@ -46,19 +44,16 @@ class LibraryActivityManagerImpl (
     }
 }
 
-
 internal class LibraryLifecycleObserver(
     private val libraryActivityManagerImpl: LibraryActivityManagerImpl
-) : LifecycleObserver {
+) : DefaultLifecycleObserver {
     private var isInBackground = false
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun onAppBackgrounded() {
+    override fun onStop(owner: LifecycleOwner) {
         isInBackground = true
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun onAppForegrounded() {
+    override fun onStart(owner: LifecycleOwner) {
         if (isInBackground) {
             libraryActivityManagerImpl.refreshSubscriptions()
             isInBackground = false

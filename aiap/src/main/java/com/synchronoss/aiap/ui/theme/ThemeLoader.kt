@@ -2,18 +2,12 @@ package com.synchronoss.aiap.ui.theme
 
 import android.util.Log
 import androidx.compose.ui.graphics.Color
-import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.domain.models.theme.ThemeInfo
 import com.synchronoss.aiap.domain.usecases.theme.ThemeManagerUseCases
-import com.synchronoss.aiap.utils.Resource
 import com.synchronoss.aiap.utils.CacheManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.synchronoss.aiap.utils.Resource
 import javax.inject.Inject
 
 open class ThemeColors(
@@ -71,7 +65,6 @@ class ThemeLoader @Inject constructor(
                         themeConfig = result.data;
                         logoUrlLight = themeConfig!!.light.logoUrl
                         logoUrlDark = themeConfig!!.dark.logoUrl
-                       // Log.d(null,"logoUrl where it is called : $logoUrl")
                     }
                 }
                 is Resource.Error -> {

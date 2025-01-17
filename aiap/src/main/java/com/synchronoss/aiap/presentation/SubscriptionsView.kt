@@ -59,7 +59,7 @@ import com.synchronoss.aiap.R
 import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
 import com.synchronoss.aiap.utils.AppColors
-import com.synchronoss.aiap.utils.Constants.STORAGE_TAGLINE
+import com.synchronoss.aiap.utils.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -69,6 +69,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
     var showDialog by remember { mutableStateOf(false) }
     val logoUrl = subscriptionsViewModel.finalLogoUrl;
+    val contentDescription = Constants.SELECTED_PLAN_INDICATOR
 
     val logoUrlWidth = 120.dp
     val logoUrlHeight = 60.dp
@@ -106,7 +107,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     )
                 }
                 Text(
-                    text = STORAGE_TAGLINE,
+                    text = Constants.STORAGE_TAGLINE,
                     style = LocalTextStyle.current.copy(
                         fontWeight = FontWeight.W700,
                         fontSize = 24.sp,
@@ -374,7 +375,7 @@ fun ActualCurrentPlanCard(
                 }
                 Image(
                     painter = painterResource(id = R.drawable.checkmark_circle),
-                    contentDescription = "Selected Plan Indicator",
+                    contentDescription = Constants.SELECTED_PLAN_INDICATOR,
                     modifier = Modifier
                         .size(24.dp),
                     alignment = Alignment.Center
@@ -454,7 +455,7 @@ fun DemoCurrentPlanCard() {
             }
             Image(
                 painter = painterResource(id = R.drawable.checkmark_circle),
-                contentDescription = "Selected Plan Indicator",
+                contentDescription = Constants.SELECTED_PLAN_INDICATOR,
                 modifier = Modifier
                     .size(24.dp),
                 alignment = Alignment.Center
@@ -545,7 +546,7 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
             if (subscriptionsViewModel.selectedPlan == productIndex) {
                 Image(
                     painter = painterResource(id = R.drawable.radio_button_checked),
-                    contentDescription = "Selected Plan Indicator",
+                    contentDescription = Constants.SELECTED_PLAN_INDICATOR,
                     modifier = Modifier
                         .size(24.dp),
                     alignment = Alignment.Center,

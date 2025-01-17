@@ -69,63 +69,103 @@ class BillingManagerImpl(
         onError: (String) -> Unit,
     ) {
         try {
-            val params = QueryProductDetailsParams.newBuilder()
-                .setProductList(
-                    listOf(QueryProductDetailsParams.Product.newBuilder()
-                        .setProductId(productInfo.productId)
-                        .setProductType(BillingClient.ProductType.SUBS)
-                        .build())
-                ).build()
-
-            billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
-                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    var product:ProductDetails? = productDetailsList[0]
-                    productDetailsList.forEach { productDetails ->
-                        productDetailsMap[productDetails.productId] = productDetails
-                        val offerToken: String = product!!.subscriptionOfferDetails?.first()?.offerToken ?: ""
-                        val productDetailsParams = listOf(
-                            BillingFlowParams.ProductDetailsParams.newBuilder()
-                                .setProductDetails(product)
-                                .setOfferToken(offerToken)
-                                .build()
-                        )
-
-                        if(currentProduct != null){
-                            val subscriptionParams = BillingFlowParams.SubscriptionUpdateParams.newBuilder()
-                                .setOldPurchaseToken(currentProduct!!.purchaseToken)
-                                .setSubscriptionReplacementMode(BillingFlowParams.SubscriptionUpdateParams.ReplacementMode.CHARGE_FULL_PRICE)
-                                .build()
-
-                            val flowParams = BillingFlowParams.newBuilder()
-                                .setProductDetailsParamsList(productDetailsParams)
-                                .setObfuscatedAccountId(PPI_USER_ID)
-                                .setObfuscatedProfileId(PPI_USER_ID)
-                                .setSubscriptionUpdateParams(subscriptionParams)
-                                .build()
-
-                            val billingResultPurchase = billingClient.launchBillingFlow(activity, flowParams)
-                            if (billingResultPurchase.responseCode != BillingClient.BillingResponseCode.OK) {
-                                onError(billingResultPurchase.debugMessage)
-                            }
-                        } else {
-                            val flowParams = BillingFlowParams.newBuilder()
-                                .setProductDetailsParamsList(productDetailsParams)
-
-                                .build()
-                            val billingResultPurchase = billingClient.launchBillingFlow(activity, flowParams)
-                            if (billingResultPurchase.responseCode != BillingClient.BillingResponseCode.OK) {
-                                onError(billingResultPurchase.debugMessage)
-                            }
-                        }
-                    }
-                }
-            }
-
-
-
+            val productParams = createProductParams(productInfo)
+            queryAndProcessProduct(activity, productParams, onError)
         } catch (e: Exception) {
             onError(e.message ?: "Unknown error")
         }
+    }
+
+    private fun createProductParams(productInfo: ProductInfo): QueryProductDetailsParams {
+        val product = QueryProductDetailsParams.Product.newBuilder()
+            .setProductId(productInfo.productId)
+            .setProductType(BillingClient.ProductType.SUBS)
+            .build()
+
+        return QueryProductDetailsParams.newBuilder()
+            .setProductList(listOf(product))
+            .build()
+    }
+
+    private fun queryAndProcessProduct(
+        activity: ComponentActivity,
+        params: QueryProductDetailsParams,
+        onError: (String) -> Unit
+    ) {
+        billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
+            if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
+                onError(billingResult.debugMessage)
+                return@queryProductDetailsAsync
+            }
+
+            handleProductDetails(activity, productDetailsList, onError)
+        }
+    }
+
+    private fun handleProductDetails(
+        activity: ComponentActivity,
+        productDetailsList: List<ProductDetails>,
+        onError: (String) -> Unit
+    ) {
+        val product = productDetailsList.firstOrNull() ?: return
+        productDetailsMap[product.productId] = product
+
+        val productDetailsParams = createProductDetailsParams(product)
+        launchBillingFlow(activity, productDetailsParams, onError)
+    }
+
+    private fun createProductDetailsParams(product: ProductDetails): List<BillingFlowParams.ProductDetailsParams> {
+        val offerToken = product.subscriptionOfferDetails?.firstOrNull()?.offerToken.orEmpty()
+
+        return listOf(
+            BillingFlowParams.ProductDetailsParams.newBuilder()
+                .setProductDetails(product)
+                .setOfferToken(offerToken)
+                .build()
+        )
+    }
+
+    private fun launchBillingFlow(
+        activity: ComponentActivity,
+        productDetailsParams: List<BillingFlowParams.ProductDetailsParams>,
+        onError: (String) -> Unit
+    ) {
+        val flowParams = if (currentProduct != null) {
+            createUpdateFlowParams(productDetailsParams)
+        } else {
+            createNewSubscriptionFlowParams(productDetailsParams)
+        }
+
+        val billingResultPurchase = billingClient.launchBillingFlow(activity, flowParams)
+        if (billingResultPurchase.responseCode != BillingClient.BillingResponseCode.OK) {
+            onError(billingResultPurchase.debugMessage)
+        }
+    }
+
+    private fun createUpdateFlowParams(
+        productDetailsParams: List<BillingFlowParams.ProductDetailsParams>
+    ): BillingFlowParams {
+        val subscriptionParams = BillingFlowParams.SubscriptionUpdateParams.newBuilder()
+            .setOldPurchaseToken(currentProduct!!.purchaseToken)
+            .setSubscriptionReplacementMode(
+                BillingFlowParams.SubscriptionUpdateParams.ReplacementMode.CHARGE_FULL_PRICE
+            )
+            .build()
+
+        return BillingFlowParams.newBuilder()
+            .setProductDetailsParamsList(productDetailsParams)
+            .setObfuscatedAccountId(PPI_USER_ID)
+            .setObfuscatedProfileId(PPI_USER_ID)
+            .setSubscriptionUpdateParams(subscriptionParams)
+            .build()
+    }
+
+    private fun createNewSubscriptionFlowParams(
+        productDetailsParams: List<BillingFlowParams.ProductDetailsParams>
+    ): BillingFlowParams {
+        return BillingFlowParams.newBuilder()
+            .setProductDetailsParamsList(productDetailsParams)
+            .build()
     }
 
     override suspend fun checkExistingSubscriptions(
