@@ -58,7 +58,6 @@ import coil.compose.rememberAsyncImagePainter
 import com.synchronoss.aiap.R
 import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
-import com.synchronoss.aiap.utils.AppColors
 import com.synchronoss.aiap.utils.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,7 +68,6 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
     var showDialog by remember { mutableStateOf(false) }
     val logoUrl = subscriptionsViewModel.finalLogoUrl;
-    val contentDescription = Constants.SELECTED_PLAN_INDICATOR
 
     val logoUrlWidth = 120.dp
     val logoUrlHeight = 60.dp
@@ -83,11 +81,12 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     }
     val filteredProducts: List<ProductInfo>? = subscriptionsViewModel.filteredProducts
 
-    if(subscriptionsViewModel.isConnectionStarted && subscriptionsViewModel.filteredProducts != null && subscriptionsViewModel.selectedTab != null)
+    if(subscriptionsViewModel.currentProductId != null && subscriptionsViewModel.lightThemeColorScheme !=null && subscriptionsViewModel.darkThemeColorScheme!=null&& subscriptionsViewModel.isConnectionStarted && subscriptionsViewModel.filteredProducts != null && subscriptionsViewModel.selectedTab != null)
     Box {
         Column(modifier = Modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp)
         ) {
 
@@ -266,12 +265,12 @@ fun ScrollablePlans() {
     val currentProductId = subscriptionsViewModel.currentProductId
     val currentProduct = subscriptionsViewModel.products?.find { it.productId == currentProductId }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(bottom = 16.dp)
-    ) {
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//
+//            .padding(bottom = 16.dp)
+//    ) {
         if (filteredProducts.isNullOrEmpty()) {
             Text(
                 text = "No products available",
@@ -282,7 +281,7 @@ fun ScrollablePlans() {
                     textAlign = TextAlign.Center
                 )
             )
-            return@Column
+            return
         }
 
         // Display current plan
@@ -301,7 +300,7 @@ fun ScrollablePlans() {
         }
 
         Spacer(modifier = Modifier.height(135.dp))
-    }
+//    }
 }
 
 @Composable

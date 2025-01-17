@@ -1,6 +1,5 @@
 package com.synchronoss.aiap.domain.usecases.theme
 
-import com.synchronoss.aiap.data.remote.theme.ThemeDataDto
 import com.synchronoss.aiap.domain.models.theme.ThemeInfo
 import com.synchronoss.aiap.domain.repository.theme.ThemeManager
 import com.synchronoss.aiap.utils.Resource

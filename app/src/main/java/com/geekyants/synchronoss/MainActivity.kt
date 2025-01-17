@@ -2,6 +2,7 @@ package com.geekyants.synchronoss
 
 import SubscriptionsViewBottomSheet
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -27,6 +28,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,11 +54,14 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             SynchronossTheme {
+
                 SetupSystemBars()
                 Scaffold(
                     modifier = Modifier
@@ -60,26 +70,25 @@ class MainActivity : ComponentActivity() {
                             androidx.compose.foundation.layout.WindowInsets.systemBars.asPaddingValues()
                         ), containerColor = Color(0xFFE3EBFC)
                 ) { innerPadding ->
-                    val subscriptionsViewModel: SubscriptionsViewModel =
-                        hiltViewModel<SubscriptionsViewModel>()
+                    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
                     SubscriptionScreen(
                         modifier = Modifier.padding(innerPadding),
                         onClickSubscribe = {
-                            subscriptionsViewModel.dialogState.value = true
-
+                            showBottomSheet = true;
                         }
                     )
-                    SubscriptionsViewBottomSheet(
-                        onDismissRequest = {
-                            //TODO: If the implementor wants to do something on dismissal
-                        },
-                        activity = this,
-
-                    )
-
-
+                    if(showBottomSheet) {
+                        Log.d(null, "Showing bottom sheet")
+                        SubscriptionsViewBottomSheet(
+                            onDismissRequest = {
+                                showBottomSheet = false
+                                //If the implementor wants to do something on dismissal
+                            },
+                            visible = showBottomSheet,
+                            activity = this,
+                        )
+                    }
                 }
-
 
             }
 
@@ -96,8 +105,6 @@ private fun SetupSystemBars() {
     DisposableEffect(view) {
         val window = (view.context as ComponentActivity).window
         WindowCompat.setDecorFitsSystemWindows(window, false)
-      //  window.setStatusBarColor(android.graphics.Color.TRANSPARENT)
-        
         onDispose {}
     }
 }

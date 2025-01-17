@@ -22,14 +22,15 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
-import com.synchronoss.aiap.ui.theme.SampleAiAPTheme
 import kotlinx.coroutines.launch
+import com.synchronoss.aiap.ui.theme.SampleAiAPTheme as SampleAiAPTheme1
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubscriptionsViewBottomSheet(
     modifier: Modifier = Modifier,
     onDismissRequest: () -> Unit,
+    visible : Boolean,
     activity: ComponentActivity,
     subscriptionsViewModel: SubscriptionsViewModel = hiltViewModel(),
 ) {
@@ -43,63 +44,67 @@ fun SubscriptionsViewBottomSheet(
     val sheetHeight = screenHeight * 0.92f
 
     // Automatically open the sheet when dialog state is true
-    LaunchedEffect(subscriptionsViewModel.dialogState.value) {
-        if (subscriptionsViewModel.dialogState.value) {
-            coroutineScope.launch {
-                sheetState.show()
-            }
-        }
-    }
+//    LaunchedEffect(subscriptionsViewModel.dialogState.value) {
+//        if (subscriptionsViewModel.dialogState.value) {
+//            coroutineScope.launch {
+//                sheetState.show()
+//            }
+//        }
+//    }
 
-    if (subscriptionsViewModel.dialogState.value) {
-        SampleAiAPTheme {
-                ModalBottomSheet(
-                    onDismissRequest = {
-                        coroutineScope.launch {
-                            sheetState.hide()
-                            subscriptionsViewModel.dialogState.value = false
-                            onDismissRequest()
-                        }
-                    },
-                    sheetState = sheetState,
-                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-                    modifier = modifier.height(sheetHeight),
-                    dragHandle = null,
+  //  if (subscriptionsViewModel.dialogState.value) {
+    if(visible) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    coroutineScope.launch {
+                        sheetState.hide()
+                        subscriptionsViewModel.dialogState.value = false
+                        onDismissRequest()
+                    }
+                },
+                sheetState = sheetState,
+                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+                modifier = modifier.height(sheetHeight),
+                dragHandle = null,
 
 
                 ) {
+                SampleAiAPTheme1 {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                color = MaterialTheme.colorScheme.background,
+                            ),
+                        horizontalArrangement = Arrangement.End,
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            color = MaterialTheme.colorScheme.background,
-                        ),
-                    horizontalArrangement = Arrangement.End,
 
-
-                    ) {
-                    IconButton(
-                        onClick = {
-                            coroutineScope.launch {
-                                sheetState.hide()
-                                subscriptionsViewModel.dialogState.value = false
-                                onDismissRequest()
+                        ) {
+                        IconButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    sheetState.hide()
+                                    subscriptionsViewModel.dialogState.value = false
+                                    onDismissRequest()
+                                }
                             }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close",
+                                tint = MaterialTheme.colorScheme.onSecondary,
+                                modifier = Modifier.size(24.dp)
+                            )
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = MaterialTheme.colorScheme.onSecondary,
-                            modifier = Modifier.size(24.dp)
-                        )
                     }
+
+                    SubscriptionsView(activity = activity)
                 }
 
-                SubscriptionsView(activity = activity)
+
             }
         }
-
     }
-}
+
+    //}
+
