@@ -42,104 +42,118 @@ class SubscriptionsViewModel @Inject constructor(
 ) : ViewModel() {
 
     val dialogState = mutableStateOf(false)
+    val isLoading = mutableStateOf(true)
+    var partnerUserId: String? = null
     var products: List<ProductInfo>? by mutableStateOf(null)
     var filteredProducts: List<ProductInfo>? by mutableStateOf(null)
     var currentProductId: String? by mutableStateOf(null)
     var currentProduct: ProductInfo? by mutableStateOf(null)
     var selectedTab:TabOption? by  mutableStateOf(null)
-    var isConnectionStarted: Boolean = false
+    var isConnectionStarted: Boolean by mutableStateOf(false)
     var selectedPlan: Int by mutableIntStateOf(-1)
     var darkThemeColors: ThemeColors? = null
     var lightThemeColors: ThemeColors? = null
     var lightThemeLogoUrl:String? = null
     var darkThemeLogoUrl:String? = null
+    private var isInitialised: Boolean by mutableStateOf(false)
+
     var finalLogoUrl:String? = null
     var lightThemeColorScheme: ColorScheme? by mutableStateOf(null)
     var darkThemeColorScheme: ColorScheme? by mutableStateOf(null)
-//    var lightThemeColorScheme: ColorScheme? = null
-//    var darkThemeColorScheme: ColorScheme? = null
+    var isCurrentProductBeingUpdated: Boolean by mutableStateOf(false)
     private var lastKnownProductTimestamp: Long? = null
     private var lastKnownThemeTimestamp: Long? = null
-    var isPurchaseOngoing: Boolean = false
 
 
 
 
 
-    init {
+    fun initialize(id:String) {
+        if(!isInitialised){
+            isInitialised = true
+            isLoading.value = true
+            partnerUserId = id
+            CoroutineScope(Dispatchers.IO).launch {
+                val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(userId = partnerUserId!!) }
+                val activeSubResult =  activeSubResultDeferred.await()
+                if (activeSubResult is Resource.Success) {
+                    lastKnownProductTimestamp = activeSubResult.data?.productUpdateTimeStamp
+                    lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
+                    currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
+                    currentProduct = activeSubResult.data?.subscriptionResponseInfo?.product
+                    val theme =  async { themeLoader.loadTheme(lastKnownThemeTimestamp) }
+                    theme.await()
+                    lightThemeColors = themeLoader.getThemeColors().themeColors
+                    lightThemeLogoUrl = themeLoader.getThemeColors().logoUrl;
+                    darkThemeColors = themeLoader.getDarkThemeColors().themeColors
+                    darkThemeLogoUrl = themeLoader.getDarkThemeColors().logoUrl;
 
+                    finalLogoUrl = lightThemeLogoUrl
 
-        CoroutineScope(Dispatchers.IO).launch {
-            val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription() }
-            val activeSubResult =  activeSubResultDeferred.await()
-            if (activeSubResult is Resource.Success) {
-                lastKnownProductTimestamp = activeSubResult.data?.productUpdateTimeStamp
-                lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
-                currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
-                currentProduct = activeSubResult.data?.subscriptionResponseInfo?.product
-                val theme =  async { themeLoader.loadTheme(lastKnownThemeTimestamp) }
-                theme.await()
-            lightThemeColors = themeLoader.getThemeColors().themeColors
-            lightThemeLogoUrl = themeLoader.getThemeColors().logoUrl;
-            darkThemeColors = themeLoader.getDarkThemeColors().themeColors
-            darkThemeLogoUrl = themeLoader.getDarkThemeColors().logoUrl;
+                    lightThemeColorScheme = lightColorScheme(
 
-            finalLogoUrl = lightThemeLogoUrl
+                        primary = lightThemeColors!!.primary,
+                        secondary = lightThemeColors!!.secondary,
+                        background = lightThemeColors!!.background,
+                        onPrimary = lightThemeColors!!.textHeading,
+                        onSecondary = lightThemeColors!!.textBody,
+                        onBackground = lightThemeColors!!.textBodyAlt,
+                        surface = lightThemeColors!!.surface,
+                        onSurface = lightThemeColors!!.onSurface,
+                        outline = lightThemeColors!!.outline,
+                        outlineVariant = lightThemeColors!!.outlineVariant,
+                        tertiary = lightThemeColors!!.tertiary,
+                        onTertiary = lightThemeColors!!.onTertiary
 
-            lightThemeColorScheme = lightColorScheme(
+                    )
+                    darkThemeColorScheme = darkColorScheme(
+                        primary = darkThemeColors!!.primary,
+                        secondary = darkThemeColors!!.secondary,
+                        background = darkThemeColors!!.background,
+                        onPrimary = darkThemeColors!!.textHeading,
+                        onSecondary = darkThemeColors!!.textBody,
+                        onBackground = darkThemeColors!!.textBodyAlt,
+                        surface = darkThemeColors!!.surface,
+                        onSurface = darkThemeColors!!.onSurface,
+                        outline = darkThemeColors!!.outline,
+                        outlineVariant = darkThemeColors!!.outlineVariant,
+                        tertiary = darkThemeColors!!.tertiary,
+                        onTertiary = darkThemeColors!!.onTertiary
+                    )
+                }
 
-                primary = lightThemeColors!!.primary,
-                secondary = lightThemeColors!!.secondary,
-                background = lightThemeColors!!.background,
-                onPrimary = lightThemeColors!!.textHeading,
-                onSecondary = lightThemeColors!!.textBody,
-                onBackground = lightThemeColors!!.textBodyAlt,
-                surface = lightThemeColors!!.surface,
-                onSurface = lightThemeColors!!.onSurface,
-                outline = lightThemeColors!!.outline,
-                outlineVariant = lightThemeColors!!.outlineVariant,
-                tertiary = lightThemeColors!!.tertiary,
-                onTertiary = lightThemeColors!!.onTertiary
-
-            )
-            darkThemeColorScheme = darkColorScheme(
-                primary = darkThemeColors!!.primary,
-                secondary = darkThemeColors!!.secondary,
-                background = darkThemeColors!!.background,
-                onPrimary = darkThemeColors!!.textHeading,
-                onSecondary = darkThemeColors!!.textBody,
-                onBackground = darkThemeColors!!.textBodyAlt,
-                surface = darkThemeColors!!.surface,
-                onSurface = darkThemeColors!!.onSurface,
-                outline = darkThemeColors!!.outline,
-                outlineVariant = darkThemeColors!!.outlineVariant,
-                tertiary = darkThemeColors!!.tertiary,
-                onTertiary = darkThemeColors!!.onTertiary
-            )
             }
-            
-        }
 
 
 
-        subscriptionCancelledHandler.onSubscriptionCancelled = {
-            viewModelScope.launch {
-                products = null
-                filteredProducts = null
-                initProducts(subscriptionCancelled =  true)
+            subscriptionCancelledHandler.onSubscriptionCancelled = {
+                viewModelScope.launch {
+                    isLoading.value = true
+                    products = null
+                    filteredProducts = null
+
+                    initProducts(subscriptionCancelled =  true)
+                }
             }
-        }
-        libraryActivityManagerUseCases.launchLibrary()
-        purchaseUpdateHandler.onPurchaseStarted = {
-            products = null
-            filteredProducts = null
-            isPurchaseOngoing = false
-        }
-        purchaseUpdateHandler.onPurchaseUpdated = {
-            viewModelScope.launch {
-                initProducts(purchaseUpdate =  true)
+            libraryActivityManagerUseCases.launchLibrary()
+            purchaseUpdateHandler.onPurchaseStarted = {
+//            isLoading.value = true
+                isCurrentProductBeingUpdated = true
+
+//            products = null
+//            filteredProducts = null
+
             }
+            purchaseUpdateHandler.onPurchaseUpdated = {
+                viewModelScope.launch {
+                    val init = async { initProducts(purchaseUpdate = true) }
+                    init.await()
+                    isCurrentProductBeingUpdated = false
+                }
+            }
+
         }
+
     }
 
     fun startConnection() {
@@ -154,6 +168,7 @@ class SubscriptionsViewModel @Inject constructor(
                             val checkSubscriptionDeferred = async {
                                 billingManagerUseCases.checkExistingSubscription(
                                     onError = {
+                                        isLoading.value = false
                                         Log.d("Co", "Error checking subscriptions: $it")
                                     }
                                 )
@@ -167,6 +182,7 @@ class SubscriptionsViewModel @Inject constructor(
                         }
                     },
                     {
+                        isLoading.value = false
                         Log.d("Co", "Failed to connect to billing service")
                     }
                 )
@@ -176,14 +192,16 @@ class SubscriptionsViewModel @Inject constructor(
 
      private suspend fun initProducts(purchaseUpdate: Boolean = false, subscriptionCancelled: Boolean = false) {
          if(purchaseUpdate || subscriptionCancelled){
-             products = null
-             filteredProducts = null
+//             products = null
+//             filteredProducts = null
+//             selectedPlan = -1
              CoroutineScope(Dispatchers.IO).launch {
-                 val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription() }
+                 val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(partnerUserId!!) }
                  val activeSubResult = activeSubResultDeferred.await()
                  val checkSubscriptionDeferred = async {
                      billingManagerUseCases.checkExistingSubscription(
                          onError = {
+                             isLoading.value = false
                              Log.d("Co", "Error checking subscriptions: $it")
                          }
                      )
@@ -223,7 +241,8 @@ class SubscriptionsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun fetchAndLoadProducts() {
+    private suspend fun fetchAndLoadProducts(purchaseUpdate: Boolean = false) {
+
          when (val result = productManagerUseCases.getProductsApi(lastKnownProductTimestamp)) {
             is Resource.Success -> {
                 if(result.data!=null){
@@ -249,6 +268,7 @@ class SubscriptionsViewModel @Inject constructor(
                 Log.d("Co", "Failed to fetch products from API")
             }
          }
+        isLoading.value = false
     }
 
     fun purchaseSubscription(
@@ -257,7 +277,7 @@ class SubscriptionsViewModel @Inject constructor(
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {
-            billingManagerUseCases.purchaseSubscription(activity, product, onError)
+            billingManagerUseCases.purchaseSubscription(activity, product, onError, userId = partnerUserId!!)
         }
     }
 }

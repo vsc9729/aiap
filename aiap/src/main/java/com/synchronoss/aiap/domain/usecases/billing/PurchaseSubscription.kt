@@ -10,12 +10,14 @@ class PurchaseSubscription(
     suspend operator fun invoke(
         activity: ComponentActivity,
         product: ProductInfo,
-        onError: (String) -> Unit
+        onError: (String) -> Unit,
+        userId: String
     ) {
         billingManager.purchaseSubscription(
             activity = activity,
             productInfo = product,
-            onError = onError
+            onError = onError,
+            userId = userId
         )
     }
 }

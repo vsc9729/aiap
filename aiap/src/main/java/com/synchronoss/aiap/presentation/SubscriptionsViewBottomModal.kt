@@ -22,7 +22,12 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import com.synchronoss.aiap.ui.theme.SampleAiAPTheme as SampleAiAPTheme1
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,10 +36,12 @@ fun SubscriptionsViewBottomSheet(
     modifier: Modifier = Modifier,
     onDismissRequest: () -> Unit,
     visible : Boolean,
+    partnerUserId: String,
     activity: ComponentActivity,
     subscriptionsViewModel: SubscriptionsViewModel = hiltViewModel(),
-) {
 
+) {
+    subscriptionsViewModel.initialize(id = partnerUserId)
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
     )

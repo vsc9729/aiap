@@ -6,5 +6,5 @@ import com.synchronoss.aiap.utils.Resource
 
 interface ProductManager {
     suspend fun getProducts(timestamp: Long?): Resource<List<ProductInfo>>
-    suspend fun getActiveSubscription(): Resource<ActiveSubscriptionInfo?>
+    suspend fun getActiveSubscription(userId: String): Resource<ActiveSubscriptionInfo?>
 }

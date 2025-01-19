@@ -19,7 +19,6 @@ import com.synchronoss.aiap.data.remote.product.ProductApi
 import com.synchronoss.aiap.di.PurchaseUpdateHandler
 import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
-import com.synchronoss.aiap.utils.Constants.PPI_USER_ID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +35,7 @@ class BillingManagerImpl(
 
     private val productDetailsMap = mutableMapOf<String, ProductDetails>()
     private var currentProduct :Purchase? = null
+    private var partnerUserId :String? = null
     private val billingClient: BillingClient = BillingClient.newBuilder(context)
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .setListener(this)
@@ -67,7 +67,10 @@ class BillingManagerImpl(
         activity: ComponentActivity,
         productInfo: ProductInfo,
         onError: (String) -> Unit,
+        userId: String
     ) {
+        partnerUserId = userId
+
         try {
             val productParams = createProductParams(productInfo)
             queryAndProcessProduct(activity, productParams, onError)
@@ -154,8 +157,8 @@ class BillingManagerImpl(
 
         return BillingFlowParams.newBuilder()
             .setProductDetailsParamsList(productDetailsParams)
-            .setObfuscatedAccountId(PPI_USER_ID)
-            .setObfuscatedProfileId(PPI_USER_ID)
+            .setObfuscatedAccountId(partnerUserId!!)
+            .setObfuscatedProfileId(partnerUserId!!)
             .setSubscriptionUpdateParams(subscriptionParams)
             .build()
     }
@@ -211,7 +214,7 @@ class BillingManagerImpl(
                 productId = purchases[0].products.first().toString(),
                 purchaseTime = purchases[0].purchaseTime,
                 purchaseToken = purchases[0].purchaseToken,
-                partnerUserId = PPI_USER_ID,
+                partnerUserId = partnerUserId!!,
 
             )
             CoroutineScope(Dispatchers.IO).launch {
@@ -223,10 +226,12 @@ class BillingManagerImpl(
                 handlePurchaseResponse.await(
                 ).let { _ ->
                     purchaseUpdateHandler.handlePurchaseUpdate()
+                    partnerUserId = null
                 }
             }
 
         } else {
+            partnerUserId = null
          //   when (billingResult.responseCode) {
 //                BillingClient.BillingResponseCode.USER_CANCELED -> {
 //                    purchaseUpdateHandler.handlePurchaseUpdate()

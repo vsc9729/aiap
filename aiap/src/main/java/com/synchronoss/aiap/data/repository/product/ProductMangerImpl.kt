@@ -67,10 +67,10 @@ class ProductMangerImpl @Inject constructor(
         )
     }
 
-    override suspend fun getActiveSubscription(): Resource<ActiveSubscriptionInfo?> {
+    override suspend fun getActiveSubscription(userId: String): Resource<ActiveSubscriptionInfo?> {
         return try {
             coroutineScope {
-                val activeSubDeferred = async { api.getActiveSubscription() }
+                val activeSubDeferred = async { api.getActiveSubscription(userId = userId) }
                 // Wait for both operations to complete
                 val response = activeSubDeferred.await()
                 if (response.isSuccessful) {

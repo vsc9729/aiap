@@ -26,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -81,7 +82,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     }
     val filteredProducts: List<ProductInfo>? = subscriptionsViewModel.filteredProducts
 
-    if(subscriptionsViewModel.currentProductId != null && subscriptionsViewModel.lightThemeColorScheme !=null && subscriptionsViewModel.darkThemeColorScheme!=null&& subscriptionsViewModel.isConnectionStarted && subscriptionsViewModel.filteredProducts != null && subscriptionsViewModel.selectedTab != null)
+    if(!subscriptionsViewModel.isLoading.value)
     Box {
         Column(modifier = Modifier
             .fillMaxSize()
@@ -210,14 +211,26 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                             )
                         }
                     },
-                    enabled = subscriptionsViewModel.selectedPlan != -1
+                    enabled = subscriptionsViewModel.selectedPlan != -1 && !subscriptionsViewModel.isCurrentProductBeingUpdated
                 ) {
-                    Text(
-                        "Continue",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.W600,
-                        color = Color.White
-                    )
+                    Row {
+                        Text(
+                            "Continue",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.W600,
+                            color = Color.White
+                        )
+                        Spacer(
+                            modifier = Modifier.width(8.dp)
+                        )
+                        if(subscriptionsViewModel.isCurrentProductBeingUpdated){
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
                 }
                 TextButton(
                     onClick = {
