@@ -86,6 +86,7 @@ class MainActivity : ComponentActivity() {
                             },
                             visible = showBottomSheet,
                             activity = this,
+                            partnerUserId = "5432eb6e-a15c-47c7-94cc-c315551c8413"
                         )
                     }
                 }
