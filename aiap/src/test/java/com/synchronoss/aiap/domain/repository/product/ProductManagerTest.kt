@@ -212,4 +212,86 @@ class ProductManagerTest {
         assertNotNull((result as Resource.Success).data)
         assertEquals("test_product", result.data?.subscriptionResponseInfo?.product?.productId)
     }
+    @Test
+    fun `getProducts returns error when network call fails`() = runTest {
+        // Given
+        coEvery { productApi.getProducts() } throws Exception("Network error")
+
+        coEvery {
+            cacheManager.getCachedDataWithTimestamp<List<ProductInfo>>(
+                key = PRODUCTS_CACHE_KEY,
+                currentTimestamp = null,
+                fetchFromNetwork = any(),
+                serialize = any(),
+                deserialize = any()
+            )
+        } coAnswers {
+            val fetch = thirdArg<(suspend () -> Resource<List<ProductInfo>>)>()
+            fetch()
+        }
+
+        // When
+        val result = productManager.getProducts(null)
+
+        // Then
+        assertTrue(result is Resource.Error)
+        assertEquals("Network error", (result as Resource.Error).message)
+    }
+
+    @Test
+    fun `getProducts uses cache when available`() = runTest {
+        // Given
+        val cachedProducts = listOf(
+            ProductInfo(
+                productId = "cached_product",
+                displayName = "Cached Product",
+                description = "Cached Description",
+                vendorName = "Test Vendor",
+                appName = "Test App",
+                price = 9.99,
+                displayPrice = "$9.99",
+                platform = "ANDROID",
+                serviceLevel = "TEST_SERVICE",
+                isActive = true,
+                recurringPeriodCode = "P1M",
+                productType = "SUBSCRIPTION",
+                entitlementId = null
+            )
+        )
+
+        coEvery {
+            cacheManager.getCachedDataWithTimestamp<List<ProductInfo>>(
+                key = PRODUCTS_CACHE_KEY,
+                currentTimestamp = 123L,
+                fetchFromNetwork = any(),
+                serialize = any(),
+                deserialize = any()
+            )
+        } returns Resource.Success(cachedProducts)
+
+        // When
+        val result = productManager.getProducts(123L)
+
+        // Then
+        assertTrue(result is Resource.Success)
+        assertEquals(cachedProducts, (result as Resource.Success).data)
+
+        // Verify cache was used
+        coVerify(exactly = 0) { productApi.getProducts() }
+    }
+
+    @Test
+    fun `getActiveSubscription returns error on network failure`() = runTest {
+        // Given
+        coEvery {
+            productApi.getActiveSubscription(any(), any())
+        } throws Exception("Network error")
+
+        // When
+        val result = productManager.getActiveSubscription("test-user")
+
+        // Then
+        assertTrue(result is Resource.Error)
+        assertEquals("Network error", (result as Resource.Error).message)
+    }
 }
