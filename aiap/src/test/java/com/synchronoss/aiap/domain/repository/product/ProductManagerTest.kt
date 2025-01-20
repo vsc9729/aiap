@@ -28,6 +28,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import io.mockk.coEvery
 
+
 class ProductManagerTest {
     @MockK
     private lateinit var productApi: ProductApi
@@ -51,7 +52,7 @@ class ProductManagerTest {
     }
 
     @Test
-    fun `getProducts returns cached data when timestamp is valid`() = runBlocking {
+    fun `getProducts returns cached data when timestamp is valid`() = runTest {
         // Given
         val mockProducts = listOf(
             ProductInfo(
@@ -73,11 +74,11 @@ class ProductManagerTest {
 
         coEvery {
             cacheManager.getCachedDataWithTimestamp<List<ProductInfo>>(
-                any(),
-                any(),
-                any(),
-                any(),
-                any()
+                key = PRODUCTS_CACHE_KEY,
+                currentTimestamp = 123L,
+                fetchFromNetwork = any(),
+                serialize = any(),
+                deserialize = any()
             )
         } returns Resource.Success(mockProducts)
 
@@ -87,26 +88,28 @@ class ProductManagerTest {
         // Then
         assertTrue(result is Resource.Success)
         assertEquals(mockProducts, (result as Resource.Success).data)
+
+        // Verify cache was used instead of network
+        coVerify(exactly = 0) { productApi.getProducts() }
     }
 
-
     @Test
-    fun `getProducts filters non-Android products`() = runTest {
+    fun `getProducts filters non-Android products when fetching from network`() = runTest {
         // Given
-        val mockProducts = ApiResponse(
+        val mockProducts =  ApiResponse(
             code = 200,
             title = "SUCCESS",
             message = "",
             data = listOf(
                 ProductDataDto(
-                    productId = "android_product",
-                    displayName = "Android Product",
-                    description = "Android Description",
+                    productId = "test_product",
+                    displayName = "Test Product",
+                    description = "Test Description",
                     vendorName = "Test Vendor",
                     appName = "Test App",
                     price = 9.99,
                     displayPrice = "$9.99",
-                    platform = "ANDROID",
+                    platform = "IOS",
                     serviceLevel = "TEST_SERVICE",
                     isActive = true,
                     recurringPeriodCode = "P1M",
@@ -114,14 +117,14 @@ class ProductManagerTest {
                     entitlementId = null
                 ),
                 ProductDataDto(
-                    productId = "ios_product",
-                    displayName = "iOS Product",
-                    description = "iOS Description",
+                    productId = "test_product",
+                    displayName = "Test Product",
+                    description = "Test Description",
                     vendorName = "Test Vendor",
                     appName = "Test App",
                     price = 9.99,
                     displayPrice = "$9.99",
-                    platform = "IOS",
+                    platform = "ANDROID",
                     serviceLevel = "TEST_SERVICE",
                     isActive = true,
                     recurringPeriodCode = "P1M",
@@ -154,9 +157,32 @@ class ProductManagerTest {
         val successResult = result as Resource.Success<List<ProductInfo>>
         assertEquals(1, successResult.data?.size)
         assertEquals("ANDROID", successResult.data?.first()?.platform)
+    }
 
-        // Verify
-        coVerify { productApi.getProducts() }
+    @Test
+    fun `getProducts returns error when network call fails`() = runTest {
+        // Given
+        coEvery { productApi.getProducts() } throws Exception("Network error")
+
+        coEvery {
+            cacheManager.getCachedDataWithTimestamp<List<ProductInfo>>(
+                key = PRODUCTS_CACHE_KEY,
+                currentTimestamp = null,
+                fetchFromNetwork = any(),
+                serialize = any(),
+                deserialize = any()
+            )
+        } coAnswers {
+            val fetch = thirdArg<(suspend () -> Resource<List<ProductInfo>>)>()
+            fetch()
+        }
+
+        // When
+        val result = productManager.getProducts(null)
+
+        // Then
+        assertTrue(result is Resource.Error)
+        assertEquals("Network error", (result as Resource.Error).message)
     }
 
     @Test
@@ -212,76 +238,10 @@ class ProductManagerTest {
         assertNotNull((result as Resource.Success).data)
         assertEquals("test_product", result.data?.subscriptionResponseInfo?.product?.productId)
     }
-    @Test
-    fun `getProducts returns error when network call fails`() = runTest {
-        // Given
-        coEvery { productApi.getProducts() } throws Exception("Network error")
 
-        coEvery {
-            cacheManager.getCachedDataWithTimestamp<List<ProductInfo>>(
-                key = PRODUCTS_CACHE_KEY,
-                currentTimestamp = null,
-                fetchFromNetwork = any(),
-                serialize = any(),
-                deserialize = any()
-            )
-        } coAnswers {
-            val fetch = thirdArg<(suspend () -> Resource<List<ProductInfo>>)>()
-            fetch()
-        }
-
-        // When
-        val result = productManager.getProducts(null)
-
-        // Then
-        assertTrue(result is Resource.Error)
-        assertEquals("Network error", (result as Resource.Error).message)
-    }
 
     @Test
-    fun `getProducts uses cache when available`() = runTest {
-        // Given
-        val cachedProducts = listOf(
-            ProductInfo(
-                productId = "cached_product",
-                displayName = "Cached Product",
-                description = "Cached Description",
-                vendorName = "Test Vendor",
-                appName = "Test App",
-                price = 9.99,
-                displayPrice = "$9.99",
-                platform = "ANDROID",
-                serviceLevel = "TEST_SERVICE",
-                isActive = true,
-                recurringPeriodCode = "P1M",
-                productType = "SUBSCRIPTION",
-                entitlementId = null
-            )
-        )
-
-        coEvery {
-            cacheManager.getCachedDataWithTimestamp<List<ProductInfo>>(
-                key = PRODUCTS_CACHE_KEY,
-                currentTimestamp = 123L,
-                fetchFromNetwork = any(),
-                serialize = any(),
-                deserialize = any()
-            )
-        } returns Resource.Success(cachedProducts)
-
-        // When
-        val result = productManager.getProducts(123L)
-
-        // Then
-        assertTrue(result is Resource.Success)
-        assertEquals(cachedProducts, (result as Resource.Success).data)
-
-        // Verify cache was used
-        coVerify(exactly = 0) { productApi.getProducts() }
-    }
-
-    @Test
-    fun `getActiveSubscription returns error on network failure`() = runTest {
+    fun `getActiveSubscription returns error when network fails`() = runTest {
         // Given
         coEvery {
             productApi.getActiveSubscription(any(), any())
