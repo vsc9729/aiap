@@ -9,6 +9,66 @@ plugins {
     id("maven-publish")
     id("com.google.devtools.ksp")
     id("jacoco")
+    id("org.sonarqube") version "6.0.1.5171"
+}
+jacoco {
+    toolVersion = "0.8.9"  // Use the latest version of Jacoco
+}
+sonar {
+    properties {
+        property("sonar.host.url", "http://localhost:9000")
+
+        // Project identification
+        property("sonar.projectKey", "codeCoverageKey")
+        property("sonar.projectName", "codeCoverage")
+
+        // Explicitly define main sources
+        property("sonar.sources", listOf(
+            "src/main/java",
+            //"src/main/kotlin"
+        ).joinToString(","))
+
+        // Explicitly define test sources
+        property("sonar.tests", listOf(
+            "src/test/java",
+            //"src/test/kotlin",
+            "src/androidTest/java",
+//            "src/androidTest/kotlin"
+        ).joinToString(","))
+
+        // Encoding of source files
+        property("sonar.sourceEncoding", "UTF-8")
+
+        // Jacoco coverage report paths
+        property("sonar.coverage.jacoco.xmlReportPaths",
+            "${layout.buildDirectory.get()}/reports/jacoco/debug/jacocoTestReport.xml")
+
+        // Android lint results
+        property("sonar.android.lint.report",
+            "${layout.buildDirectory.get()}/reports/lint-results.xml")
+
+        // Exclude specific files and patterns
+        property("sonar.exclusions", listOf(
+            "**/BuildConfig.*",
+            "**/Manifest.java",
+            "**/R.class",
+            "**/R$*.class",
+            "**/*Test*.*",
+            "**/res/**/*.*"
+        ).joinToString(","))
+
+        // Explicitly exclude test files from main sources
+        property("sonar.test.exclusions", listOf(
+            "src/test/**/*",
+            "src/androidTest/**/*"
+        ).joinToString(","))
+
+        // Explicitly include only test files in test sources
+        property("sonar.test.inclusions", listOf(
+            "**/*Test*.*",
+            "**/*Spec*.*"
+        ).joinToString(","))
+    }
 }
 
 android {
@@ -68,6 +128,8 @@ publishing {
     }
 }
 
+
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -106,6 +168,9 @@ dependencies {
     testImplementation(libs.mockwebserver)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.kotlin.test)
 }
 
 val exclusions = listOf(
@@ -124,21 +189,14 @@ tasks.withType(Test::class) {
 }
 androidComponents {
     onVariants { variant ->
-        // Extract variant name and capitalize the first letter
         val variantName = variant.name.replaceFirstChar {
             if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
         }
 
-        // Define task names for unit tests and Android tests
-        val unitTests = "test${variantName}UnitTest"
-        val androidTests = "connected${variantName}AndroidTest"
+        val testTaskName = "test${variantName}UnitTest"
 
-        // Register a JacocoReport task for code coverage analysis
-        tasks.register<JacocoReport>("jacoco${variantName}CodeCoverage") {
-            dependsOn(unitTests)
-            // Note: Android tests are optional as they require a connected device
-            // If you want to include them, uncomment the next line
-            // dependsOn(androidTests)
+        tasks.register<JacocoReport>("jacoco${variantName}Report") {
+            dependsOn(testTaskName)
 
             group = "Reporting"
             description = "Generate Jacoco coverage reports for the ${variantName} build"
@@ -146,38 +204,51 @@ androidComponents {
             reports {
                 xml.required.set(true)
                 html.required.set(true)
-                // Optionally set report directories
-                html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco/${variant.name}/html"))
+
+                // Set specific output locations
+                html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco/${variant.name}"))
                 xml.outputLocation.set(layout.buildDirectory.file("reports/jacoco/${variant.name}/jacocoTestReport.xml"))
             }
 
-            sourceDirectories.setFrom(
-                files(
-                    "$projectDir/src/main/java",
-                    "$projectDir/src/main/kotlin"
-                )
+            sourceDirectories.setFrom(layout.projectDirectory.dir("src/main/java"))
+            additionalSourceDirs.setFrom(layout.projectDirectory.dir("src/main/kotlin"))
+
+            classDirectories.setFrom(
+                fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/${variant.name}") {
+                    exclude(excludes)
+                }
             )
 
-            classDirectories.setFrom(files(
-                fileTree("${layout.buildDirectory.get()}/intermediates/javac/${variant.name}") {
-                    exclude(exclusions)
-                },
-                fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/${variant.name}") {
-                    exclude(exclusions)
-                }
-            ))
-
             executionData.setFrom(fileTree(layout.buildDirectory) {
-                include(
-                    "jacoco/test${variantName}UnitTest.exec",
-                    "outputs/unit_test_code_coverage/${variant.name}UnitTest/${variant.name}UnitTest.ec",
-                    "outputs/code_coverage/${variant.name}AndroidTest/connected/**/*.ec"
-                )
+                include("outputs/unit_test_code_coverage/${variant.name}UnitTest/**/*.exec")
+                include("jacoco/${testTaskName}.exec")
             })
         }
+    }
+}
+tasks.register("jacocoTestReport") {
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports for all variants"
+
+    // This will be configured after all variant-specific tasks are created
+    androidComponents.onVariants { variant ->
+        dependsOn("jacoco${variant.name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }}Report")
     }
 }
 
 kapt {
     correctErrorTypes = true
+}
+tasks.configureEach {
+    doFirst {
+        println("Executing task: ${this.name}")
+    }
+}
+
+tasks.withType<JacocoReport> {
+    doFirst {
+        println("Jacoco source dirs: ${sourceDirectories.files}")
+        println("Jacoco class dirs: ${classDirectories.files}")
+        println("Jacoco execution data: ${executionData.files}")
+    }
 }
