@@ -202,7 +202,6 @@ class BillingManagerImpl(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(DelicateCoroutinesApi::class)
     override fun onPurchasesUpdated(
         billingResult: BillingResult,

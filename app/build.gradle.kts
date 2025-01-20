@@ -12,13 +12,12 @@ plugins {
 android {
     namespace = "com.geekyants.synchronoss"
     compileSdk = 35
-
     defaultConfig {
         applicationId = "com.geekyants.synchronoss"
         minSdk = 21
         targetSdk = 34
-        versionCode = 16
-        versionName = "5.1.0"
+        versionCode = 17
+        versionName = "6.0.0"
 
 
 
@@ -49,7 +48,9 @@ android {
                 )
                 signingConfig = signingConfigs.getByName("release")
             }
+
         }
+
         compileOptions {
             sourceCompatibility = JavaVersion.VERSION_1_8
             targetCompatibility = JavaVersion.VERSION_1_8
@@ -99,7 +100,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
-
 kapt {
     correctErrorTypes = true
 }

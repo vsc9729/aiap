@@ -4,15 +4,15 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.geekyants.tippy",
+  "applicationId": "com.geekyants.synchronoss",
   "variantName": "release",
   "elements": [
     {
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 6,
-      "versionName": "1.6",
+      "versionCode": 17,
+      "versionName": "6.0.0",
       "outputFile": "app-release.apk"
     }
   ],
