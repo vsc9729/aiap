@@ -1,5 +1,6 @@
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -28,6 +30,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import okhttp3.internal.wait
 import com.synchronoss.aiap.ui.theme.SampleAiAPTheme as SampleAiAPTheme1
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,7 +84,7 @@ fun SubscriptionsViewBottomSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(
-                                color = MaterialTheme.colorScheme.background,
+                                color = if( isSystemInDarkTheme()) Color.Black    else  Color.White,
                             ),
                         horizontalArrangement = Arrangement.End,
 
@@ -99,7 +102,7 @@ fun SubscriptionsViewBottomSheet(
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Close",
-                                tint = MaterialTheme.colorScheme.onSecondary,
+                                tint = if( isSystemInDarkTheme()) Color.White   else  Color(0xFF6B7280),
                                 modifier = Modifier.size(24.dp)
                             )
                         }
