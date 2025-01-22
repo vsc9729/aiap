@@ -1,3 +1,4 @@
+import android.graphics.Paint.Style
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.BorderStroke
@@ -43,9 +44,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -157,24 +165,33 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
         }
 
         Box(
-            contentAlignment = Alignment.Center,
             modifier = Modifier
-                .shadow(
-                    elevation = 1.dp,
-                    shape = RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp),
-                    spotColor = Color.Black.copy(alpha = 0.1f),
-                    ambientColor = Color.Black.copy(alpha = 0.1f)
-
-                )
                 .fillMaxWidth()
                 .height(170.dp)
+                .drawBehind {
+                    val shadowColor = Color.Black.copy(alpha = 0.068f)
+                    val shadowRadius = 35.dp.toPx()
+                    val offsetY = -shadowRadius / 2
+                    drawRect(
+                        brush = Brush.verticalGradient(
+                            colors = listOf( Color.Transparent, shadowColor),
+                            startY = offsetY,
+                            endY = offsetY + shadowRadius,
+                            tileMode = TileMode.Clamp
+                        ),
+                        topLeft = Offset(0f, offsetY),
+                        size = Size(size.width, shadowRadius)
+                    )
+                }
                 .clip(RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp))
                 .background(color = MaterialTheme.colorScheme.tertiary)
-                .align(Alignment.BottomCenter)
 
+                .align(Alignment.BottomCenter)
         )
         {
-            Box(modifier = Modifier.padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)) {
+            Box(modifier = Modifier.padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+
+            ) {
 
             Column(
                 modifier = Modifier.fillMaxSize(),
