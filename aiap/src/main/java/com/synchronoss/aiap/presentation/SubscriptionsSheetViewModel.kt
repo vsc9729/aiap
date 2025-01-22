@@ -30,7 +30,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
+/**
+ * ViewModel responsible for managing subscription-related UI state and business logic.
+ * Handles product filtering, theme management, and purchase operations.
+ */
 @HiltViewModel
 class SubscriptionsViewModel @Inject constructor(
     private val billingManagerUseCases: BillingManagerUseCases,
@@ -41,32 +44,34 @@ class SubscriptionsViewModel @Inject constructor(
     private val subscriptionCancelledHandler: SubscriptionCancelledHandler
 ) : ViewModel() {
 
+    // UI State
     val dialogState = mutableStateOf(false)
     val isLoading = mutableStateOf(true)
+    
+    // Product Management
     var partnerUserId: String? = null
     var products: List<ProductInfo>? by mutableStateOf(null)
     var filteredProducts: List<ProductInfo>? by mutableStateOf(null)
     var currentProductId: String? by mutableStateOf(null)
     var currentProduct: ProductInfo? by mutableStateOf(null)
-    var selectedTab:TabOption? by  mutableStateOf(null)
+    var selectedTab: TabOption? by mutableStateOf(null)
     var isConnectionStarted: Boolean by mutableStateOf(false)
     var selectedPlan: Int by mutableIntStateOf(-1)
+    
+    // Theme Management
     var darkThemeColors: ThemeColors? = null
     var lightThemeColors: ThemeColors? = null
-    var lightThemeLogoUrl:String? = null
-    var darkThemeLogoUrl:String? = null
-    private var isInitialised: Boolean by mutableStateOf(false)
-
-    var finalLogoUrl:String? = null
+    var lightThemeLogoUrl: String? = null
+    var darkThemeLogoUrl: String? = null
+    var finalLogoUrl: String? = null
     var lightThemeColorScheme: ColorScheme? by mutableStateOf(null)
     var darkThemeColorScheme: ColorScheme? by mutableStateOf(null)
+    
+    // State Management
+    var isInitialised: Boolean by mutableStateOf(false)
     var isCurrentProductBeingUpdated: Boolean by mutableStateOf(false)
     private var lastKnownProductTimestamp: Long? = null
     private var lastKnownThemeTimestamp: Long? = null
-
-
-
-
 
     fun initialize(id:String) {
         if(!isInitialised){
@@ -77,6 +82,10 @@ class SubscriptionsViewModel @Inject constructor(
                 val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(userId = partnerUserId!!) }
                 val activeSubResult =  activeSubResultDeferred.await()
                 if (activeSubResult is Resource.Success) {
+                    if(!isConnectionStarted){
+                        val billing = async { startConnection() }
+                        billing.await()
+                    }
                     lastKnownProductTimestamp = activeSubResult.data?.productUpdateTimeStamp
                     lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
                     currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
@@ -123,7 +132,7 @@ class SubscriptionsViewModel @Inject constructor(
                 }
 
             }
-
+                
 
 
             subscriptionCancelledHandler.onSubscriptionCancelled = {

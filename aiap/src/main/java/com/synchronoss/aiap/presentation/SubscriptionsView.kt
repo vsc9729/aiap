@@ -64,6 +64,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * Main composable for displaying subscription plans and handling user interactions.
+ * Provides a complete subscription interface with plan selection, purchase flow, and coupon handling.
+ */
 @Composable
 fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
@@ -75,11 +79,11 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 
     Log.d(null , "Logo url is $logoUrl")
 
-    if(!subscriptionsViewModel.isConnectionStarted){
-        CoroutineScope(Dispatchers.IO).launch {
-            subscriptionsViewModel.startConnection()
-        }
-    }
+//    if(!subscriptionsViewModel.isConnectionStarted){
+//        CoroutineScope(Dispatchers.IO).launch {
+//            subscriptionsViewModel.startConnection()
+//        }
+//    }
     val filteredProducts: List<ProductInfo>? = subscriptionsViewModel.filteredProducts
 
     if(!subscriptionsViewModel.isLoading.value)
@@ -270,7 +274,10 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     }
 }
 
-
+/**
+ * Displays scrollable subscription plans including current and available plans.
+ * Handles plan selection and display of pricing information.
+ */
 @Composable
 fun ScrollablePlans() {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
@@ -316,6 +323,10 @@ fun ScrollablePlans() {
 //    }
 }
 
+/**
+ * Displays the current active subscription plan card.
+ * @param product The currently active subscription product
+ */
 @Composable
 fun ActualCurrentPlanCard(
     product: ProductInfo
@@ -398,6 +409,10 @@ fun ActualCurrentPlanCard(
 
     }
 }
+
+/**
+ * Displays a demo/placeholder current plan card when no active subscription exists.
+ */
 @Composable
 fun DemoCurrentPlanCard() {
     Box(
@@ -479,6 +494,11 @@ fun DemoCurrentPlanCard() {
     }
     }
 
+/**
+ * Displays available subscription plan cards for selection.
+ * @param product The subscription product to display
+ * @param productIndex Index for tracking selected plan
+ */
 @Composable
 fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
@@ -625,6 +645,11 @@ fun TabSelector(
     }
 }
 
+/**
+ * Dialog for entering and applying coupon codes.
+ * @param onDismiss Callback when dialog is dismissed
+ * @param onConfirm Callback when coupon is confirmed
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DialogBox(

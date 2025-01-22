@@ -213,7 +213,7 @@ class BillingManagerImpl(
                 productId = purchases[0].products.first().toString(),
                 purchaseTime = purchases[0].purchaseTime,
                 purchaseToken = purchases[0].purchaseToken,
-                partnerUserId = partnerUserId!!,
+                partnerUserId = partnerUserId ?: "",
 
             )
             CoroutineScope(Dispatchers.IO).launch {
