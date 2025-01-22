@@ -8,4 +8,5 @@ plugins {
     alias(libs.plugins.android.library) apply false
     id("com.google.devtools.ksp") version "2.0.0-1.0.21" apply false
     id("org.sonarqube") version "6.0.1.5171"
+    id("org.jetbrains.kotlinx.kover") version "0.9.1"
 }

@@ -10,64 +10,33 @@ plugins {
     id("com.google.devtools.ksp")
     id("jacoco")
     id("org.sonarqube") version "6.0.1.5171"
+    id("org.jetbrains.kotlinx.kover")
+
 }
-jacoco {
-    toolVersion = "0.8.9"  // Use the latest version of Jacoco
-}
+
 sonar {
     properties {
-        property("sonar.host.url", "http://localhost:9000")
+        property("sonar.host.url", "https://sonarqube.blr0.geekydev.com/sonar")
 
         // Project identification
-        property("sonar.projectKey", "codeCoverageKey")
-        property("sonar.projectName", "codeCoverage")
+        property("sonar.projectKey", "saddsa")
+        property("sonar.projectName", "saddsa")
 
-        // Explicitly define main sources
-        property("sonar.sources", listOf(
-            "src/main/java",
-            //"src/main/kotlin"
-        ).joinToString(","))
+        // Define main source directories
+        property("sonar.sources", "src/main/java")
 
-        // Explicitly define test sources
+        // Define test source directories
         property("sonar.tests", listOf(
             "src/test/java",
-            //"src/test/kotlin",
-            "src/androidTest/java",
-//            "src/androidTest/kotlin"
+            "src/androidTest/java"
         ).joinToString(","))
 
         // Encoding of source files
         property("sonar.sourceEncoding", "UTF-8")
 
-        // Jacoco coverage report paths
+        // Jacoco coverage report path
         property("sonar.coverage.jacoco.xmlReportPaths",
-            "${layout.buildDirectory.get()}/reports/jacoco/debug/jacocoTestReport.xml")
-
-        // Android lint results
-        property("sonar.android.lint.report",
-            "${layout.buildDirectory.get()}/reports/lint-results.xml")
-
-        // Exclude specific files and patterns
-        property("sonar.exclusions", listOf(
-            "**/BuildConfig.*",
-            "**/Manifest.java",
-            "**/R.class",
-            "**/R$*.class",
-            "**/*Test*.*",
-            "**/res/**/*.*"
-        ).joinToString(","))
-
-        // Explicitly exclude test files from main sources
-        property("sonar.test.exclusions", listOf(
-            "src/test/**/*",
-            "src/androidTest/**/*"
-        ).joinToString(","))
-
-        // Explicitly include only test files in test sources
-        property("sonar.test.inclusions", listOf(
-            "**/*Test*.*",
-            "**/*Spec*.*"
-        ).joinToString(","))
+            "${layout.buildDirectory.get()}/reports/kover/reportDebug.xml")
     }
 }
 
@@ -90,6 +59,24 @@ android {
     buildFeatures {
         compose = true
     }
+
+//    packaging {
+//        resources {
+//            pickFirsts.add("META-INF/versions/9/OSGI-INF/MANIFEST.MF")
+//            excludes.addAll(
+//                listOf(
+//                    "META-INF/DEPENDENCIES",
+//                    "META-INF/LICENSE",
+//                    "META-INF/LICENSE.txt",
+//                    "META-INF/license.txt",
+//                    "META-INF/NOTICE",
+//                    "META-INF/NOTICE.txt",
+//                    "META-INF/notice.txt",
+//                    "META-INF/ASL2.0"
+//                )
+//            )
+//        }
+//    }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
     }
@@ -163,6 +150,11 @@ dependencies {
     // Billing
     implementation(libs.android.billing.client)
 
+//    // BouncyCastle Dependencies
+//    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+//    implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
+//    implementation("org.bouncycastle:bcutil-jdk15on:1.70")
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockwebserver)
@@ -171,84 +163,15 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotlin.test)
+//    testImplementation(libs.hilt.android.testing)
+//    kaptTest(libs.hilt.android.compiler)
+//    androidTestImplementation(libs.hilt.android.testing)
+//    androidTestImplementation (libs.androidx.runner)
+//    androidTestImplementation (libs.androidx.rules)
+//    kaptAndroidTest(libs.hilt.android.compiler)
 }
 
-val exclusions = listOf(
-    "**/R.class",
-    "**/R\$*.class",
-    "**/BuildConfig.*",
-    "**/Manifest*.*",
-    "**/*Test*.*"
-)
-
-tasks.withType(Test::class) {
-    configure<JacocoTaskExtension> {
-        isIncludeNoLocationClasses = true
-        excludes = listOf("jdk.internal.*")
-    }
-}
-androidComponents {
-    onVariants { variant ->
-        val variantName = variant.name.replaceFirstChar {
-            if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
-        }
-
-        val testTaskName = "test${variantName}UnitTest"
-
-        tasks.register<JacocoReport>("jacoco${variantName}Report") {
-            dependsOn(testTaskName)
-
-            group = "Reporting"
-            description = "Generate Jacoco coverage reports for the ${variantName} build"
-
-            reports {
-                xml.required.set(true)
-                html.required.set(true)
-
-                // Set specific output locations
-                html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco/${variant.name}"))
-                xml.outputLocation.set(layout.buildDirectory.file("reports/jacoco/${variant.name}/jacocoTestReport.xml"))
-            }
-
-            sourceDirectories.setFrom(layout.projectDirectory.dir("src/main/java"))
-            additionalSourceDirs.setFrom(layout.projectDirectory.dir("src/main/kotlin"))
-
-            classDirectories.setFrom(
-                fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/${variant.name}") {
-                    exclude(excludes)
-                }
-            )
-
-            executionData.setFrom(fileTree(layout.buildDirectory) {
-                include("outputs/unit_test_code_coverage/${variant.name}UnitTest/**/*.exec")
-                include("jacoco/${testTaskName}.exec")
-            })
-        }
-    }
-}
-tasks.register("jacocoTestReport") {
-    group = "Reporting"
-    description = "Generate Jacoco coverage reports for all variants"
-
-    // This will be configured after all variant-specific tasks are created
-    androidComponents.onVariants { variant ->
-        dependsOn("jacoco${variant.name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }}Report")
-    }
-}
 
 kapt {
     correctErrorTypes = true
-}
-tasks.configureEach {
-    doFirst {
-        println("Executing task: ${this.name}")
-    }
-}
-
-tasks.withType<JacocoReport> {
-    doFirst {
-        println("Jacoco source dirs: ${sourceDirectories.files}")
-        println("Jacoco class dirs: ${classDirectories.files}")
-        println("Jacoco execution data: ${executionData.files}")
-    }
 }
