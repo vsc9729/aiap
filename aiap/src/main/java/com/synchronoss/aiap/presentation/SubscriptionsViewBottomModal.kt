@@ -1,5 +1,7 @@
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -51,7 +53,7 @@ fun SubscriptionsViewBottomSheet(
     val coroutineScope = rememberCoroutineScope()
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
-    val sheetHeight = screenHeight * 0.92f
+    val sheetHeight = screenHeight * 0.98f
 
     // Automatically open the sheet when dialog state is true
 //    LaunchedEffect(subscriptionsViewModel.dialogState.value) {
@@ -76,18 +78,15 @@ fun SubscriptionsViewBottomSheet(
                 shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
                 modifier = modifier.height(sheetHeight),
                 dragHandle = null,
-
-
                 ) {
                 SampleAiAPTheme1 {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(
-                                color = if( isSystemInDarkTheme()) Color.Black    else  Color.White,
+                                color = if( isSystemInDarkTheme()) Color(0xFF0D0D0D)    else  Color.White,
                             ),
                         horizontalArrangement = Arrangement.End,
-
 
                         ) {
                         IconButton(
@@ -110,8 +109,6 @@ fun SubscriptionsViewBottomSheet(
 
                     SubscriptionsView(activity = activity)
                 }
-
-
             }
         }
     }
