@@ -47,6 +47,7 @@ class SubscriptionsViewModel @Inject constructor(
     // UI State
     val dialogState = mutableStateOf(false)
     val isLoading = mutableStateOf(true)
+    val noInternetConnectionAndNoCache = mutableStateOf(false)
     
     // Product Management
     var partnerUserId: String? = null
@@ -73,6 +74,7 @@ class SubscriptionsViewModel @Inject constructor(
     private var lastKnownProductTimestamp: Long? = null
     private var lastKnownThemeTimestamp: Long? = null
 
+
     fun initialize(id:String) {
         if(!isInitialised){
             isInitialised = true
@@ -82,10 +84,10 @@ class SubscriptionsViewModel @Inject constructor(
                 val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(userId = partnerUserId!!) }
                 val activeSubResult =  activeSubResultDeferred.await()
                 if (activeSubResult is Resource.Success) {
-                    if(!isConnectionStarted){
-                        val billing = async { startConnection() }
-                        billing.await()
-                    }
+//                    if(!isConnectionStarted){
+//                        val billing = async { startConnection() }
+//                        billing.await()
+//                    }
                     lastKnownProductTimestamp = activeSubResult.data?.productUpdateTimeStamp
                     lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
                     currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
@@ -129,9 +131,14 @@ class SubscriptionsViewModel @Inject constructor(
                         tertiary = darkThemeColors!!.tertiary,
                         onTertiary = darkThemeColors!!.onTertiary
                     )
+                    initProducts()
+                }else{
+                    noInternetConnectionAndNoCache.value = true
                 }
 
             }
+            // Only runs after subscription check is complete
+
                 
 
 
@@ -165,7 +172,7 @@ class SubscriptionsViewModel @Inject constructor(
 
     }
 
-    fun startConnection() {
+     fun startConnection(makePurchase: () ->Unit ) {
         if(!isConnectionStarted){
             CoroutineScope(Dispatchers.IO).launch {
                 billingManagerUseCases.startConnection(
@@ -185,9 +192,8 @@ class SubscriptionsViewModel @Inject constructor(
 
                             // Wait for the check to complete
                             checkSubscriptionDeferred.await()
-
-                            // Only runs after subscription check is complete
-                            initProducts()
+                            //Start Purchase flow
+                            makePurchase()
                         }
                     },
                     {
@@ -285,8 +291,22 @@ class SubscriptionsViewModel @Inject constructor(
         product: ProductInfo,
         onError: (String) -> Unit
     ) {
-        viewModelScope.launch {
-            billingManagerUseCases.purchaseSubscription(activity, product, onError, userId = partnerUserId!!)
+        CoroutineScope(Dispatchers.IO).launch {
+            if (!isConnectionStarted) {
+                 startConnection(makePurchase = {
+                    CoroutineScope(Dispatchers.IO).launch {  billingManagerUseCases.purchaseSubscription(
+                            activity,
+                            product,
+                            onError,
+                            userId = partnerUserId!!
+                            )
+                        }
+                    })
+            } else {
+                billingManagerUseCases.purchaseSubscription(activity, product, onError, userId = partnerUserId!!)
+            }
+
         }
+
     }
 }

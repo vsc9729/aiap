@@ -25,6 +25,7 @@ class ProductMangerImpl @Inject constructor(
 
     companion object {
         private const val PRODUCTS_CACHE_KEY = "products_cache"
+        private const val ACTIVE_SUBSCRIPTION_CACHE_KEY = "active_subscription_cache"
     }
 
     private val moshi = Moshi.Builder()
@@ -35,11 +36,9 @@ class ProductMangerImpl @Inject constructor(
         ProductInfo::class.java
     )
     private val jsonAdapter = moshi.adapter<List<ProductInfo>>(listType).lenient()
-
+    private val subscriptionAdapter = moshi.adapter(ActiveSubscriptionInfo::class.java).lenient()
 
     override suspend fun getProducts(timestamp: Long?): Resource<List<ProductInfo>> {
-
-
         return cacheManager.getCachedDataWithTimestamp(
             key = PRODUCTS_CACHE_KEY,
             currentTimestamp = timestamp,
@@ -68,21 +67,30 @@ class ProductMangerImpl @Inject constructor(
     }
 
     override suspend fun getActiveSubscription(userId: String): Resource<ActiveSubscriptionInfo?> {
-        return try {
-            coroutineScope {
-                val activeSubDeferred = async { api.getActiveSubscription(userId = userId) }
-                // Wait for both operations to complete
-                val response = activeSubDeferred.await()
-                if (response.isSuccessful) {
-                    response.body()?.let { activeSubscriptionResponse ->
-                        Resource.Success(activeSubscriptionResponse.data.toActiveSubscriptionInfo())
-                    } ?: Resource.Error("Empty response body")
-                } else {
-                    Resource.Error("Failed to fetch active subscription: ${response.message()}")
+        return cacheManager.getCachedDataWithNetwork(
+            key = "${ACTIVE_SUBSCRIPTION_CACHE_KEY}_${userId}",
+            fetchFromNetwork = {
+                try {
+                    coroutineScope {
+                        val response = api.getActiveSubscription(userId = userId)
+                        if (response.isSuccessful) {
+                            response.body()?.let { activeSubscriptionResponse ->
+                                Resource.Success(activeSubscriptionResponse.data.toActiveSubscriptionInfo())
+                            } ?: Resource.Error("Empty response body 1")
+                        } else {
+                            Resource.Error("Failed to fetch active subscription: ${response.message()} 2")
+                        }
+                    }
+                } catch (e: Exception) {
+                    Resource.Error(e.message ?: "Failed to fetch active subscription. Unknown error 3")
                 }
+            },
+            serialize = { subscription ->
+                subscriptionAdapter.toJson(subscription)
+            },
+            deserialize = { jsonString ->
+                subscriptionAdapter.fromJson(jsonString)
             }
-        } catch (e: Exception) {
-            Resource.Error(e.message ?: "Failed to fetch active subscription. Unknown error")
-        }
+        )
     }
 }

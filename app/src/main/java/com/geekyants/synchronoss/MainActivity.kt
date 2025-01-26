@@ -23,9 +23,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
@@ -44,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.times
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.geekyants.synchronoss.ui.theme.Poppins
@@ -58,6 +63,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
+
+        val intentLcid: String? = intent.getStringExtra("lcid")
         enableEdgeToEdge()
         setContent {
             SynchronossTheme {
@@ -70,15 +77,23 @@ class MainActivity : ComponentActivity() {
                             androidx.compose.foundation.layout.WindowInsets.systemBars.asPaddingValues()
                         ), containerColor = Color(0xFFE3EBFC)
                 ) { innerPadding ->
-                    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
+                    // Initialize showBottomSheet based on intent LCID
+                    var showBottomSheet by rememberSaveable { mutableStateOf(intentLcid != null) }
+                    var lcid by rememberSaveable { mutableStateOf(intentLcid ?: "") }
+                    
                     SubscriptionScreen(
                         modifier = Modifier.padding(innerPadding),
+                        lcid = lcid,
+                        onLcidChange = { lcid = it },
                         onClickSubscribe = {
-                            showBottomSheet = true;
+                            showBottomSheet = true
                         }
                     )
+                    
+                    // Rest of the code remains the same
                     if(showBottomSheet) {
                         Log.d(null, "Showing bottom sheet")
+                        //Composable responsible for displaying the paywall
                         SubscriptionsViewBottomSheet(
                             onDismissRequest = {
                                 showBottomSheet = false
@@ -86,7 +101,7 @@ class MainActivity : ComponentActivity() {
                             },
                             visible = showBottomSheet,
                             activity = this,
-                            partnerUserId = "5432eb6e-a15c-47c7-94cc-c315551c8413"
+                            partnerUserId = lcid.ifEmpty { "5432eb6e-a15c-47c7-94cc-c315551c8413" } //Pass you own use id for testing
                         )
                     }
                 }
@@ -113,13 +128,17 @@ private fun SetupSystemBars() {
 @Composable
 fun SubscriptionScreen(
     modifier: Modifier = Modifier,
+    lcid: String = "",
+    onLcidChange: (String) -> Unit = {},
     onClickSubscribe: () -> Unit = {}
 ) {
     Column(
+        verticalArrangement = Arrangement.SpaceBetween,
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(
-                horizontal = 10.dp
+                horizontal = 0.75*10.dp
             ),
     ) {
         Column(
@@ -132,19 +151,19 @@ fun SubscriptionScreen(
                 fontFamily = Roboto,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xff0D368C),
-                fontSize = 40.sp,
-                modifier = Modifier.padding(0.dp)
+                fontSize = 0.75*40.sp,
+                modifier = Modifier.padding(0.75*0.dp)
             )
             Spacer(
-                modifier = Modifier.height(10.dp)
+                modifier = Modifier.height(0.75*10.dp)
             )
             Text(
                 text = "Unlock all the power of this mobile tool and enjoy digital experience like never before!",
 //            modifier = modifier,
                 fontFamily = Poppins,
                 color = Color(0xff0D368C),
-                fontSize = 17.sp,
-                modifier = Modifier.padding(0.dp),
+                fontSize = 0.75*17.sp,
+                modifier = Modifier.padding(0.75*0.dp),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
 
@@ -152,160 +171,178 @@ fun SubscriptionScreen(
                 painter = painterResource(id = R.drawable.top),
                 contentDescription = "Sample Image",
 
-                modifier = Modifier.size(300.dp)
+                modifier = Modifier.size(0.75*300.dp)
             )
         }
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-
-        ) {
-            Box(
-                modifier = Modifier
-
-                    .fillMaxWidth()
-                    .clip(shape = RoundedCornerShape(20.dp))
-                    .background(Color(0x1A092765))
-                    .border(
-                        2.dp,
-                        Color(0xff0D368C),
-                        RoundedCornerShape(20.dp),
-
-                        )
-                    .padding(vertical = 10.dp, horizontal = 20.dp)
+        Column {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
 
             ) {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Annual",
-                            fontFamily = Roboto,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xff0D368C),
-                            fontSize = 25.sp,
-                            modifier = Modifier.padding(10.dp)
-                        )
-                        Box(
+                Box(
+                    modifier = Modifier
+
+                        .fillMaxWidth()
+                        .clip(shape = RoundedCornerShape(0.75*20.dp))
+                        .background(Color(0x1A092765))
+                        .border(
+                            0.75*2.dp,
+                            Color(0xff0D368C),
+                            RoundedCornerShape(0.75*20.dp),
+
+                            )
+                        .padding(vertical = 0.75*10.dp, horizontal = 0.75*20.dp)
+
+                ) {
+                    Column {
+                        Row(
                             modifier = Modifier
-
-                                .width(70.dp)
-                                .height(30.dp)
-                                .clip(shape = RoundedCornerShape(Int.MAX_VALUE.dp))
-                                .background(Color(0xff26CB63))
-
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxSize(),
+                            Text(
+                                text = "Annual",
+                                fontFamily = Roboto,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xff0D368C),
+                                fontSize = 0.75*25.sp,
+                                modifier = Modifier.padding(0.75*10.dp)
+                            )
+                            Box(
+                                modifier = Modifier
+
+                                    .width(0.75*70.dp)
+                                    .height(0.75*30.dp)
+                                    .clip(shape = RoundedCornerShape(Int.MAX_VALUE.dp))
+                                    .background(Color(0xff26CB63))
+
                             ) {
-                                Text(
-                                    text = "Best Value",
-                                    fontFamily = Poppins,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color(0xffffffff),
-                                    fontSize = 9.sp,
+                                Row(
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxSize(),
+                                ) {
+                                    Text(
+                                        text = "Best Value",
+                                        fontFamily = Poppins,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color(0xffffffff),
+                                        fontSize =0.75* 9.sp,
 
-                                    )
+                                        )
+                                }
+
                             }
-
                         }
+                        Text(
+                            text = "First 30 days free - Then \$999/year",
+                            fontFamily = Poppins,
+                            color = Color(0xff0D368C),
+                            fontSize = 0.75*14.sp,
+                            modifier = Modifier.padding(0.75*10.dp)
+                        )
                     }
-                    Text(
-                        text = "First 30 days free - Then \$999/year",
-                        fontFamily = Poppins,
-                        color = Color(0xff0D368C),
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(10.dp)
-                    )
+
+                }
+                Spacer(
+                    modifier = Modifier.height(0.75*10.dp)
+                )
+                Box(
+                    modifier = Modifier
+
+                        .fillMaxWidth()
+                        .clip(shape = RoundedCornerShape(0.75*20.dp))
+                        .background(Color(0x1A092765))
+                        .border(
+                            0.75*2.dp,
+                            Color(0xff0D368C),
+                            RoundedCornerShape(0.75*20.dp),
+
+                            )
+                        .padding(vertical = 0.75*10.dp, horizontal = 0.75*20.dp)
+
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Monthly",
+                                fontFamily = Roboto,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xff0D368C),
+                                fontSize = 0.75*25.sp,
+                                modifier = Modifier.padding(0.75*10.dp)
+                            )
+                        }
+                        Text(
+                            text = "First 7 days free - Then \$4.99/month",
+                            fontFamily = Poppins,
+                            color = Color(0xff0D368C),
+                            fontSize = 0.75*14.sp,
+                            modifier = Modifier.padding(0.75*10.dp)
+                        )
+                    }
+
                 }
 
             }
             Spacer(
-                modifier = Modifier.height(10.dp)
+                modifier = Modifier.height(0.75*10.dp)
             )
-            Box(
+            OutlinedTextField(
+                value = lcid,
+                onValueChange = onLcidChange,
+                label = { Text("Enter LCID") },
                 modifier = Modifier
-
                     .fillMaxWidth()
-                    .clip(shape = RoundedCornerShape(20.dp))
-                    .background(Color(0x1A092765))
-                    .border(
-                        2.dp,
-                        Color(0xff0D368C),
-                        RoundedCornerShape(20.dp),
-
-                        )
-                    .padding(vertical = 10.dp, horizontal = 20.dp)
-
+                    .padding(horizontal = 0.75 * 10.dp),
+                shape = RoundedCornerShape(0.75 * 20.dp),
+                textStyle = androidx.compose.ui.text.TextStyle(
+                    fontFamily = Poppins
+                )
+            )
+            
+            Spacer(
+                modifier = Modifier.height(0.75*10.dp)
+            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Monthly",
-                            fontFamily = Roboto,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xff0D368C),
-                            fontSize = 25.sp,
-                            modifier = Modifier.padding(10.dp)
-                        )
-                    }
+                Button(
+                    onClick = { onClickSubscribe() },
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(0.75*20.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        Color(0xff0D368C),
+                        contentColor = Color(0xFFFFFFFF)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(0.75*65.dp)
+                        .clip(shape = RoundedCornerShape(0.75*20.dp))
+//                    .padding(0.75*16.dp)
+                ) {
                     Text(
-                        text = "First 7 days free - Then \$4.99/month",
-                        fontFamily = Poppins,
-                        color = Color(0xff0D368C),
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(10.dp)
+                        text = "Subscribe Now",
+                        fontFamily = Roboto,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFFFFFF),
+                        fontSize = 0.75*18.sp
                     )
                 }
-
-            }
-
-        }
-        Spacer(
-            modifier = Modifier.height(10.dp)
-        )
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Button(
-                onClick = { onClickSubscribe() },
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    Color(0xff0D368C),
-                    contentColor = Color(0xFFFFFFFF)
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(65.dp)
-                    .clip(shape = RoundedCornerShape(20.dp))
-//                    .padding(16.dp)
-            ) {
                 Text(
-                    text = "Subscribe Now",
-                    fontFamily = Roboto,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFFFFFF),
-                    fontSize = 18.sp
+                    "By placing this order, you agree to the Terms of Service and Privacy Policy. Subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period.",
+                    fontFamily = Poppins,
+                    color = Color(0xff0D368C),
+                    fontSize = 0.75*12.sp,
+                    modifier = Modifier.padding(0.75*10.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
             }
-            Text(
-                "By placing this order, you agree to the Terms of Service and Privacy Policy. Subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period.",
-                fontFamily = Poppins,
-                color = Color(0xff0D368C),
-                fontSize = 12.sp,
-                modifier = Modifier.padding(10.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
         }
     }
 }

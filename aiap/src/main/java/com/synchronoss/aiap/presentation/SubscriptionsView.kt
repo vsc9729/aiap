@@ -7,6 +7,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -94,14 +95,26 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 
     val filteredProducts: List<ProductInfo>? = subscriptionsViewModel.filteredProducts
 
-    if (!subscriptionsViewModel.isLoading.value)
-    Box {
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .background(color = MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp)
-        ) {
+
+    if(subscriptionsViewModel.noInternetConnectionAndNoCache.value){
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = if(isSystemInDarkTheme()) Color(0xFF0D0D0D) else Color.White )
+                .padding(vertical = 16.dp),
+            contentAlignment = Alignment.Center
+        ){
+            Text(text = "No Internet Connection", style = LocalTextStyle.current.copy(color = Color.Red, fontSize = 16.sp, fontWeight = FontWeight.Bold))
+        }
+    }else{
+        if (!subscriptionsViewModel.isLoading.value)
+            Box {
+                Column(modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = MaterialTheme.colorScheme.background)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp)
+                ) {
 //            Column(
 //                modifier = Modifier
 //                    .fillMaxSize()
@@ -118,310 +131,312 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 //                )
 //            }
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Image(
-                        painter = rememberAsyncImagePainter(logoUrl),
-                        contentDescription = "Image from URL",
+                    Row(
                         modifier = Modifier
-                            .wrapContentSize()
-                            .width(logoUrlWidth)
-                            .height(logoUrlHeight)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(logoUrl),
+                            contentDescription = "Image from URL",
+                            modifier = Modifier
+                                .wrapContentSize()
+                                .width(logoUrlWidth)
+                                .height(logoUrlHeight)
 
-                    )
-                }
-
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-
-                ) {
-                    Text(
-                        text = Constants.STORAGE_TAGLINE,
-                        style = LocalTextStyle.current.copy(
-                            fontWeight = FontWeight.W700,
-                            fontSize = 24.sp,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            textAlign = TextAlign.Center
                         )
-                    )
-                }
-
-
-                Spacer(modifier = Modifier.height(8.dp))
-                TabSelector(
-                    selectedTab = subscriptionsViewModel.selectedTab?:TabOption.YEARLY,
-                    onTabSelected = { tab ->
-                        subscriptionsViewModel.selectedTab = tab
-                        subscriptionsViewModel.onTabSelected(tab= tab)
-
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-
-            TextButton(
-                onClick = { /* Handle restore */ },
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .let {
-                    if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        it.padding(4.dp)
-                    } else {
-                        it.padding(12.dp)
                     }
-                }
-            ) {
-                Text(
-                    text = "Restore purchase",
-                    color = MaterialTheme.colorScheme.onTertiary,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.W400,
-                    style = TextStyle(
-                        textDecoration = TextDecoration.Underline,
-                    )
-                )
-            }
 
-            ScrollablePlans()
-            Spacer(modifier = modifier.height(8.dp))
-        }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .let {
-                    if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        it.height(80.dp)
-                    } else {
-                        it.height(125.dp)
-                    }
-                }
-                .drawBehind {
-                    val shadowColor = Color.Black.copy(alpha = 0.068f)
-                    val shadowRadius = 35.dp.toPx()
-                    val offsetY = -shadowRadius / 2
-                    drawRect(
-                        brush = Brush.verticalGradient(
-                            colors = listOf( Color.Transparent, shadowColor),
-                            startY = offsetY,
-                            endY = offsetY + shadowRadius,
-                            tileMode = TileMode.Clamp
-                        ),
-                        topLeft = Offset(0f, offsetY),
-                        size = Size(size.width, shadowRadius)
-                    )
-                }
-                .clip(RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp))
-                .background(color = MaterialTheme.colorScheme.tertiary)
-
-                .align(Alignment.BottomCenter)
-        )
-        {
-            when(configuration.orientation) {
-                Configuration.ORIENTATION_PORTRAIT -> {
-                    Box(
+                    Row(
                         modifier = Modifier
-                            .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+
                     ) {
-
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.SpaceBetween,
-                            horizontalAlignment = Alignment.CenterHorizontally
-
-                        ) {
-//                            Text(
-//                                text = "Plan auto-renews for ₹1000 every month. You can cancel anytime you want.",
-//                                style = MaterialTheme.typography.bodyMedium.copy(
-//                                    fontWeight = FontWeight.W400,
-//                                    color = MaterialTheme.colorScheme.onSecondary,
-//                                    fontSize = 12.sp,
-//                                    textAlign = TextAlign.Center
-//                                )
-//                            )
-                            Button(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(50.dp)
-                                    .clip(RoundedCornerShape(999.dp)),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary, // Normal state color
-                                    contentColor = Color.White, // Normal text/icon color
-                                    disabledContainerColor = MaterialTheme.colorScheme.primary.copy(
-                                        alpha = 0.4f
-                                    ),
-                                    disabledContentColor = Color.White.copy(alpha = 0.4f)
-                                ),
-                                onClick = {
-                                    CoroutineScope(Dispatchers.IO).launch {
-                                        subscriptionsViewModel.purchaseSubscription(
-                                            activity = activity,
-                                            product = filteredProducts?.get(subscriptionsViewModel.selectedPlan)
-                                                ?: return@launch,
-                                            onError = { error ->
-                                                // Handle error
-                                                println("Error: $error")
-                                            }
-                                        )
-                                    }
-                                },
-                                enabled = subscriptionsViewModel.selectedPlan != -1 && !subscriptionsViewModel.isCurrentProductBeingUpdated
-                            ) {
-                                Row {
-                                    Text(
-                                        "Continue",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.W600,
-                                        color = Color.White
-                                    )
-                                    Spacer(
-                                        modifier = Modifier.width(8.dp)
-                                    )
-                                    if (subscriptionsViewModel.isCurrentProductBeingUpdated) {
-                                        CircularProgressIndicator(
-                                            color = Color.White,
-                                            strokeWidth = 2.dp,
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                    }
-                                }
-                            }
-                            TextButton(
-                                onClick = {
-                                    showDialog = true
-                                }
-                            ) {
-                                Text(
-                                    text = "Apply Coupon",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.W600,
-                                    color = MaterialTheme.colorScheme.onTertiary
-                                )
-                            }
-                        }
-                    }
-                }
-                Configuration.ORIENTATION_LANDSCAPE -> {
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
-                    ) {
-
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-
-                        ) {
-//                            Text(
-//                                text = "Plan auto-renews for ₹1000 every month. You can cancel anytime you want.",
-//                                style = MaterialTheme.typography.bodyMedium.copy(
-//                                    fontWeight = FontWeight.W400,
-//                                    color = MaterialTheme.colorScheme.onSecondary,
-//                                    fontSize = 12.sp,
-//                                    textAlign = TextAlign.Center
-//                                )
-//                            )
-                            Spacer(
-                                modifier = Modifier.height(4.dp)
+                        Text(
+                            text = Constants.STORAGE_TAGLINE,
+                            style = LocalTextStyle.current.copy(
+                                fontWeight = FontWeight.W700,
+                                fontSize = 24.sp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                textAlign = TextAlign.Center
                             )
-                            Row(
-                                modifier=Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                        )
+                    }
 
-                            ) {
-                            Button(
-                                modifier = Modifier
-                                    //.fillMaxWidth()
-                                    .weight(1f)
-                                    .height(50.dp)
-                                    .clip(RoundedCornerShape(999.dp)),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary, // Normal state color
-                                    contentColor = Color.White, // Normal text/icon color
-                                    disabledContainerColor = MaterialTheme.colorScheme.primary.copy(
-                                        alpha = 0.4f
-                                    ),
-                                    disabledContentColor = Color.White.copy(alpha = 0.4f)
-                                ),
-                                onClick = {
-                                    CoroutineScope(Dispatchers.IO).launch {
-                                        subscriptionsViewModel.purchaseSubscription(
-                                            activity = activity,
-                                            product = filteredProducts?.get(subscriptionsViewModel.selectedPlan)
-                                                ?: return@launch,
-                                            onError = { error ->
-                                                // Handle error
-                                                println("Error: $error")
-                                            }
-                                        )
-                                    }
-                                },
-                                enabled = subscriptionsViewModel.selectedPlan != -1 && !subscriptionsViewModel.isCurrentProductBeingUpdated
-                            ) {
-                                Row {
-                                    Text(
-                                        "Continue",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.W600,
-                                        color = Color.White
-                                    )
-                                    Spacer(
-                                        modifier = Modifier.width(8.dp)
-                                    )
-                                    if (subscriptionsViewModel.isCurrentProductBeingUpdated) {
-                                        CircularProgressIndicator(
-                                            color = Color.White,
-                                            strokeWidth = 2.dp,
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TabSelector(
+                        selectedTab = subscriptionsViewModel.selectedTab?:TabOption.YEARLY,
+                        onTabSelected = { tab ->
+                            subscriptionsViewModel.selectedTab = tab
+                            subscriptionsViewModel.onTabSelected(tab= tab)
+
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+
+                    TextButton(
+                        onClick = { /* Handle restore */ },
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .let {
+                                if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                                    it.padding(4.dp)
+                                } else {
+                                    it.padding(12.dp)
                                 }
                             }
-                            TextButton(
-                                modifier = Modifier.weight(1f),
-                                onClick = {
-                                    showDialog = true
-                                }
-                            ) {
-                                Text(
-                                    text = "Apply Coupon",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.W600,
-                                    color = MaterialTheme.colorScheme.onTertiary
-                                )
+                    ) {
+                        Text(
+                            text = "Restore purchase",
+                            color = MaterialTheme.colorScheme.onTertiary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.W400,
+                            style = TextStyle(
+                                textDecoration = TextDecoration.Underline,
+                            )
+                        )
+                    }
+
+                    ScrollablePlans()
+                    Spacer(modifier = modifier.height(8.dp))
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .let {
+                            if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                                it.height(80.dp)
+                            } else {
+                                it.height(125.dp)
                             }
                         }
+                        .drawBehind {
+                            val shadowColor = Color.Black.copy(alpha = 0.068f)
+                            val shadowRadius = 35.dp.toPx()
+                            val offsetY = -shadowRadius / 2
+                            drawRect(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf( Color.Transparent, shadowColor),
+                                    startY = offsetY,
+                                    endY = offsetY + shadowRadius,
+                                    tileMode = TileMode.Clamp
+                                ),
+                                topLeft = Offset(0f, offsetY),
+                                size = Size(size.width, shadowRadius)
+                            )
+                        }
+                        .clip(RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp))
+                        .background(color = MaterialTheme.colorScheme.tertiary)
+
+                        .align(Alignment.BottomCenter)
+                )
+                {
+                    when(configuration.orientation) {
+                        Configuration.ORIENTATION_PORTRAIT -> {
+                            Box(
+                                modifier = Modifier
+                                    .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+                            ) {
+
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.SpaceBetween,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+
+                                ) {
+//                            Text(
+//                                text = "Plan auto-renews for ₹1000 every month. You can cancel anytime you want.",
+//                                style = MaterialTheme.typography.bodyMedium.copy(
+//                                    fontWeight = FontWeight.W400,
+//                                    color = MaterialTheme.colorScheme.onSecondary,
+//                                    fontSize = 12.sp,
+//                                    textAlign = TextAlign.Center
+//                                )
+//                            )
+                                    Button(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(50.dp)
+                                            .clip(RoundedCornerShape(999.dp)),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary, // Normal state color
+                                            contentColor = Color.White, // Normal text/icon color
+                                            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(
+                                                alpha = 0.4f
+                                            ),
+                                            disabledContentColor = Color.White.copy(alpha = 0.4f)
+                                        ),
+                                        onClick = {
+                                            CoroutineScope(Dispatchers.IO).launch {
+                                                subscriptionsViewModel.purchaseSubscription(
+                                                    activity = activity,
+                                                    product = filteredProducts?.get(subscriptionsViewModel.selectedPlan)
+                                                        ?: return@launch,
+                                                    onError = { error ->
+                                                        // Handle error
+                                                        println("Error: $error")
+                                                    }
+                                                )
+                                            }
+                                        },
+                                        enabled = subscriptionsViewModel.selectedPlan != -1 && !subscriptionsViewModel.isCurrentProductBeingUpdated
+                                    ) {
+                                        Row {
+                                            Text(
+                                                "Continue",
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.W600,
+                                                color = Color.White
+                                            )
+                                            Spacer(
+                                                modifier = Modifier.width(8.dp)
+                                            )
+                                            if (subscriptionsViewModel.isCurrentProductBeingUpdated) {
+                                                CircularProgressIndicator(
+                                                    color = Color.White,
+                                                    strokeWidth = 2.dp,
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                    TextButton(
+                                        onClick = {
+                                            showDialog = true
+                                        }
+                                    ) {
+                                        Text(
+                                            text = "Apply Coupon",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.W600,
+                                            color = MaterialTheme.colorScheme.onTertiary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        Configuration.ORIENTATION_LANDSCAPE -> {
+                            Box(
+                                modifier = Modifier
+                                    .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+                            ) {
+
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+
+                                ) {
+//                            Text(
+//                                text = "Plan auto-renews for ₹1000 every month. You can cancel anytime you want.",
+//                                style = MaterialTheme.typography.bodyMedium.copy(
+//                                    fontWeight = FontWeight.W400,
+//                                    color = MaterialTheme.colorScheme.onSecondary,
+//                                    fontSize = 12.sp,
+//                                    textAlign = TextAlign.Center
+//                                )
+//                            )
+                                    Spacer(
+                                        modifier = Modifier.height(4.dp)
+                                    )
+                                    Row(
+                                        modifier=Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+
+                                    ) {
+                                        Button(
+                                            modifier = Modifier
+                                                //.fillMaxWidth()
+                                                .weight(1f)
+                                                .height(50.dp)
+                                                .clip(RoundedCornerShape(999.dp)),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.primary, // Normal state color
+                                                contentColor = Color.White, // Normal text/icon color
+                                                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(
+                                                    alpha = 0.4f
+                                                ),
+                                                disabledContentColor = Color.White.copy(alpha = 0.4f)
+                                            ),
+                                            onClick = {
+                                                CoroutineScope(Dispatchers.IO).launch {
+                                                    subscriptionsViewModel.purchaseSubscription(
+                                                        activity = activity,
+                                                        product = filteredProducts?.get(subscriptionsViewModel.selectedPlan)
+                                                            ?: return@launch,
+                                                        onError = { error ->
+                                                            // Handle error
+                                                            println("Error: $error")
+                                                        }
+                                                    )
+                                                }
+                                            },
+                                            enabled = subscriptionsViewModel.selectedPlan != -1 && !subscriptionsViewModel.isCurrentProductBeingUpdated
+                                        ) {
+                                            Row {
+                                                Text(
+                                                    "Continue",
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.W600,
+                                                    color = Color.White
+                                                )
+                                                Spacer(
+                                                    modifier = Modifier.width(8.dp)
+                                                )
+                                                if (subscriptionsViewModel.isCurrentProductBeingUpdated) {
+                                                    CircularProgressIndicator(
+                                                        color = Color.White,
+                                                        strokeWidth = 2.dp,
+                                                        modifier = Modifier.size(24.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        TextButton(
+                                            modifier = Modifier.weight(1f),
+                                            onClick = {
+                                                showDialog = true
+                                            }
+                                        ) {
+                                            Text(
+                                                text = "Apply Coupon",
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.W600,
+                                                color = MaterialTheme.colorScheme.onTertiary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
-    }
-    else Column (
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = MaterialTheme.colorScheme.background)
-            .padding(vertical = 16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        else Column (
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = MaterialTheme.colorScheme.background)
+                .padding(vertical = 16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
 
-    ) {
-        //Add skeleton loader here
-        SkeletonLoader()
-    }
-    if(showDialog){
-        DialogBox(
-            onDismiss = {showDialog = false},
-            onConfirm = { input -> Log.d("Co", "Input: $input")}
+        ) {
+            //Add skeleton loader here
+            SkeletonLoader()
+        }
+        if(showDialog){
+            DialogBox(
+                onDismiss = {showDialog = false},
+                onConfirm = { input -> Log.d("Co", "Input: $input")}
             )
 
+        }
     }
+
 }
 
 /**
