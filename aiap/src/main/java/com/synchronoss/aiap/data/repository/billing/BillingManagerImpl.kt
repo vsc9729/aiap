@@ -222,9 +222,14 @@ class BillingManagerImpl(
                         handleRequest
                     )
                 }
+
                 handlePurchaseResponse.await(
-                ).let { _ ->
-                    purchaseUpdateHandler.handlePurchaseUpdate()
+                ).let { response ->
+                    if (response.isSuccessful) {
+                        purchaseUpdateHandler.handlePurchaseUpdate()
+                    } else {
+                        purchaseUpdateHandler.handlePurchaseFailed()
+                    }
                     partnerUserId = null
                 }
             }

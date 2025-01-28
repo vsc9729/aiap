@@ -29,6 +29,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 
 /**
  * ViewModel responsible for managing subscription-related UI state and business logic.
@@ -74,6 +76,28 @@ class SubscriptionsViewModel @Inject constructor(
     private var lastKnownProductTimestamp: Long? = null
     private var lastKnownThemeTimestamp: Long? = null
 
+    // Toast Handling
+    private var toastJob: Job? = null
+    var toastState by mutableStateOf(ToastState())
+        private set
+
+    fun showToast(heading: String, message: String) {
+        toastJob?.cancel()
+        toastState = ToastState(
+            isVisible = true,
+            heading = heading,
+            message = message
+        )
+        toastJob = viewModelScope.launch {
+            delay(3000)
+            hideToast()
+        }
+    }
+
+    fun hideToast() {
+        toastJob?.cancel()
+        toastState = toastState.copy(isVisible = false)
+    }
 
     fun initialize(id:String) {
         if(!isInitialised){
@@ -92,7 +116,7 @@ class SubscriptionsViewModel @Inject constructor(
                     lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
                     currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
                     currentProduct = activeSubResult.data?.subscriptionResponseInfo?.product
-                    val theme =  async { themeLoader.loadTheme(lastKnownThemeTimestamp) }
+                    val theme =  async { themeLoader.loadTheme() }
                     theme.await()
                     lightThemeColors = themeLoader.getThemeColors().themeColors
                     lightThemeLogoUrl = themeLoader.getThemeColors().logoUrl;
@@ -133,7 +157,12 @@ class SubscriptionsViewModel @Inject constructor(
                     )
                     initProducts()
                 }else{
+
                     noInternetConnectionAndNoCache.value = true
+                    showToast(
+                        heading = "No Connection",
+                        message = "Please check your internet connection"
+                    )
                 }
 
             }
@@ -144,6 +173,10 @@ class SubscriptionsViewModel @Inject constructor(
 
             subscriptionCancelledHandler.onSubscriptionCancelled = {
                 viewModelScope.launch {
+                    showToast(
+                        heading = "Subscription Cancelled",
+                        message = "Your subscription has been cancelled"
+                    )
                     isLoading.value = true
                     products = null
                     filteredProducts = null
@@ -165,6 +198,16 @@ class SubscriptionsViewModel @Inject constructor(
                     val init = async { initProducts(purchaseUpdate = true) }
                     init.await()
                     isCurrentProductBeingUpdated = false
+                }
+            }
+            purchaseUpdateHandler.onPurchaseFailed = {
+                viewModelScope.launch {
+                    val init = async { initProducts(purchaseUpdate = true) }
+                    init.await()
+                    showToast(
+                        heading = "Something went wrong",
+                        message = "Any debited amount will be refunded."
+                    )
                 }
             }
 
@@ -280,6 +323,10 @@ class SubscriptionsViewModel @Inject constructor(
                 }
             }
             is Resource.Error -> {
+                showToast(
+                    heading = "Error",
+                    message = "Failed to load products. Please try again later."
+                )
                 Log.d("Co", "Failed to fetch products from API")
             }
          }
@@ -297,13 +344,19 @@ class SubscriptionsViewModel @Inject constructor(
                     CoroutineScope(Dispatchers.IO).launch {  billingManagerUseCases.purchaseSubscription(
                             activity,
                             product,
-                            onError,
+                            { error -> 
+                                showToast("Purchase Failed", error)
+                                onError(error)
+                            },
                             userId = partnerUserId!!
                             )
                         }
                     })
             } else {
-                billingManagerUseCases.purchaseSubscription(activity, product, onError, userId = partnerUserId!!)
+                billingManagerUseCases.purchaseSubscription(activity, product, { error -> 
+                    showToast("Purchase Failed", error)
+                    onError(error)
+                }, userId = partnerUserId!!)
             }
 
         }

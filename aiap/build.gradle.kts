@@ -163,12 +163,14 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotlin.test)
-//    testImplementation(libs.hilt.android.testing)
-//    kaptTest(libs.hilt.android.compiler)
-//    androidTestImplementation(libs.hilt.android.testing)
-//    androidTestImplementation (libs.androidx.runner)
-//    androidTestImplementation (libs.androidx.rules)
-//    kaptAndroidTest(libs.hilt.android.compiler)
+    androidTestImplementation (libs.mockk.android)
+    androidTestImplementation (libs.mockk.agent)
+    testImplementation(libs.google.hilt.android.testing)
+    kaptTest(libs.hilt.android.compiler)
+    androidTestImplementation(libs.google.hilt.android.testing)
+    androidTestImplementation(libs.androidx.runner)
+    androidTestImplementation(libs.androidx.rules)
+    kaptAndroidTest(libs.hilt.android.compiler)
 }
 
 
