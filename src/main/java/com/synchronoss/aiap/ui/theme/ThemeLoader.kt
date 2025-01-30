@@ -42,7 +42,7 @@ class ThemeLoader @Inject constructor(
         .build()
     private val jsonAdapter = moshi.adapter(ThemeInfo::class.java).lenient()
 
-    suspend fun loadTheme(timestamp: Long?) {
+    suspend fun loadTheme(timestamp: Long? = null) {
         try {
             val result = cacheManager.getCachedDataWithTimestamp(
                 key = THEME_CACHE_KEY,

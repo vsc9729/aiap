@@ -1,17 +1,19 @@
 package com.synchronoss.aiap.data.remote.product
 
 import com.synchronoss.aiap.data.remote.common.ApiResponse
-import com.synchronoss.aiap.utils.Constants.PPI_USER_ID
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ProductApi {
-    @GET("api/iap/$PPI_USER_ID/Active")
+    @GET("api/iap/{userid}/Active")
     suspend fun getActiveSubscription(
-        @Header("x-api-key") apiKey: String = "IAPAppAndroid"
+        @Header("x-api-key") apiKey: String = "IAPAppAndroid",
+        @Path("userid") userId: String
     ): Response<ApiResponse<ActiveSubscriptionResponse>>
     @GET("api/core/app/product")
     suspend fun getProducts(

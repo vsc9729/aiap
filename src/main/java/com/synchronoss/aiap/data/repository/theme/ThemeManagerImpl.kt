@@ -2,7 +2,6 @@ package com.synchronoss.aiap.data.repository.theme
 
 import android.util.Log
 import com.synchronoss.aiap.data.mappers.toThemeInfo
-import com.synchronoss.aiap.data.remote.common.ApiResponse
 import com.synchronoss.aiap.data.remote.theme.ThemeApi
 import com.synchronoss.aiap.data.remote.theme.ThemeDataDto
 import com.synchronoss.aiap.domain.models.theme.ThemeInfo
@@ -15,17 +14,28 @@ private const val API_KEY = "IAPAppAndroid"
 class ThemeManagerImpl @Inject constructor(
     private val api: ThemeApi,
 ) : ThemeManager {
-    override suspend fun getTheme(): Resource<ThemeInfo> {  // Change return type to ThemeInfo
+    private val mockThemeData = listOf(
+        ThemeDataDto(
+            themeName = "Light",
+            logoUrl = "https://capsyl.com/wp-content/uploads/cropped-Capsyl-Logo-sm-2.png",
+            primaryColor = "#0096D5",
+            secondaryColor = "#E7F8FF"
+        ),
+        ThemeDataDto(
+            themeName = "Dark",
+            logoUrl = "https://i.ibb.co/WsyDq6v/capsyl-dark.png",
+            primaryColor = "#0096D5",
+            secondaryColor = "#262627"
+        )
+    )
+
+    override suspend fun getTheme(): Resource<ThemeInfo> {
         return try {
-            val apiResponse: ApiResponse<List<ThemeDataDto>> = api.getTheme(API_KEY)
-            val themeData: List<ThemeDataDto> = apiResponse.data
-            val themeInfo = themeData.toThemeInfo()
-
-            Log.d("ThemeData", "data ${themeInfo}")
-
-            Resource.Success(themeInfo)  // Return the domain model
+            val themeInfo = mockThemeData.toThemeInfo()
+            Log.d("ThemeData", "Mock data: $themeInfo")
+            Resource.Success(themeInfo)
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Failed to fetch theme data")
+            throw Exception(e.message ?: "Failed to process mock theme data")
         }
     }
 }

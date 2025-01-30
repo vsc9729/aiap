@@ -8,6 +8,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 
 @Singleton
 class CacheManager @Inject constructor(
@@ -64,7 +66,73 @@ class CacheManager @Inject constructor(
         }
     }
 
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork
+        val capabilities = connectivityManager.getNetworkCapabilities(network)
+        return capabilities != null &&
+                (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                 capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+    }
+
+    suspend fun <T> getCachedDataWithNetwork(
+        key: String,
+        fetchFromNetwork: suspend () -> Resource<T>,
+        serialize: (T) -> String,
+        deserialize: (String) -> T
+    ): Resource<T> {
+        return try {
+            if (isNetworkAvailable()) {
+                // If network is available, fetch fresh data and cache it
+                when (val result = fetchFromNetwork()) {
+                    is Resource.Success -> {
+                        result.data?.let { data ->
+                            saveData(key, serialize(data))
+                        }
+                        result
+                    }
+                    is Resource.Error -> {
+                        // If network call fails, try to get cached data
+                        getCachedData(key, deserialize)?.takeIf { it is Resource.Success } ?: Resource.Error("No cached data available but request failed 4")
+                    }
+                }
+            } else {
+                // If no network, return cached data
+                getCachedData(key, deserialize)?.takeIf { it is Resource.Success } ?: Resource.Error("No cached data available and no internet 5")
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unknown error occurred 6")
+        }
+    }
+
+    private suspend fun <T> getCachedData(
+        key: String,
+        deserialize: (String) -> T
+    ): Resource<T>? {
+        return try {
+            val preferences = dataStore.data.first()
+            val cachedValue = preferences[stringPreferencesKey(key)]
+            if (cachedValue != null) {
+                try {
+                    Resource.Success(deserialize(cachedValue))
+                } catch (e: Exception) {
+                    null
+                }
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private suspend fun saveData(key: String, value: String) {
+        dataStore.edit { preferences ->
+            preferences[stringPreferencesKey(key)] = value
+        }
+    }
+
     suspend fun clearCache() {
         dataStore.edit { it.clear() }
     }
-} 
+}

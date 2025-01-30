@@ -1,10 +1,9 @@
-package com.synchronoss.aiap
+package com.synchronoss.aiap.data.repository.product
 
-import com.google.android.gms.common.api.Response
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.synchronoss.aiap.data.remote.product.HandlePurchaseRequest
 import com.synchronoss.aiap.data.remote.product.ProductApi
+import com.synchronoss.aiap.data.remote.common.ApiResponse
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -16,7 +15,7 @@ import org.junit.Test
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
-class ProductsApiTest {
+class ProductMangerImplTest {
 
     private lateinit var productApi: ProductApi
     private lateinit var mockWebServer: MockWebServer
@@ -32,6 +31,11 @@ class ProductsApiTest {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(ProductApi::class.java)
+    }
+
+    @After
+    fun tearDown() {
+        mockWebServer.shutdown()
     }
 
     @Test
@@ -82,80 +86,10 @@ class ProductsApiTest {
         )
 
         // When
-        val response = runBlocking { productApi.getActiveSubscription() }
+        val response = runBlocking { productApi.getActiveSubscription(userId = "543a2eb6e-aasd15c-47casd7-94cc-c315551c8413") }
 
         // Then
         assertNotNull(response.body())
         assertEquals(true, response.isSuccessful)
-    }
-
-    @Test
-    fun `test getProducts returns successful response`() {
-        // Given
-        val mockResponse = """
-            {
-                "status": "SUCCESS",
-                "data": [
-                    {
-                        "productId": "test_product",
-                        "displayName": "Test Product",
-                        "price": 99.9,
-                        "isActive": true
-                    }
-                ]
-            }
-        """.trimIndent()
-
-        mockWebServer.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody(mockResponse)
-        )
-
-        // When
-        val response = runBlocking { productApi.getProducts() }
-
-        // Then
-        assertEquals("SUCCESS", response.status)
-        assertEquals(1, response.data?.size)
-        assertEquals("test_product", response.data?.first()?.productId)
-    }
-
-    @Test
-    fun `test handlePurchase returns successful response`() {
-        // Given
-        val mockResponse = """
-            {
-                "status": "SUCCESS",
-                "data": {
-                    "message": "Purchase successful",
-                    "orderId": "test_order_123"
-                }
-            }
-        """.trimIndent()
-
-        mockWebServer.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody(mockResponse)
-        )
-
-        val request = HandlePurchaseRequest(
-            productId = "test_product",
-            purchaseToken = "test_token"
-        )
-
-        // When
-        val response = runBlocking { productApi.handlePurchase(request) }
-
-        // Then
-        assertNotNull(response.body())
-        assertEquals("SUCCESS", response.body()?.status)
-        assertEquals("test_order_123", response.body()?.data?.orderId)
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
     }
 }

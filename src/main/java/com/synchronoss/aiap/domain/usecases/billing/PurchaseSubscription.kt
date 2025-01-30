@@ -1,7 +1,6 @@
 package com.synchronoss.aiap.domain.usecases.billing
 
 import androidx.activity.ComponentActivity
-import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
 
@@ -11,12 +10,14 @@ class PurchaseSubscription(
     suspend operator fun invoke(
         activity: ComponentActivity,
         product: ProductInfo,
-        onError: (String) -> Unit
+        onError: (String) -> Unit,
+        userId: String
     ) {
         billingManager.purchaseSubscription(
             activity = activity,
             productInfo = product,
-            onError = onError
+            onError = onError,
+            userId = userId
         )
     }
 }

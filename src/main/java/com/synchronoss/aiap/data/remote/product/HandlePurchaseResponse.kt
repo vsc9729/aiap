@@ -6,7 +6,7 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class HandlePurchaseResponse(
     @Json(name = "product")
-    val productId: ProductDataDto,
+    val product: ProductDataDto,
     @Json(name = "vendorName")
     val vendorName: String,
     @Json(name = "appName")
