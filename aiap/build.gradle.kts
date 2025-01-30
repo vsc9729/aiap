@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Locale
 
 plugins {
@@ -11,7 +13,6 @@ plugins {
     id("jacoco")
     id("org.sonarqube") version "6.0.1.5171"
     id("org.jetbrains.kotlinx.kover")
-
 }
 
 sonar {
@@ -40,6 +41,53 @@ sonar {
     }
 }
 
+kover {
+    reports {
+        filters {
+            excludes {
+                classes.addAll(
+                    "*di.*",
+                    "*Factory*",
+                    "com.sel2in.kotlinDefaultsJson.app.App",
+                    "*.BuildConfig",
+                    "*.R",
+                    "*.R$*",
+                    "*Manifest*",
+                    "*Args*",
+                    "*Companion*",
+                    "*Module*",
+                    "*_Factory*",
+                    "*_MembersInjector*",
+                    "*_Provide*Factory*",
+                    "*Hilt_*",
+                    "*_HiltModules*",
+                    "*.dagger.hilt.*",
+                    "*Dagger*",
+                    "*.generated.*"
+                )
+                annotatedBy.addAll(
+                    "*Generated",
+                    "*CustomAnnotationToExclude"
+                )
+            }
+        }
+
+        verify {
+            rule("Line Coverage of Tests must be more than 80%") {
+                bound {
+                    minValue = 80
+                }
+            }
+        }
+
+        total {
+            html {
+                onCheck = true
+            }
+        }
+    }
+}
+
 android {
     namespace = "com.synchronoss.aiap"
     compileSdk = 35
@@ -52,7 +100,7 @@ android {
     defaultConfig {
         minSdk = 21
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.synchronoss.aiap.CustomTestRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
 
@@ -60,23 +108,25 @@ android {
         compose = true
     }
 
-//    packaging {
-//        resources {
-//            pickFirsts.add("META-INF/versions/9/OSGI-INF/MANIFEST.MF")
-//            excludes.addAll(
-//                listOf(
-//                    "META-INF/DEPENDENCIES",
-//                    "META-INF/LICENSE",
-//                    "META-INF/LICENSE.txt",
-//                    "META-INF/license.txt",
-//                    "META-INF/NOTICE",
-//                    "META-INF/NOTICE.txt",
-//                    "META-INF/notice.txt",
-//                    "META-INF/ASL2.0"
-//                )
-//            )
-//        }
-//    }
+    packaging {
+        resources {
+            pickFirsts.add("META-INF/versions/9/OSGI-INF/MANIFEST.MF")
+            excludes.addAll(
+                listOf(
+                    "META-INF/DEPENDENCIES",
+                    "META-INF/LICENSE",
+                    "META-INF/LICENSE.txt",
+                    "META-INF/license.txt",
+                    "META-INF/NOTICE",
+                    "META-INF/NOTICE.txt",
+                    "META-INF/notice.txt",
+                    "META-INF/ASL2.0",
+                    "META-INF/LICENSE.md",
+                    "META-INF/LICENSE-notice.md"
+                )
+            )
+        }
+    }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
     }
@@ -96,12 +146,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = "1.8"
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
@@ -114,8 +160,6 @@ publishing {
         }
     }
 }
-
-
 
 dependencies {
 
@@ -173,7 +217,67 @@ dependencies {
     kaptAndroidTest(libs.hilt.android.compiler)
 }
 
-
 kapt {
     correctErrorTypes = true
+}
+
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest", "connectedDebugAndroidTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    classDirectories.setFrom(files(
+        fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+            exclude(
+                "**/R.class",
+                "**/R$*.class",
+                "**/BuildConfig.*",
+                "**/Manifest*.*",
+                "**/*Test*.*",
+                "**/*Args*.*",
+                "**/di/**",
+                "**/*Companion*.*",
+                "**/*Module*.*",
+                "**/*_Factory*.*",
+                "**/*_MembersInjector*.*",
+                "**/*_Provide*Factory*.*",
+                "**/Hilt_*.*",
+                "**/*_HiltModules*.*",
+                "**/dagger/hilt/**",
+                "**/*Dagger*.*",
+                "**/generated/**"
+            )
+        }
+    ))
+
+    sourceDirectories.setFrom(files(
+        "${project.projectDir}/src/main/java",
+        "${project.projectDir}/src/main/kotlin"
+    ))
+
+    executionData.setFrom(files(
+        "${buildDir}/jacoco/testDebugUnitTest.exec",
+        "${buildDir}/outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec"
+    ))
+}
+
+tasks.withType<Test> {
+    configure<JacocoTaskExtension> {
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
+    }
+    finalizedBy("jacocoTestReport")
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
 }

@@ -42,7 +42,7 @@ class SubscriptionsViewModel @Inject constructor(
     private val productManagerUseCases: ProductManagerUseCases,
     private val themeLoader: ThemeLoader,
     private val libraryActivityManagerUseCases: LibraryActivityManagerUseCases,
-    private val purchaseUpdateHandler: PurchaseUpdateHandler,
+    val purchaseUpdateHandler: PurchaseUpdateHandler,
     private val subscriptionCancelledHandler: SubscriptionCancelledHandler
 ) : ViewModel() {
 
@@ -101,11 +101,15 @@ class SubscriptionsViewModel @Inject constructor(
 
     fun initialize(id:String) {
         if(!isInitialised){
+
             isInitialised = true
             isLoading.value = true
             partnerUserId = id
             CoroutineScope(Dispatchers.IO).launch {
+
                 val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(userId = partnerUserId!!) }
+                val startConnection =  async { startConnection() }
+                startConnection.await()
                 val activeSubResult =  activeSubResultDeferred.await()
                 if (activeSubResult is Resource.Success) {
 //                    if(!isConnectionStarted){
@@ -215,7 +219,7 @@ class SubscriptionsViewModel @Inject constructor(
 
     }
 
-     fun startConnection(makePurchase: () ->Unit ) {
+     fun startConnection( ) {
         if(!isConnectionStarted){
             CoroutineScope(Dispatchers.IO).launch {
                 billingManagerUseCases.startConnection(
@@ -236,7 +240,6 @@ class SubscriptionsViewModel @Inject constructor(
                             // Wait for the check to complete
                             checkSubscriptionDeferred.await()
                             //Start Purchase flow
-                            makePurchase()
                         }
                     },
                     {
@@ -340,18 +343,7 @@ class SubscriptionsViewModel @Inject constructor(
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             if (!isConnectionStarted) {
-                 startConnection(makePurchase = {
-                    CoroutineScope(Dispatchers.IO).launch {  billingManagerUseCases.purchaseSubscription(
-                            activity,
-                            product,
-                            { error -> 
-                                showToast("Purchase Failed", error)
-                                onError(error)
-                            },
-                            userId = partnerUserId!!
-                            )
-                        }
-                    })
+                 startConnection()
             } else {
                 billingManagerUseCases.purchaseSubscription(activity, product, { error -> 
                     showToast("Purchase Failed", error)

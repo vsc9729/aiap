@@ -51,9 +51,11 @@ fun SubscriptionsViewBottomSheet(
     partnerUserId: String,
     activity: ComponentActivity,
     subscriptionsViewModel: SubscriptionsViewModel = hiltViewModel(),
-
 ) {
-    subscriptionsViewModel.initialize(id = partnerUserId)
+    // Launch initialization in side effect
+    LaunchedEffect(partnerUserId) {
+        subscriptionsViewModel.initialize(id = partnerUserId)
+    }
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
     )
@@ -62,8 +64,6 @@ fun SubscriptionsViewBottomSheet(
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val sheetHeight = screenHeight * 0.98f
-
-
     // Automatically open the sheet when dialog state is true
 //    LaunchedEffect(subscriptionsViewModel.dialogState.value) {
 //        if (subscriptionsViewModel.dialogState.value) {
@@ -72,7 +72,6 @@ fun SubscriptionsViewBottomSheet(
 //            }
 //        }
 //    }
-
   //  if (subscriptionsViewModel.dialogState.value) {
     if(visible) {
             ModalBottomSheet(

@@ -230,6 +230,18 @@ class ProductManagerTest {
             productApi.getActiveSubscription(userId = any())
         } returns mockResponse
 
+        coEvery {
+            cacheManager.getCachedDataWithNetwork<ActiveSubscriptionResponse>(
+                key = any(),
+                fetchFromNetwork = any(),
+                serialize = any(),
+                deserialize = any()
+            )
+        } coAnswers {
+            val fetch = secondArg<(suspend () -> Resource<ActiveSubscriptionResponse>)>()
+            fetch()
+        }
+
         // When
         val result = productManager.getActiveSubscription("test-user-id")
 
@@ -246,6 +258,18 @@ class ProductManagerTest {
         coEvery {
             productApi.getActiveSubscription(any(), any())
         } throws Exception("Network error")
+
+        coEvery {
+            cacheManager.getCachedDataWithNetwork<ActiveSubscriptionResponse>(
+                key = any(),
+                fetchFromNetwork = any(),
+                serialize = any(),
+                deserialize = any()
+            )
+        } coAnswers {
+            val fetch = secondArg<(suspend () -> Resource<ActiveSubscriptionResponse>)>()
+            fetch()
+        }
 
         // When
         val result = productManager.getActiveSubscription("test-user")

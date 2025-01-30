@@ -7,10 +7,11 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
-import kotlin.test.Test
+import org.junit.Test
 
 class ProductManagerUseCasesTest {
     @MockK
@@ -20,7 +21,8 @@ class ProductManagerUseCasesTest {
 
     @Before
     fun setUp() {
-        MockKAnnotations.init(this)
+        MockKAnnotations.init(this, relaxUnitFun = true)
+        assertNotNull(productManager)
         getProductsApi = GetProductsApi(productManager)
     }
 
