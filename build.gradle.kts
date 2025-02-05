@@ -2,6 +2,7 @@
 buildscript {
     dependencies {
         classpath("org.bouncycastle:bcutil-jdk18on:1.79")
+        classpath("org.jacoco:org.jacoco.core:0.8.10")
     }
 }
 plugins {

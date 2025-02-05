@@ -50,21 +50,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
 import androidx.core.view.WindowCompat
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.geekyants.synchronoss.ui.theme.Poppins
 import com.geekyants.synchronoss.ui.theme.Roboto
 import com.geekyants.synchronoss.ui.theme.SynchronossTheme
-import com.synchronoss.aiap.presentation.SubscriptionsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    private var launchedFromIntent: Boolean = false
 
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val intentLcid: String? = intent.getStringExtra("lcid")
+        // Set flag if launched with LCID
+        launchedFromIntent = intentLcid != null
+
         enableEdgeToEdge()
         setContent {
             SynchronossTheme {
@@ -80,7 +82,7 @@ class MainActivity : ComponentActivity() {
                     // Initialize showBottomSheet based on intent LCID
                     var showBottomSheet by rememberSaveable { mutableStateOf(intentLcid != null) }
                     var lcid by rememberSaveable { mutableStateOf(intentLcid ?: "") }
-                    
+
                     SubscriptionScreen(
                         modifier = Modifier.padding(innerPadding),
                         lcid = lcid,
@@ -89,30 +91,32 @@ class MainActivity : ComponentActivity() {
                             showBottomSheet = true
                         }
                     )
-                    
+
                     // Rest of the code remains the same
                     if(showBottomSheet) {
                         Log.d(null, "Showing bottom sheet")
                         //Composable responsible for displaying the paywall
                         SubscriptionsViewBottomSheet(
                             onDismissRequest = {
-                                showBottomSheet = false
+                                if (launchedFromIntent) {
+                                    finish()
+                                }else{
+                                    showBottomSheet = false
+                                }
                                 //If the implementor wants to do something on dismissal
                             },
                             visible = showBottomSheet,
                             activity = this,
-                            partnerUserId = lcid.ifEmpty { "5432eb6e-a15c-47c7-94cc-c315551c8413" } //Pass you own use id for testing
-                        )
+                            partnerUserId = lcid.ifEmpty { "6215c9b8-29ef-45d1-a6dd-d9e5f3dbfd5c" }, //Pass you own use id for testing
+                            isLaunchedViaIntent = launchedFromIntent
+                            )
                     }
                 }
 
             }
 
         }
-
     }
-
-
 }
 
 @Composable

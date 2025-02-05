@@ -16,11 +16,8 @@ android {
         applicationId = "com.geekyants.synchronoss"
         minSdk = 21
         targetSdk = 34
-        versionCode = 24
-        versionName = "6.0.7"
-
-
-
+        versionCode = 25
+        versionName = "6.1.0"
 
         signingConfigs {
             create("release") {
