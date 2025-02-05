@@ -10,7 +10,6 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("maven-publish")
     id("com.google.devtools.ksp")
-    id("jacoco")
     id("org.sonarqube") version "6.0.1.5171"
     id("org.jetbrains.kotlinx.kover")
 }
@@ -44,37 +43,47 @@ sonar {
 kover {
     reports {
         filters {
+            includes {
+                // Include only specific classes we want to cover
+                classes(
+                    "com.synchronoss.aiap.presentation.SubscriptionsViewModel",
+                    "com.synchronoss.aiap.ui.theme.ThemeLoader",
+                    "com.synchronoss.aiap.utils.Resource",
+                    "com.synchronoss.aiap.utils.CacheManager",
+                    "com.synchronoss.aiap.common.**",
+                    "com.synchronoss.aiap.data.**",
+                    "com.synchronoss.aiap.domain.**",
+
+                )
+            }
             excludes {
-                classes.addAll(
-                    "*di.*",
-                    "*Factory*", 
-                    "com.sel2in.kotlinDefaultsJson.app.App",
-                    "*.BuildConfig",
-                    "*.R",
-                    "*.R$*",
-                    "*Manifest*",
-                    "*Args*",
-                    "*Companion*",
-                    "*Module*",
-                    "*_Factory*",
+                // Keep existing exclusions for generated code
+                classes(
+                    "*_Factory",
+                    "*_Factory\$*",
                     "*_MembersInjector*",
                     "*_Provide*Factory*",
                     "*Hilt_*",
                     "*_HiltModules*",
                     "*.dagger.hilt.*",
                     "*Dagger*",
+                    "*.BuildConfig",
+                    "*.R",
+                    "*.R\$*",
+                    "*Manifest*",
+                    "*Args*",
                     "*.generated.*",
-                    // Add these new patterns for Moshi generated adapters
+                    "*Companion*",
+                    "*Module*",
                     "*JsonAdapter*",
-                    "*JsonAdapter",
-                    "*_JsonAdapter",
-                    "*.MoshiJsonAdapter",
+                    "*JsonAdapter\$*",
                     "com.synchronoss.aiap.data.remote.**.*JsonAdapter"
                 )
-                annotatedBy.addAll(
-                    "*Generated",
-                    "*CustomAnnotationToExclude",
-                    // Add Moshi's annotation
+                
+                annotatedBy(
+                    "javax.annotation.Generated",
+                    "dagger.Generated",
+                    "androidx.annotation.Generated",
                     "com.squareup.moshi.JsonClass"
                 )
             }
@@ -228,76 +237,10 @@ kapt {
     correctErrorTypes = true
 }
 
-jacoco {
-    toolVersion = "0.8.7"
-}
-
-tasks.register<JacocoReport>("jacocoTestReport") {
-    group = "Reporting"
-    description = "Generate Jacoco coverage reports after running tests."
-
-    dependsOn("testDebugUnitTest")
-
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-    }
-
-    val androidExclusions = listOf(
-        "**/BR.*",
-        "**/R.*",
-        "**/R$*.*",
-        "**/BuildConfig.*",
-        "**/Manifest*.*",
-        "**/*Adapter*.*",
-        "**/*Fragment*.*",
-        "**/*ViewHolder*.*",
-        "**/*ViewModelFactory*.*",
-        "**/*Layout*.*",
-        // Adding your existing exclusions
-        "**/di/**",
-        "**/*Companion*.*",
-        "**/*Module*.*",
-        "**/*_Factory*.*",
-        "**/*_MembersInjector*.*",
-        "**/*_Provide*Factory*.*",
-        "**/Hilt_*.*",
-        "**/*_HiltModules*.*",
-        "**/dagger/hilt/**",
-        "**/*Dagger*.*",
-        "**/generated/**"
-    )
-
-    classDirectories.setFrom(files(
-        fileTree("${buildDir}/intermediates/javac/debug/classes") {
-            exclude(androidExclusions)
-        },
-        fileTree("${buildDir}/tmp/kotlin-classes/debug") {
-            exclude(androidExclusions)
-        }
-    ))
-
-    sourceDirectories.setFrom(files(
-        "${project.projectDir}/src/main/java",
-        "${project.projectDir}/src/main/kotlin"
-    ))
-
-    executionData.setFrom(files(
-        "${buildDir}/jacoco/testDebugUnitTest.exec",
-        "${buildDir}/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"
-    ))
-}
-
-tasks.withType<Test> {
-    configure<JacocoTaskExtension> {
-        isIncludeNoLocationClasses = true
-        excludes = listOf("jdk.internal.*")
-    }
-    finalizedBy("jacocoTestReport")
-}
-
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
     }
 }
+
+

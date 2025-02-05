@@ -8,7 +8,7 @@ data class ProductDataDto(
     @field:Json(name = "displayName")
     val displayName: String,
     @field:Json(name = "description")
-    val description: String,
+    val description: String?,
     @field:Json(name = "vendorName")
     val vendorName: String,
     @field:Json(name = "appName")

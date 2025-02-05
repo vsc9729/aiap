@@ -218,9 +218,15 @@ class BillingManagerImpl(
             )
             CoroutineScope(Dispatchers.IO).launch {
                 val handlePurchaseResponse = async {
-                    productApi.handlePurchase(
-                        handleRequest
-                    )
+                    if(purchaseUpdateHandler.isLaunchedViaIntent){
+                        productApi.handlePurchaseAccountId(
+                            handleRequest
+                        )
+                    }else{
+                        productApi.handlePurchase(
+                            handleRequest
+                        )
+                    }
                 }
 
                 handlePurchaseResponse.await(

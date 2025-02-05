@@ -1,5 +1,9 @@
+package com.synchronoss.aiap.presentation
+
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Paint.Style
+import android.net.Uri
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.BorderStroke
@@ -58,6 +62,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -87,15 +92,10 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     var showDialog by remember { mutableStateOf(false) }
     val logoUrl = subscriptionsViewModel.finalLogoUrl;
     val configuration = LocalConfiguration.current;
-
     val logoUrlWidth = 110.dp
     val logoUrlHeight = 55.dp
-
     Log.d(null, "Logo url is $logoUrl")
-
     val filteredProducts: List<ProductInfo>? = subscriptionsViewModel.filteredProducts
-
-
     if(subscriptionsViewModel.noInternetConnectionAndNoCache.value){
         Box(
             modifier = Modifier
@@ -115,22 +115,6 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp)
                 ) {
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .background(color = MaterialTheme.colorScheme.background)
-//                    .padding(vertical = 16.dp),
-//                verticalArrangement = Arrangement.Center,
-//            ) {
-//                ToastComposable(
-//                    heading = "Purchase Cancelled",
-//                    subText = "User has cancelled the purchase",
-//                    onDismiss = {
-//                        println("Toast dismissed!")
-//                    }
-//                )
-//            }
-
                     Row(
                         modifier = Modifier
                             .fillMaxWidth(),
@@ -143,16 +127,12 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                 .wrapContentSize()
                                 .width(logoUrlWidth)
                                 .height(logoUrlHeight)
-
                         )
                     }
-
-
                     Row(
                         modifier = Modifier
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
-
                     ) {
                         Text(
                             text = Constants.STORAGE_TAGLINE,
@@ -164,20 +144,15 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                             )
                         )
                     }
-
-
                     Spacer(modifier = Modifier.height(8.dp))
                     TabSelector(
-                        selectedTab = subscriptionsViewModel.selectedTab?:TabOption.YEARLY,
+                        selectedTab = subscriptionsViewModel.selectedTab?: TabOption.getAvailableTabs(subscriptionsViewModel.products!!).first(),
                         onTabSelected = { tab ->
                             subscriptionsViewModel.selectedTab = tab
                             subscriptionsViewModel.onTabSelected(tab= tab)
-
                         },
                         modifier = Modifier.fillMaxWidth()
                     )
-
-
                     TextButton(
                         onClick = { /* Handle restore */ },
                         modifier = Modifier
@@ -200,11 +175,9 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                             )
                         )
                     }
-
                     ScrollablePlans()
                     Spacer(modifier = modifier.height(8.dp))
                 }
-
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -212,7 +185,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                             if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                                 it.height(80.dp)
                             } else {
-                                it.height(125.dp)
+                                it.height(if(subscriptionsViewModel.selectedPlan != -1)165.dp else 125.dp)
                             }
                         }
                         .drawBehind {
@@ -232,7 +205,6 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                         }
                         .clip(RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp))
                         .background(color = MaterialTheme.colorScheme.tertiary)
-
                         .align(Alignment.BottomCenter)
                 )
                 {
@@ -242,22 +214,24 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                 modifier = Modifier
                                     .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
                             ) {
-
                                 Column(
                                     modifier = Modifier.fillMaxSize(),
                                     verticalArrangement = Arrangement.SpaceBetween,
                                     horizontalAlignment = Alignment.CenterHorizontally
-
                                 ) {
-//                            Text(
-//                                text = "Plan auto-renews for ₹1000 every month. You can cancel anytime you want.",
-//                                style = MaterialTheme.typography.bodyMedium.copy(
-//                                    fontWeight = FontWeight.W400,
-//                                    color = MaterialTheme.colorScheme.onSecondary,
-//                                    fontSize = 12.sp,
-//                                    textAlign = TextAlign.Center
-//                                )
-//                            )
+                                    if(subscriptionsViewModel.selectedPlan != -1){
+                                        val selectedProduct = filteredProducts?.get(subscriptionsViewModel.selectedPlan)
+
+                                        Text(
+                                            text = "Plan auto-renews for ${selectedProduct?.displayPrice} every month. You can cancel anytime you want.",
+                                            style = MaterialTheme.typography.bodyMedium.copy(
+                                                fontWeight = FontWeight.W400,
+                                                color = MaterialTheme.colorScheme.onSecondary,
+                                                fontSize = 10.sp,
+                                                textAlign = TextAlign.Center
+                                            )
+                                        )
+                                    }
                                     Button(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -416,6 +390,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     }
                 }
             }
+
         else Column (
             modifier = Modifier
                 .fillMaxSize()
@@ -682,7 +657,29 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
 enum class TabOption {
     MONTHLY,
     WEEKlY,
-    YEARLY,
+    YEARLY;
+
+    companion object {
+        fun getAvailableTabs(products: List<ProductInfo>): List<TabOption> {
+            val tabsInOrder = mutableListOf<TabOption>()
+            val seenPeriods = mutableSetOf<Char>()
+
+            // Iterate through products in order
+            for (product in products) {
+                val periodCode = product.recurringPeriodCode.last()
+                if (!seenPeriods.contains(periodCode)) {
+                    when (periodCode) {
+                        'M' -> tabsInOrder.add(MONTHLY)
+                        'Y' -> tabsInOrder.add(YEARLY)
+                        'W' -> tabsInOrder.add(WEEKlY)
+                    }
+                    seenPeriods.add(periodCode)
+                }
+            }
+
+            return tabsInOrder
+        }
+    }
 }
 
 @Composable
@@ -691,43 +688,47 @@ fun TabSelector(
     onTabSelected: (TabOption) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val configuration = LocalConfiguration.current;
-    Surface(
-        modifier = modifier
-            .let {
-                if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    it.height(40.dp)
-                } else {
-                    it.height(50.dp)
+    val configuration = LocalConfiguration.current
+    val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
+    val availableTabs = subscriptionsViewModel.products?.let { TabOption.getAvailableTabs(it) } ?: emptyList()
+
+    if (availableTabs.isNotEmpty()) {
+        Surface(
+            modifier = modifier
+                .let {
+                    if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                        it.height(40.dp)
+                    } else {
+                        it.height(50.dp)
+                    }
                 }
-            }
-            .height(50.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(color = MaterialTheme.colorScheme.secondary),
-        color = MaterialTheme.colorScheme.secondary
-    ) {
-        Row(
-            modifier = Modifier.padding(6.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+                .clip(RoundedCornerShape(8.dp))
+                .background(color = MaterialTheme.colorScheme.secondary),
+            color = MaterialTheme.colorScheme.secondary
         ) {
-            TabOption.entries.forEach { tab ->
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(
-                            if (tab == selectedTab) MaterialTheme.colorScheme.primary
-                            else Color.Transparent
+            Row(
+                modifier = Modifier.padding(6.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                availableTabs.forEach { tab ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(
+                                if (tab == selectedTab) MaterialTheme.colorScheme.primary
+                                else Color.Transparent
+                            )
+                            .clickable { onTabSelected(tab) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = tab.name.lowercase().replaceFirstChar { it.uppercase() },
+                            color = if (tab == selectedTab) Color.White else MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.W600
                         )
-                        .clickable { onTabSelected(tab) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = tab.name.lowercase().replaceFirstChar { it.uppercase() },
-                        color = if (tab == selectedTab) Color.White else MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.W600
-                    )
+                    }
                 }
             }
         }
@@ -742,10 +743,12 @@ fun TabSelector(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DialogBox(
-    onDismiss : ()->Unit,
-    onConfirm : (String)->Unit
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
 ) {
     var text by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
     BasicAlertDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -783,7 +786,7 @@ fun DialogBox(
                     ) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                ),
+                    ),
                     textStyle = TextStyle(color = Color.Black)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -803,8 +806,10 @@ fun DialogBox(
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
-                            onConfirm(text);
-                            onDismiss();
+                            onConfirm(text)
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/redeem?code=$text"))
+                            context.startActivity(intent)
+                            onDismiss()
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,

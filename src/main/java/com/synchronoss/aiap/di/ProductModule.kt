@@ -1,12 +1,12 @@
 package com.synchronoss.aiap.di
 
-import GetActiveSubscription
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.synchronoss.aiap.data.remote.product.ProductApi
 import com.synchronoss.aiap.data.repository.product.ProductMangerImpl
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
 import com.synchronoss.aiap.domain.repository.product.ProductManager
+import com.synchronoss.aiap.domain.usecases.product.GetActiveSubscription
 import com.synchronoss.aiap.domain.usecases.product.GetProductsApi
 import com.synchronoss.aiap.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.utils.CacheManager
