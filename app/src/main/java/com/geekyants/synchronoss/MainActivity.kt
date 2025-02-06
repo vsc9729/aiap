@@ -1,6 +1,6 @@
 package com.geekyants.synchronoss
 
-import SubscriptionsViewBottomSheet
+
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -53,6 +53,7 @@ import androidx.core.view.WindowCompat
 import com.geekyants.synchronoss.ui.theme.Poppins
 import com.geekyants.synchronoss.ui.theme.Roboto
 import com.geekyants.synchronoss.ui.theme.SynchronossTheme
+import com.synchronoss.aiap.presentation.SubscriptionsViewBottomSheet
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
