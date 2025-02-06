@@ -27,6 +27,7 @@ build/
 captures/
 .externalNativeBuild/
 .cxx/
+htmlReport/
 *.apk
 output.json
 

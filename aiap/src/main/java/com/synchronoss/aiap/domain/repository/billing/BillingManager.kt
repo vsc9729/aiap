@@ -1,27 +1,22 @@
 package com.synchronoss.aiap.domain.repository.billing
 
 import androidx.activity.ComponentActivity
-import com.android.billingclient.api.BillingResult
-import com.android.billingclient.api.ProductDetails
-import com.android.billingclient.api.Purchase
+import com.synchronoss.aiap.domain.models.ProductInfo
 
 interface BillingManager {
-    fun startConnection(
+    suspend fun startConnection(
         onConnected: () -> Unit,
         onDisconnected: () -> Unit
     )
 
-    suspend fun getProducts(
-        productIds: List<String>,
-        onProductsReceived: (List<ProductDetails>) -> Unit,
-        onError: (String) -> Unit
-    )
-
     suspend fun purchaseSubscription(
         activity: ComponentActivity,
-        product: ProductDetails,
+        productInfo: ProductInfo,
+        onError: (String) -> Unit,
+        userId: String
+    )
+    suspend fun checkExistingSubscriptions(
         onError: (String) -> Unit
     )
-
 
 }

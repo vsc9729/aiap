@@ -1,11 +1,12 @@
 package com.synchronoss.aiap.di
 
 import android.app.Application
+import com.synchronoss.aiap.data.remote.product.ProductApi
 import com.synchronoss.aiap.data.repository.billing.BillingManagerImpl
 import com.synchronoss.aiap.domain.usecases.billing.BillingManagerUseCases
-import com.synchronoss.aiap.domain.usecases.billing.GetProducts
 import com.synchronoss.aiap.domain.usecases.billing.PurchaseSubscription
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
+import com.synchronoss.aiap.domain.usecases.billing.CheckExistingSubscription
 import com.synchronoss.aiap.domain.usecases.billing.StartConnection
 
 
@@ -21,10 +22,21 @@ import javax.inject.Singleton
 object BillingModule {
     @Provides
     @Singleton
+    fun providePurchaseUpdateHandler(): PurchaseUpdateHandler {
+        return PurchaseUpdateHandler(
+            onPurchaseUpdated = { /* Do nothing */ },
+            onPurchaseStarted = { /* Do nothing */ },
+            onPurchaseFailed = { /* Do nothing */ }
+        )
+    }
+    @Provides
+    @Singleton
     fun provideBillingManager(
-        application: Application
+        application: Application,
+        productApi: ProductApi,
+        purchaseUpdateHandler: PurchaseUpdateHandler
     ): BillingManager {
-        return BillingManagerImpl(application)
+        return BillingManagerImpl(application, productApi, purchaseUpdateHandler)
     }
 
     @Provides
@@ -32,8 +44,8 @@ object BillingModule {
     fun provideBillingManagerUseCases(billingManager: BillingManager): BillingManagerUseCases {
         return BillingManagerUseCases(
             startConnection = StartConnection(billingManager),
-            getProducts = GetProducts(billingManager),
-            purchaseSubscription = PurchaseSubscription(billingManager)
+            purchaseSubscription = PurchaseSubscription(billingManager),
+            checkExistingSubscription = CheckExistingSubscription(billingManager)
         )
     }
 
