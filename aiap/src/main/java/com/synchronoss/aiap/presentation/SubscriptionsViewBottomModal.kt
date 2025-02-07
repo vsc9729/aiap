@@ -42,7 +42,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.internal.wait
-import com.synchronoss.aiap.ui.theme.SampleAiAPTheme as SampleAiAPTheme1
+import com.synchronoss.aiap.ui.theme.AiAPTheme as AiAPTheme1
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,7 +92,7 @@ fun SubscriptionsViewBottomSheet(
                 modifier = modifier.height(sheetHeight),
                 dragHandle = null,
                 ) {
-                SampleAiAPTheme1 {
+                AiAPTheme1 {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()

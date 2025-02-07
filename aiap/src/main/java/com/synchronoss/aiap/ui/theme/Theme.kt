@@ -11,7 +11,7 @@ import com.synchronoss.aiap.presentation.SubscriptionsViewModel
 
 
 @Composable
-fun SampleAiAPTheme(
+fun AiAPTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {

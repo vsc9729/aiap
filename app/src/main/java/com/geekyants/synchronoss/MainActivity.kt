@@ -108,7 +108,7 @@ class MainActivity : ComponentActivity() {
                             },
                             visible = showBottomSheet,
                             activity = this,
-                            partnerUserId = lcid.ifEmpty { "6215c9b8-29ef-45d1-a6dd-d9e5f3dbfd5c" }, //Pass you own use id for testing
+                            partnerUserId = lcid.ifEmpty { "64f782eae2c446c398ec06fede5477e4" }, //Pass you own use id for testing
                             isLaunchedViaIntent = launchedFromIntent
                             )
                     }
