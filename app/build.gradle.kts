@@ -14,7 +14,7 @@ android {
     compileSdk = 35
     defaultConfig {
         applicationId = "com.geekyants.synchronoss"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 34
         versionCode = 25
         versionName = "6.1.0"
