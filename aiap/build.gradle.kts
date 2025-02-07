@@ -10,34 +10,8 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("maven-publish")
     id("com.google.devtools.ksp")
-    id("org.sonarqube") version "6.0.1.5171"
     id("org.jetbrains.kotlinx.kover")
-}
-
-sonar {
-    properties {
-        property("sonar.host.url", "https://sonarqube.blr0.geekydev.com/sonar")
-
-        // Project identification
-        property("sonar.projectKey", "saddsa")
-        property("sonar.projectName", "saddsa")
-
-        // Define main source directories
-        property("sonar.sources", "src/main/java")
-
-        // Define test source directories
-        property("sonar.tests", listOf(
-            "src/test/java",
-            "src/androidTest/java"
-        ).joinToString(","))
-
-        // Encoding of source files
-        property("sonar.sourceEncoding", "UTF-8")
-
-        // Jacoco coverage report path
-        property("sonar.coverage.jacoco.xmlReportPaths",
-            "${layout.buildDirectory.get()}/reports/kover/reportDebug.xml")
-    }
+    id("org.sonarqube")
 }
 
 kover {
@@ -77,7 +51,9 @@ kover {
                     "*Module*",
                     "*JsonAdapter*",
                     "*JsonAdapter\$*",
-                    "com.synchronoss.aiap.data.remote.**.*JsonAdapter"
+                    "com.synchronoss.aiap.data.remote.**.*JsonAdapter",
+                    "com.synchronoss.aiap.data.repository.activity.**",
+                    "com.synchronoss.aiap.domain.usecases.activity.**"
                 )
                 
                 annotatedBy(
@@ -102,6 +78,8 @@ kover {
                 onCheck = true
             }
         }
+
+
     }
 }
 
@@ -115,7 +93,7 @@ android {
         }
     }
     defaultConfig {
-        minSdk = 21
+        minSdk = 23
 
         testInstrumentationRunner = "com.synchronoss.aiap.CustomTestRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -243,3 +221,63 @@ tasks.withType<KotlinCompile>().configureEach {
     }
 }
 
+sonar {
+    val sonarToken: String by project
+    println(sonarToken)
+
+    properties {
+        property("sonar.host.url", "https://sonarqube.blr0.geekydev.com")
+        property("sonar.projectKey", "android-sample-app")
+        property("sonar.projectName", "android-sample-app")
+        property("sonar.token", sonarToken)
+        property("sonar.sources", "src/main/java")
+        property("sonar.tests", listOf(
+            "src/test/java",
+            "src/androidTest/java"
+        ).joinToString(","))
+        property("sonar.java.binaries", "build/intermediates/javac/debug/classes")
+        property("sonar.kotlin.binaries", "build/tmp/kotlin-classes/debug")
+        property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/kover/reportDebug.xml")
+
+        // Coverage inclusions - matching Kover configuration
+        property("sonar.inclusions", listOf(
+            "**/presentation/SubscriptionsViewModel.*",
+            "**/ui/theme/ThemeLoader.*",
+            "**/utils/Resource.*",
+            "**/utils/CacheManager.*",
+            "**/common/**/*",
+            "**/data/**/*",
+            "**/domain/**/*"
+        ).joinToString(","))
+
+        // Coverage exclusions - matching Kover configuration
+        property("sonar.exclusions", listOf(
+            "**/*_Factory.*",
+            "**/*_Factory\$*.*",
+            "**/*_MembersInjector*.*",
+            "**/*_Provide*Factory*.*",
+            "**/*Hilt_*.*",
+            "**/*_HiltModules*.*",
+            "**/dagger/hilt/**/*.*",
+            "**/*Dagger*.*",
+            "**/BuildConfig.*",
+            "**/R.*",
+            "**/R\$*.*",
+            "**/*Manifest*.*",
+            "**/*Args*.*",
+            "**/generated/**/*.*",
+            "**/*Companion*.*",
+            "**/*Module*.*",
+            "**/*JsonAdapter*.*",
+            "**/*JsonAdapter\$*.*",
+            "**/data/remote/**/*JsonAdapter.*",
+            // Classes with specific annotations
+            "**/javax/annotation/Generated.*",
+            "**/dagger/Generated.*",
+            "**/androidx/annotation/Generated.*",
+            "**/com/squareup/moshi/JsonClass.*",
+            "/aiap/data/repository/activity/**/*",
+            "/aiap/domain/usecases/activity/**/*"
+        ).joinToString(","))
+    }
+}

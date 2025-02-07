@@ -1,0 +1,65 @@
+{
+  "shared": {
+    "logoUrl": "https://capsyl.com/wp-content/uploads/cropped-Capsyl-Logo-sm-2.png"
+  },
+  "themes": {
+    "light": {
+      "colors": {
+        "primary": "#5514b4",
+        "secondary": "#e6d9f9",
+        "background": "#FFFFFF",
+        "text": {
+          "heading": "#1F2937",
+          "body": "#6B7280",
+          "bodyAlt": "#1F2937"
+        },
+        "surface": {
+          "base": "#E4FFF4",
+          "onSurface": "#2A7948"
+        },
+        "outline": {
+          "defaultColor": "#E5E7EB",
+          "variant": "#5514b4"
+        },
+        "tertiary": {
+          "base": "#FFFFFF",
+          "onTertiary": "#6B7280"
+        },
+        "error": {
+          "text": "#D76C1F",
+          "background": "#FFF9F5",
+          "border": "#FECDAA"
+        }
+      }
+    },
+    "dark": {
+      "colors": {
+        "primary": "#8d52e3",
+        "secondary": "#262627",
+        "background": "#0D0D0D",
+        "text": {
+          "heading": "#C8D2E0",
+          "body": "#8C8C8C",
+          "bodyAlt": "#FEFEFF"
+        },
+        "surface": {
+          "base": "#166534",
+          "onSurface": "#E4FFF4"
+        },
+        "outline": {
+          "defaultColor": "#262627",
+          "variant": "#404040"
+        },
+        "tertiary": {
+          "base": "#212121",
+          "onTertiary": "#FEFEFF"
+        },
+        "error": {
+          "text": "#D76C1F",
+          "background": "#FFF9F5",
+          "border": "#FECDAA"
+        }
+      }
+    }
+  }
+}

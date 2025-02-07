@@ -1,0 +1,139 @@
+default_platform(:android)
+
+platform :android do
+  desc "Runs all tests"
+  lane :test do
+    gradle(task: "test")
+  end
+
+  desc "Build debug APK"
+  lane :build_debug do
+    gradle(
+      task: "clean assembleDebug"
+    )
+  end
+
+  desc "Increment version code and name"
+  lane :increment_version_code do
+    path = "#{ENV['CI_PROJECT_DIR']}/app/build.gradle.kts"
+
+    unless File.exist?(path)
+      UI.error("Could not find build.gradle.kts at: #{path}")
+      raise "build.gradle.kts not found"
+    end
+
+    gradle_file = File.read(path)
+
+    vc_match = gradle_file.match(/versionCode\s*=\s*(\d+)/)
+    vn_match = gradle_file.match(/versionName\s*=\s*"([^"]+)"/)
+
+    unless vc_match && vn_match
+      UI.error("Could not find version information in build.gradle.kts")
+      raise "Version information not found"
+    end
+
+    version_code = vc_match[1].to_i
+    version_name = vn_match[1]
+
+    # Normalize version name
+    version_parts = version_name.split('.').map(&:to_i)
+    version_parts << 0 while version_parts.size < 3
+
+    version_parts[2] += 1  # Increment patch version
+    new_version_name = version_parts.join('.')
+    new_version_code = version_code + 1
+
+    updated_gradle_file = gradle_file
+      .sub(/versionCode\s*=\s*\d+/, "versionCode = #{new_version_code}")
+      .sub(/versionName\s*=\s*"[^"]+"/, "versionName = \"#{new_version_name}\"")
+
+    File.write(path, updated_gradle_file)
+
+      # Setup SSH key for CI/CD
+        sh "mkdir -p ~/.ssh"
+        sh "echo $SSH_PRIVATE_KEY > ~/.ssh/id_rsa"
+        sh "chmod 600 ~/.ssh/id_rsa"
+        sh "ssh-keyscan git.geekyants.com >> ~/.ssh/known_hosts"
+
+        repo_url = "git@git.geekyants.com:client-projects/synchronous/android-sample-app.git"
+        sh "git remote set-url origin #{repo_url}"
+
+
+      # Update the Git remote URL to use the token
+      sh "git remote set-url origin #{repo_url}"
+
+      # Commit and push changes
+      sh "git config --global user.email 'vikrantsingh@geekyants.com'"
+      sh "git config --global user.name 'GitLab CI'"
+      sh "git add #{path}"
+      sh "git commit -m '[ci skip] Bump version code to #{new_version_code} and version name to #{new_version_name}'"
+      sh "git push origin HEAD:#{ENV['CI_COMMIT_REF_NAME']}"
+
+      # Set environment variables for later stages
+      ENV['NEW_VERSION_CODE'] = new_version_code.to_s
+      ENV['NEW_VERSION_NAME'] = new_version_name
+
+      UI.success("Version code incremented to #{new_version_code}")
+      UI.success("Version name updated to #{new_version_name}")
+  end
+
+
+  desc "Build release APK"
+  lane :build_release do
+    gradle(
+      task: "clean assembleRelease",
+      properties: {
+        "android.injected.signing.store.file" => "#{ENV['CI_PROJECT_DIR']}/app/keystore.jks",
+        "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
+      }
+    )
+  end
+
+  desc "Run lint check"
+  lane :lint do
+    gradle(task: "lint")
+  end
+
+  desc "Deploy to Play Store internal testing track"
+  lane :deploy_internal do
+    # Read the version code from build.gradle.kts
+    path = "#{ENV['CI_PROJECT_DIR']}/app/build.gradle.kts"
+    unless File.exist?(path)
+      UI.error("Could not find build.gradle.kts at: #{path}")
+      raise "build.gradle.kts not found"
+    end
+
+    gradle_file = File.read(path)
+    vc_match = gradle_file.match(/versionCode\s*=\s*(\d+)/)
+
+    unless vc_match
+      UI.error("Could not find versionCode in build.gradle.kts")
+      raise "Version code not found"
+    end
+
+    version_code = vc_match[1].to_i
+    UI.message("Detected version code: #{version_code}")
+
+    # Determine the AAB path
+      aab_path = ENV['AAB_PATH'] || lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH]
+
+      unless aab_path && File.exist?(aab_path)
+        UI.error("AAB file not found at: #{aab_path}")
+        raise "AAB file missing. Ensure the build lane generates it and sets the correct path."
+      end
+
+      UI.success("AAB file located: #{aab_path}")
+
+
+    # Upload to Play Store
+    upload_to_play_store(
+      track: 'internal',
+      json_key: "#{ENV['CI_PROJECT_DIR']}/play-store-credentials.json",
+      aab: ENV['AAB_PATH'] || lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
+      version_code: version_code # Pass the detected version code
+    )
+  end
+
+end
