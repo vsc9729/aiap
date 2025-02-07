@@ -23,4 +23,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "AIAP"
 include(":aiap")
-include(":app")
+//include(":app")

@@ -6,11 +6,11 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("kotlin-kapt")
-    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.hilt)
     id("maven-publish")
-    id("com.google.devtools.ksp")
-    id("org.jetbrains.kotlinx.kover")
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kover)
     id("org.sonarqube")
 }
 
