@@ -18,7 +18,7 @@ local.properties
 
 build/
 
-
+app/
 
 # Log/OS Files
 *.log
