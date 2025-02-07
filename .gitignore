@@ -1,24 +1,9 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
 # Gradle files
 .gradle/
-
 build/
 
-app/
+# Local configuration file (sdk path, etc)
+local.properties
 
 # Log/OS Files
 *.log
@@ -27,37 +12,23 @@ app/
 captures/
 .externalNativeBuild/
 .cxx/
-htmlReport/
 *.apk
+target/
 output.json
 
 # IntelliJ
-
+*.iml
 .idea/
 misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml
 
-
-# Fastlane
-fastlane/report.xml
-fastlane/report.html
-fastlane/logs/
-fastlane/*.json
-fastlane/*.key
-
-# Android-specific
-fastlane/keystore.properties
-fastlane/*.keystore
-
-
 # Keystore files
 *.jks
 *.keystore
-keystore.properties
-synchronoss-445109-97b86f468d05.json
+
 # Google Services (e.g. APIs or Firebase)
-google-services.json
+../app/google-services.json
 
 # Android Profiling
 *.hprof
