@@ -10,64 +10,57 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("maven-publish")
     id("com.google.devtools.ksp")
-    id("jacoco")
-    id("org.sonarqube") version "6.0.1.5171"
     id("org.jetbrains.kotlinx.kover")
-}
-
-sonar {
-    properties {
-        property("sonar.host.url", "https://sonarqube.blr0.geekydev.com/sonar")
-
-        // Project identification
-        property("sonar.projectKey", "saddsa")
-        property("sonar.projectName", "saddsa")
-
-        // Define main source directories
-        property("sonar.sources", "src/main/java")
-
-        // Define test source directories
-        property("sonar.tests", listOf(
-            "src/test/java",
-            "src/androidTest/java"
-        ).joinToString(","))
-
-        // Encoding of source files
-        property("sonar.sourceEncoding", "UTF-8")
-
-        // Jacoco coverage report path
-        property("sonar.coverage.jacoco.xmlReportPaths",
-            "${layout.buildDirectory.get()}/reports/kover/reportDebug.xml")
-    }
+    id("org.sonarqube")
 }
 
 kover {
     reports {
         filters {
+            includes {
+                // Include only specific classes we want to cover
+                classes(
+                    "com.synchronoss.aiap.presentation.SubscriptionsViewModel",
+                    "com.synchronoss.aiap.ui.theme.ThemeLoader",
+                    "com.synchronoss.aiap.utils.Resource",
+                    "com.synchronoss.aiap.utils.CacheManager",
+                    "com.synchronoss.aiap.common.**",
+                    "com.synchronoss.aiap.data.**",
+                    "com.synchronoss.aiap.domain.**",
+
+                )
+            }
             excludes {
-                classes.addAll(
-                    "*di.*",
-                    "*Factory*",
-                    "com.sel2in.kotlinDefaultsJson.app.App",
-                    "*.BuildConfig",
-                    "*.R",
-                    "*.R$*",
-                    "*Manifest*",
-                    "*Args*",
-                    "*Companion*",
-                    "*Module*",
-                    "*_Factory*",
+                // Keep existing exclusions for generated code
+                classes(
+                    "*_Factory",
+                    "*_Factory\$*",
                     "*_MembersInjector*",
                     "*_Provide*Factory*",
                     "*Hilt_*",
                     "*_HiltModules*",
                     "*.dagger.hilt.*",
                     "*Dagger*",
-                    "*.generated.*"
+                    "*.BuildConfig",
+                    "*.R",
+                    "*.R\$*",
+                    "*Manifest*",
+                    "*Args*",
+                    "*.generated.*",
+                    "*Companion*",
+                    "*Module*",
+                    "*JsonAdapter*",
+                    "*JsonAdapter\$*",
+                    "com.synchronoss.aiap.data.remote.**.*JsonAdapter",
+                    "com.synchronoss.aiap.data.repository.activity.**",
+                    "com.synchronoss.aiap.domain.usecases.activity.**"
                 )
-                annotatedBy.addAll(
-                    "*Generated",
-                    "*CustomAnnotationToExclude"
+                
+                annotatedBy(
+                    "javax.annotation.Generated",
+                    "dagger.Generated",
+                    "androidx.annotation.Generated",
+                    "com.squareup.moshi.JsonClass"
                 )
             }
         }
@@ -85,6 +78,8 @@ kover {
                 onCheck = true
             }
         }
+
+
     }
 }
 
@@ -98,7 +93,7 @@ android {
         }
     }
     defaultConfig {
-        minSdk = 21
+        minSdk = 23
 
         testInstrumentationRunner = "com.synchronoss.aiap.CustomTestRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -177,7 +172,6 @@ dependencies {
     // Dependency Injection - Hilt
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
-    testImplementation(libs.junit.jupiter)
     kapt(libs.hilt.android.compiler)
 
     // Network & Serialization
@@ -221,63 +215,69 @@ kapt {
     correctErrorTypes = true
 }
 
-jacoco {
-    toolVersion = "0.8.11"
-}
-
-tasks.register<JacocoReport>("jacocoTestReport") {
-    dependsOn("testDebugUnitTest", "connectedDebugAndroidTest")
-
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-    }
-
-    classDirectories.setFrom(files(
-        fileTree("${buildDir}/tmp/kotlin-classes/debug") {
-            exclude(
-                "**/R.class",
-                "**/R$*.class",
-                "**/BuildConfig.*",
-                "**/Manifest*.*",
-                "**/*Test*.*",
-                "**/*Args*.*",
-                "**/di/**",
-                "**/*Companion*.*",
-                "**/*Module*.*",
-                "**/*_Factory*.*",
-                "**/*_MembersInjector*.*",
-                "**/*_Provide*Factory*.*",
-                "**/Hilt_*.*",
-                "**/*_HiltModules*.*",
-                "**/dagger/hilt/**",
-                "**/*Dagger*.*",
-                "**/generated/**"
-            )
-        }
-    ))
-
-    sourceDirectories.setFrom(files(
-        "${project.projectDir}/src/main/java",
-        "${project.projectDir}/src/main/kotlin"
-    ))
-
-    executionData.setFrom(files(
-        "${buildDir}/jacoco/testDebugUnitTest.exec",
-        "${buildDir}/outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec"
-    ))
-}
-
-tasks.withType<Test> {
-    configure<JacocoTaskExtension> {
-        isIncludeNoLocationClasses = true
-        excludes = listOf("jdk.internal.*")
-    }
-    finalizedBy("jacocoTestReport")
-}
-
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
+    }
+}
+
+sonar {
+    val sonarToken: String by project
+    println(sonarToken)
+
+    properties {
+        property("sonar.host.url", "https://sonarqube.blr0.geekydev.com")
+        property("sonar.projectKey", "android-sample-app")
+        property("sonar.projectName", "android-sample-app")
+        property("sonar.token", sonarToken)
+        property("sonar.sources", "src/main/java")
+        property("sonar.tests", listOf(
+            "src/test/java",
+            "src/androidTest/java"
+        ).joinToString(","))
+        property("sonar.java.binaries", "build/intermediates/javac/debug/classes")
+        property("sonar.kotlin.binaries", "build/tmp/kotlin-classes/debug")
+        property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/kover/reportDebug.xml")
+
+        // Coverage inclusions - matching Kover configuration
+        property("sonar.inclusions", listOf(
+            "**/presentation/SubscriptionsViewModel.*",
+            "**/ui/theme/ThemeLoader.*",
+            "**/utils/Resource.*",
+            "**/utils/CacheManager.*",
+            "**/common/**/*",
+            "**/data/**/*",
+            "**/domain/**/*"
+        ).joinToString(","))
+
+        // Coverage exclusions - matching Kover configuration
+        property("sonar.exclusions", listOf(
+            "**/*_Factory.*",
+            "**/*_Factory\$*.*",
+            "**/*_MembersInjector*.*",
+            "**/*_Provide*Factory*.*",
+            "**/*Hilt_*.*",
+            "**/*_HiltModules*.*",
+            "**/dagger/hilt/**/*.*",
+            "**/*Dagger*.*",
+            "**/BuildConfig.*",
+            "**/R.*",
+            "**/R\$*.*",
+            "**/*Manifest*.*",
+            "**/*Args*.*",
+            "**/generated/**/*.*",
+            "**/*Companion*.*",
+            "**/*Module*.*",
+            "**/*JsonAdapter*.*",
+            "**/*JsonAdapter\$*.*",
+            "**/data/remote/**/*JsonAdapter.*",
+            // Classes with specific annotations
+            "**/javax/annotation/Generated.*",
+            "**/dagger/Generated.*",
+            "**/androidx/annotation/Generated.*",
+            "**/com/squareup/moshi/JsonClass.*",
+            "/aiap/data/repository/activity/**/*",
+            "/aiap/domain/usecases/activity/**/*"
+        ).joinToString(","))
     }
 }

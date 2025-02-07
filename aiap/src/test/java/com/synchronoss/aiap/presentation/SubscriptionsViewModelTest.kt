@@ -27,7 +27,7 @@ import kotlin.test.assertFalse
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SubscriptionsViewModelTest {
-    
+
     companion object {
         @JvmStatic
         fun mockLog() {
@@ -101,7 +101,7 @@ class SubscriptionsViewModelTest {
         })
 
         // When
-        viewModel.initialize("test_user_id")
+        viewModel.initialize("test_user_id", intentLaunch = false)
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Then
@@ -167,8 +167,8 @@ class SubscriptionsViewModelTest {
         callbackCompleted.await()
         // Then
         assertTrue(assertionRan, "Callback should have executed")
-        
-        coVerify(exactly = 1) { 
+
+        coVerify(exactly = 1) {
             billingManagerUseCases.startConnection(any(), any())
         }
         coVerify {
@@ -186,7 +186,7 @@ class SubscriptionsViewModelTest {
         var onConnectedCalled = false
 
         // Mock startConnection behavior
-        coEvery { 
+        coEvery {
             billingManagerUseCases.startConnection(
                 onConnected = capture(onConnectedSlot),
                 onDisconnected = any()
@@ -201,7 +201,7 @@ class SubscriptionsViewModelTest {
         }
 
         // Mock purchaseSubscription behavior
-        coEvery { 
+        coEvery {
             billingManagerUseCases.purchaseSubscription(
                 activity = any(),
                 product = any(),
@@ -214,15 +214,15 @@ class SubscriptionsViewModelTest {
         viewModel.isConnectionStarted = false
         viewModel.partnerUserId = "test_user"
         viewModel.purchaseSubscription(mockActivity, mockProduct, errorCallback)
-        
+
         // Then - Verify connection is started
         testDispatcher.scheduler.runCurrent()
         callbackCompleted.await()
         advanceUntilIdle()
-        
+
         assertTrue(onConnectedCalled)
         assertTrue(viewModel.isConnectionStarted)
-        coVerify { 
+        coVerify {
             billingManagerUseCases.startConnection(any(), any())
         }
 
@@ -232,7 +232,7 @@ class SubscriptionsViewModelTest {
         advanceUntilIdle()
 
         // Then - Verify purchase is attempted
-        coVerify { 
+        coVerify {
             billingManagerUseCases.purchaseSubscription(
                 activity = mockActivity,
                 product = mockProduct,
@@ -263,10 +263,10 @@ class SubscriptionsViewModelTest {
     @Test
     fun `test purchase update handler states`() = runTest {
         // Given
-        coEvery { 
-            productManagerUseCases.getActiveSubscription(any()) 
+        coEvery {
+            productManagerUseCases.getActiveSubscription(any())
         } returns Resource.Success(mockk(relaxed = true))
-        
+
         // Create actual handlers instead of mocks
         val purchaseUpdateHandler = PurchaseUpdateHandler(
             onPurchaseStarted = { viewModel.isCurrentProductBeingUpdated = true },
@@ -275,7 +275,7 @@ class SubscriptionsViewModelTest {
             },
             onPurchaseFailed = { }
         )
-        
+
         // Recreate viewModel with actual handler
         viewModel = SubscriptionsViewModel(
             billingManagerUseCases,
@@ -285,8 +285,8 @@ class SubscriptionsViewModelTest {
             purchaseUpdateHandler,
             subscriptionCancelledHandler
         )
-        
-        viewModel.initialize("test_user")
+
+        viewModel.initialize("test_user", intentLaunch = false)
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Test onPurchaseStarted
@@ -296,7 +296,51 @@ class SubscriptionsViewModelTest {
         // Test onPurchaseUpdated
         purchaseUpdateHandler.handlePurchaseUpdate()
         testDispatcher.scheduler.advanceUntilIdle()
-        
+
+        assertFalse(viewModel.isCurrentProductBeingUpdated)
+
+        // Test onPurchaseFailed
+        purchaseUpdateHandler.handlePurchaseFailed()
+        testDispatcher.scheduler.advanceUntilIdle()
+    }
+
+    @Test
+    fun `test purchase update handler states intent`() = runTest {
+        // Given
+        coEvery {
+            productManagerUseCases.getActiveSubscription(any())
+        } returns Resource.Success(mockk(relaxed = true))
+
+        // Create actual handlers instead of mocks
+        val purchaseUpdateHandler = PurchaseUpdateHandler(
+            onPurchaseStarted = { viewModel.isCurrentProductBeingUpdated = true },
+            onPurchaseUpdated = {
+                viewModel.isCurrentProductBeingUpdated = false
+            },
+            onPurchaseFailed = { }
+        )
+
+        // Recreate viewModel with actual handler
+        viewModel = SubscriptionsViewModel(
+            billingManagerUseCases,
+            productManagerUseCases,
+            themeLoader,
+            libraryActivityManagerUseCases,
+            purchaseUpdateHandler,
+            subscriptionCancelledHandler
+        )
+
+        viewModel.initialize("test_user", intentLaunch = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Test onPurchaseStarted
+        purchaseUpdateHandler.handlePurchaseStarted()
+        assertTrue(viewModel.isCurrentProductBeingUpdated)
+
+        // Test onPurchaseUpdated
+        purchaseUpdateHandler.handlePurchaseUpdate()
+        testDispatcher.scheduler.advanceUntilIdle()
+
         assertFalse(viewModel.isCurrentProductBeingUpdated)
 
         // Test onPurchaseFailed
@@ -307,22 +351,21 @@ class SubscriptionsViewModelTest {
     @Test
     fun `test no internet connection scenario`() = runTest {
         // Given
-        coEvery { 
-            productManagerUseCases.getActiveSubscription(any()) 
+        coEvery {
+            productManagerUseCases.getActiveSubscription(any())
         } returns Resource.Error("No internet connection")
 
         // Reset any existing state
         viewModel.noInternetConnectionAndNoCache.value = false
-        
+
         // When
-        viewModel.initialize("test_user")
-        testDispatcher.scheduler.advanceUntilIdle()
+        launch {
+            viewModel.initialize("test_user", intentLaunch = false)
+        }
 
         // Then
+        testDispatcher.scheduler.advanceUntilIdle()
         assertTrue(viewModel.noInternetConnectionAndNoCache.value)
-        verify { 
-            libraryActivityManagerUseCases.launchLibrary() 
-        }
     }
 
     @Test

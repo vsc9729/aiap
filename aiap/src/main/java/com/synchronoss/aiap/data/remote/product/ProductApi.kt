@@ -24,4 +24,9 @@ interface ProductApi {
         @Body request: HandlePurchaseRequest,
         @Header("x-api-key") apiKey: String? = "IAPAppAndroid"
     ): Response<ApiResponse<HandlePurchaseResponse>>
+    @POST("api/iap/android/handle/accountId")
+    suspend fun handlePurchaseAccountId(
+        @Body request: HandlePurchaseRequest,
+        @Header("x-api-key") apiKey: String? = "IAPAppAndroid"
+    ): Response<ApiResponse<HandlePurchaseResponse>>
 }

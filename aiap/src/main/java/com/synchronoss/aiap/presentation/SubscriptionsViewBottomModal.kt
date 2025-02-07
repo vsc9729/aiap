@@ -1,3 +1,5 @@
+package com.synchronoss.aiap.presentation
+
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -51,15 +53,15 @@ fun SubscriptionsViewBottomSheet(
     partnerUserId: String,
     activity: ComponentActivity,
     subscriptionsViewModel: SubscriptionsViewModel = hiltViewModel(),
+    isLaunchedViaIntent: Boolean = false
 ) {
     // Launch initialization in side effect
     LaunchedEffect(partnerUserId) {
-        subscriptionsViewModel.initialize(id = partnerUserId)
+        subscriptionsViewModel.initialize(id = partnerUserId, intentLaunch = isLaunchedViaIntent)
     }
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
     )
-    val isVisible: MutableState<Boolean> = remember {mutableStateOf(false)}
     val coroutineScope = rememberCoroutineScope()
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
@@ -75,7 +77,10 @@ fun SubscriptionsViewBottomSheet(
   //  if (subscriptionsViewModel.dialogState.value) {
     if(visible) {
             ModalBottomSheet(
+
                 onDismissRequest = {
+                    onDismissRequest()
+
                     coroutineScope.launch {
                         sheetState.hide()
                         subscriptionsViewModel.dialogState.value = false

@@ -1,5 +1,4 @@
 package com.synchronoss.aiap.data.repository.product
-import ActiveSubscriptionInfo
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -8,6 +7,7 @@ import com.synchronoss.aiap.data.mappers.toProductInfo
 import com.synchronoss.aiap.data.remote.common.ApiResponse
 import com.synchronoss.aiap.data.remote.product.ProductApi
 import com.synchronoss.aiap.data.remote.product.ProductDataDto
+import com.synchronoss.aiap.domain.models.ActiveSubscriptionInfo
 import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
 import com.synchronoss.aiap.domain.repository.product.ProductManager

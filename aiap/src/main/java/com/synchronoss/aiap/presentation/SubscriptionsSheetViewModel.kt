@@ -1,7 +1,6 @@
 package com.synchronoss.aiap.presentation
 
 
-import TabOption
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.ColorScheme
@@ -22,10 +21,7 @@ import com.synchronoss.aiap.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.ui.theme.ThemeColors
 import com.synchronoss.aiap.ui.theme.ThemeLoader
 import com.synchronoss.aiap.utils.Resource
-
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -50,6 +46,8 @@ class SubscriptionsViewModel @Inject constructor(
     val dialogState = mutableStateOf(false)
     val isLoading = mutableStateOf(true)
     val noInternetConnectionAndNoCache = mutableStateOf(false)
+    var isLaunchedViaIntent: Boolean = false
+
     
     // Product Management
     var partnerUserId: String? = null
@@ -99,13 +97,14 @@ class SubscriptionsViewModel @Inject constructor(
         toastState = toastState.copy(isVisible = false)
     }
 
-    fun initialize(id:String) {
+    fun initialize(id:String, intentLaunch: Boolean) {
+        isLaunchedViaIntent = intentLaunch
         if(!isInitialised){
 
             isInitialised = true
             isLoading.value = true
             partnerUserId = id
-            CoroutineScope(Dispatchers.IO).launch {
+            viewModelScope.launch {
 
                 val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(userId = partnerUserId!!) }
                 val startConnection =  async { startConnection() }
@@ -204,6 +203,7 @@ class SubscriptionsViewModel @Inject constructor(
                     isCurrentProductBeingUpdated = false
                 }
             }
+            purchaseUpdateHandler.isLaunchedViaIntent = isLaunchedViaIntent
             purchaseUpdateHandler.onPurchaseFailed = {
                 viewModelScope.launch {
                     val init = async { initProducts(purchaseUpdate = true) }
@@ -219,15 +219,14 @@ class SubscriptionsViewModel @Inject constructor(
 
     }
 
-     fun startConnection( ) {
+     fun startConnection() {
         if(!isConnectionStarted){
-            CoroutineScope(Dispatchers.IO).launch {
+            viewModelScope.launch {
                 billingManagerUseCases.startConnection(
                     {
                         Log.d("Co", "Connected to billing service")
                         isConnectionStarted = true
-                        CoroutineScope(Dispatchers.IO).launch {
-                            // Create async operation and wait for it
+                        viewModelScope.launch {
                             val checkSubscriptionDeferred = async {
                                 billingManagerUseCases.checkExistingSubscription(
                                     onError = {
@@ -236,10 +235,7 @@ class SubscriptionsViewModel @Inject constructor(
                                     }
                                 )
                             }
-
-                            // Wait for the check to complete
                             checkSubscriptionDeferred.await()
-                            //Start Purchase flow
                         }
                     },
                     {
@@ -256,7 +252,7 @@ class SubscriptionsViewModel @Inject constructor(
 //             products = null
 //             filteredProducts = null
 //             selectedPlan = -1
-             CoroutineScope(Dispatchers.IO).launch {
+             viewModelScope.launch {
                  val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(partnerUserId!!) }
                  val activeSubResult = activeSubResultDeferred.await()
                  val checkSubscriptionDeferred = async {
@@ -311,14 +307,14 @@ class SubscriptionsViewModel @Inject constructor(
                     if(currentProduct != null && (products?.contains(currentProduct) != true)){
                         products = products?.plus(currentProduct!!)
                     }
-                    val recurringPeriodCode: String = products!!.findLast { it.productId == currentProductId }?.recurringPeriodCode ?: "P1Y"
-                    selectedTab = if (currentProductId ==null) TabOption.YEARLY else {
+                    val recurringPeriodCode: String = products!!.findLast { it.productId == currentProductId }?.recurringPeriodCode ?: products!!.first().recurringPeriodCode
+                    selectedTab =
                         when (recurringPeriodCode) {
                             "P1M" -> TabOption.MONTHLY
                             "P1Y" -> TabOption.YEARLY
                             else -> TabOption.WEEKlY
                         }
-                    }
+
                     filteredProducts = products!!.filter {
                         it.recurringPeriodCode.endsWith(recurringPeriodCode.last())
                     }
@@ -341,7 +337,7 @@ class SubscriptionsViewModel @Inject constructor(
         product: ProductInfo,
         onError: (String) -> Unit
     ) {
-        CoroutineScope(Dispatchers.IO).launch {
+        viewModelScope.launch {
             if (!isConnectionStarted) {
                  startConnection()
             } else {

@@ -1,3 +1,5 @@
+package com.synchronoss.aiap.domain.models
+
 import com.synchronoss.aiap.domain.models.ProductInfo
 
 data class SubscriptionResponseInfo(
