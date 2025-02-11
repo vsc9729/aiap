@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Toast Messages -->
+    <string name="no_connection_title">No Connection</string>
+    <string name="no_connection_message">Please check your internet connection</string>
+    <string name="no_connection_text">No Internet Connection</string>
+    <string name="error_title">Error</string>
+    <string name="error_products_message">Failed to load products. Please try again later.</string>
+    <string name="purchase_failed_title">Something went wrong</string>
+    <string name="purchase_failed_message">Any debited amount will be refunded.</string>
+    <string name="subscription_cancelled_title">Subscription Cancelled</string>
+    <string name="subscription_cancelled_message">Your subscription has been cancelled</string>
+
+    <!-- Dialog -->
+    <string name="dialog_title">Enter Your Coupon Code</string>
+    <string name="dialog_coupon_label">Coupon Code</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_ok">OK</string>
+
+    <!-- Content Descriptions -->
+    <string name="close_button">Close</string>
+    <string name="continue_button">Continue</string>
+    <string name="apply_coupon">Apply Coupon</string>
+
+    <!-- ThemeLoader strings -->
+    <string name="theme_loader_tag">ThemeLoader</string>
+    <string name="theme_loader_loaded">Loaded theme: %1$s</string>
+    <string name="theme_loader_fetch_failed">Failed to fetch theme: %1$s</string>
+    <string name="theme_loader_error">Error loading theme</string>
+    <string name="theme_cache_key">theme_cache</string>
+
+    <!-- CacheManager strings -->
+    <string name="cache_deserialization_failed">Cache deserialization failed: %1$s</string>
+    <string name="cache_save_failed">Failed to save to cache: %1$s</string>
+    <string name="cache_manager_error">Cache manager error: %1$s</string>
+    <string name="no_cached_data_request_failed">No cached data available but request failed</string>
+    <string name="no_cached_data_no_internet">No cached data available and no internet</string>
+    <string name="unknown_error">An unknown error occurred</string>
+
+    <!-- New strings from ViewModel -->
+    <string name="billing_connected">Connected to billing service</string>
+    <string name="billing_connection_failed">Failed to connect to billing service</string>
+    <string name="billing_check_error">Error checking subscriptions: %1$s</string>
+    <string name="products_fetch_failed">Failed to fetch products from API</string>
+    <string name="purchase_failed">Purchase Failed</string>
+
+    <!-- Subscription View strings -->
+    <string name="image_url_description">Image from URL</string>
+    <string name="restore_purchase">Restore purchase</string>
+    <string name="no_products_available">No products available</string>
+    <string name="current_subscription">Current Subscription</string>
+    <string name="selected_plan_indicator">Selected Plan Indicator</string>
+    <string name="unselected_plan_indicator">Unselected Plan Indicator</string>
+    <string name="plan_auto_renews">Plan auto-renews for %1$s every month. You can cancel anytime you want.</string>
+    <string name="continue_text">Continue</string>
+</resources> 

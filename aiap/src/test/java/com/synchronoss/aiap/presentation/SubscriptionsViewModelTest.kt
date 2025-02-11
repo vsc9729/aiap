@@ -1,5 +1,6 @@
 package com.synchronoss.aiap.presentation
 
+import android.app.Application
 import android.util.Log
 import androidx.activity.ComponentActivity
 import com.synchronoss.aiap.di.PurchaseUpdateHandler
@@ -43,6 +44,7 @@ class SubscriptionsViewModelTest {
     private lateinit var libraryActivityManagerUseCases: LibraryActivityManagerUseCases
     private lateinit var purchaseUpdateHandler: PurchaseUpdateHandler
     private lateinit var subscriptionCancelledHandler: SubscriptionCancelledHandler
+    private lateinit var applicationContext: Application
     private val testDispatcher = StandardTestDispatcher()
     private val onConnectedSlot = CapturingSlot<() -> Unit>()
 
@@ -51,6 +53,7 @@ class SubscriptionsViewModelTest {
         mockLog()
         Dispatchers.setMain(testDispatcher)
 
+        applicationContext = mockk(relaxed = true)
         billingManagerUseCases = mockk(relaxed = true)
         productManagerUseCases = mockk(relaxed = true)
         themeLoader = mockk(relaxed = true)
@@ -59,12 +62,13 @@ class SubscriptionsViewModelTest {
         subscriptionCancelledHandler = mockk(relaxed = true)
 
         viewModel = SubscriptionsViewModel(
-            billingManagerUseCases,
-            productManagerUseCases,
-            themeLoader,
-            libraryActivityManagerUseCases,
-            purchaseUpdateHandler,
-            subscriptionCancelledHandler
+            context = applicationContext,
+            billingManagerUseCases = billingManagerUseCases,
+            productManagerUseCases = productManagerUseCases,
+            themeLoader = themeLoader,
+            libraryActivityManagerUseCases = libraryActivityManagerUseCases,
+            purchaseUpdateHandler = purchaseUpdateHandler,
+            subscriptionCancelledHandler = subscriptionCancelledHandler,
         )
     }
 
@@ -278,12 +282,13 @@ class SubscriptionsViewModelTest {
 
         // Recreate viewModel with actual handler
         viewModel = SubscriptionsViewModel(
-            billingManagerUseCases,
-            productManagerUseCases,
-            themeLoader,
-            libraryActivityManagerUseCases,
-            purchaseUpdateHandler,
-            subscriptionCancelledHandler
+            context = applicationContext,
+            billingManagerUseCases = billingManagerUseCases,
+            productManagerUseCases = productManagerUseCases,
+            themeLoader = themeLoader,
+            libraryActivityManagerUseCases = libraryActivityManagerUseCases,
+            purchaseUpdateHandler = purchaseUpdateHandler,
+            subscriptionCancelledHandler = subscriptionCancelledHandler
         )
 
         viewModel.initialize("test_user", intentLaunch = false)
@@ -322,12 +327,13 @@ class SubscriptionsViewModelTest {
 
         // Recreate viewModel with actual handler
         viewModel = SubscriptionsViewModel(
-            billingManagerUseCases,
-            productManagerUseCases,
-            themeLoader,
-            libraryActivityManagerUseCases,
-            purchaseUpdateHandler,
-            subscriptionCancelledHandler
+            context = applicationContext,
+            billingManagerUseCases = billingManagerUseCases,
+            productManagerUseCases = productManagerUseCases,
+            themeLoader = themeLoader,
+            libraryActivityManagerUseCases = libraryActivityManagerUseCases,
+            purchaseUpdateHandler = purchaseUpdateHandler,
+            subscriptionCancelledHandler = subscriptionCancelledHandler
         )
 
         viewModel.initialize("test_user", intentLaunch = true)

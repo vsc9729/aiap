@@ -1,65 +1,16 @@
-{
-  "shared": {
-    "logoUrl": "https://capsyl.com/wp-content/uploads/cropped-Capsyl-Logo-sm-2.png"
+[
+  {
+    "themeId": "1",
+    "themeName": "Dark",
+    "logoUrl": "https://i.ibb.co/WsyDq6v/capsyl-dark.png",
+    "primaryColor": "#0096D5",
+    "secondaryColor": "#262627"
   },
-  "themes": {
-    "light": {
-      "colors": {
-        "primary": "#0096D5",
-        "secondary": "#E7F8FF",
-        "background": "#FFFFFF",
-        "text": {
-          "heading": "#1F2937",
-          "body": "#6B7280",
-          "bodyAlt": "#1F2937"
-        },
-        "surface": {
-          "base": "#E4FFF4",
-          "onSurface": "#2A7948"
-        },
-        "outline": {
-          "defaultColor": "#E5E7EB",
-          "variant": "#0096D5"
-        },
-        "tertiary": {
-          "base": "#FFFFFF",
-          "onTertiary": "#6B7280"
-        },
-        "error": {
-          "text": "#D76C1F",
-          "background": "#FFF9F5",
-          "border": "#FECDAA"
-        }
-      }
-    },
-    "dark": {
-      "colors": {
-        "primary": "#0096D5",
-        "secondary": "#262627",
-        "background": "#0D0D0D",
-        "text": {
-          "heading": "#C8D2E0",
-          "body": "#8C8C8C",
-          "bodyAlt": "#FEFEFF"
-        },
-        "surface": {
-          "base": "#166534",
-          "onSurface": "#E4FFF4"
-        },
-        "outline": {
-          "defaultColor": "#262627",
-          "variant": "#404040"
-        },
-        "tertiary": {
-          "base": "#212121",
-          "onTertiary": "#FEFEFF"
-        },
-        "error": {
-          "text": "#D76C1F",
-          "background": "#FFF9F5",
-          "border": "#FECDAA"
-        }
-      }
-    }
+  {
+    "themeId": "2",
+    "themeName": "Light",
+    "logoUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSbsG9IKFzx4KS48aNQVtQA5M0C1XlcCt-1lQ&s",
+    "primaryColor": "#0096D5",
+    "secondaryColor": "#E7F8FF"
   }
-}
+]

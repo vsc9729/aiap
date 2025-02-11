@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Light Theme Colors -->
+    <color name="light_logo_default">#0096D5</color>
+    <color name="light_primary_default">#0096D5</color>
+    <color name="light_secondary_default">#E7F8FF</color>
+    <color name="light_fallback_primary">#ffffff</color>
+    <color name="light_fallback_secondary">#000000</color>
+
+    <!-- Dark Theme Colors -->
+    <color name="dark_primary_default">#0096D5</color>
+    <color name="dark_secondary_default">#262627</color>
+    <color name="dark_fallback_primary">#000000</color>
+    <color name="dark_fallback_secondary">#ffffff</color>
+</resources> 

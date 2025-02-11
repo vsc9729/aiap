@@ -3,7 +3,7 @@ import com.synchronoss.aiap.data.remote.product.ActiveSubscriptionResponse
 import com.synchronoss.aiap.data.remote.product.ProductApi
 import com.synchronoss.aiap.data.remote.product.ProductDataDto
 import com.synchronoss.aiap.data.remote.product.SubscriptionResponseDTO
-import com.synchronoss.aiap.data.repository.product.ProductMangerImpl
+import com.synchronoss.aiap.data.repository.product.ProductManagerImpl
 import com.synchronoss.aiap.domain.models.ProductInfo
 import com.synchronoss.aiap.domain.repository.billing.BillingManager
 import com.synchronoss.aiap.domain.repository.product.ProductManager
@@ -48,7 +48,7 @@ class ProductManagerTest {
     @Before
     fun setUp() {
         init(this)
-        productManager = ProductMangerImpl(productApi, billingManager, cacheManager)
+        productManager = ProductManagerImpl(productApi, billingManager, cacheManager)
     }
 
     @Test

@@ -6,11 +6,11 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.kapt)
-    alias(libs.plugins.hilt)
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
     id("maven-publish")
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.kover)
+    id("com.google.devtools.ksp")
+    id("org.jetbrains.kotlinx.kover")
     id("org.sonarqube")
 }
 
@@ -223,8 +223,6 @@ tasks.withType<KotlinCompile>().configureEach {
 
 sonar {
     val sonarToken: String by project
-    println(sonarToken)
-
     properties {
         property("sonar.host.url", "https://sonarqube.blr0.geekydev.com")
         property("sonar.projectKey", "android-sample-app")

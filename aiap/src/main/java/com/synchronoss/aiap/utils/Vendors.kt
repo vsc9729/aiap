@@ -7,7 +7,7 @@ enum class Vendors {
 }
 
 
-val vendorThemeMap: Map<Vendors , String> = mutableMapOf(
+val vendorThemeMap: Map<Vendors, String> = mutableMapOf(
     Vendors.Verizon to "Verizon_theme.json",
     Vendors.BT to "BT_theme.json",
     Vendors.Capsyl to "Capsyl_theme.json",

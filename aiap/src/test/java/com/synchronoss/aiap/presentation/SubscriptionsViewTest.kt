@@ -1,5 +1,6 @@
 package com.synchronoss.aiap.presentation
 
+import android.app.Application
 import android.util.Log
 import com.synchronoss.aiap.di.PurchaseUpdateHandler
 import com.synchronoss.aiap.di.SubscriptionCancelledHandler
@@ -27,6 +28,7 @@ class SubscriptionsViewTest {
     private lateinit var libraryActivityManagerUseCases: LibraryActivityManagerUseCases
     private lateinit var purchaseUpdateHandler: PurchaseUpdateHandler
     private lateinit var subscriptionCancelledHandler: SubscriptionCancelledHandler
+    private lateinit var applicationContext: Application
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
@@ -35,6 +37,7 @@ class SubscriptionsViewTest {
         mockkStatic(Log::class)
         every { Log.d(any(), any()) } returns 0
 
+        applicationContext = mockk(relaxed = true)
         billingManagerUseCases = mockk(relaxed = true)
         productManagerUseCases = mockk(relaxed = true)
         themeLoader = mockk(relaxed = true)
@@ -43,12 +46,13 @@ class SubscriptionsViewTest {
         subscriptionCancelledHandler = mockk(relaxed = true)
 
         viewModel = SubscriptionsViewModel(
-            billingManagerUseCases,
-            productManagerUseCases,
-            themeLoader,
-            libraryActivityManagerUseCases,
-            purchaseUpdateHandler,
-            subscriptionCancelledHandler
+            context = applicationContext,
+            billingManagerUseCases = billingManagerUseCases,
+            productManagerUseCases = productManagerUseCases,
+            themeLoader = themeLoader,
+            libraryActivityManagerUseCases = libraryActivityManagerUseCases,
+            purchaseUpdateHandler = purchaseUpdateHandler,
+            subscriptionCancelledHandler = subscriptionCancelledHandler
         )
     }
 

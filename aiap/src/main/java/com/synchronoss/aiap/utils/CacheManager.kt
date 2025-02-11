@@ -10,6 +10,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import com.synchronoss.aiap.R
 
 @Singleton
 class CacheManager @Inject constructor(
@@ -41,7 +42,12 @@ class CacheManager @Inject constructor(
                 return try {
                     Resource.Success(deserialize(cachedValue))
                 } catch (e: Exception) {
-                    Resource.Error("Cache deserialization failed: ${e.message}")
+                    Resource.Error(
+                        context.getString(
+                            R.string.cache_deserialization_failed,
+                            e.message
+                        )
+                    )
                 }
             }
 
@@ -56,13 +62,18 @@ class CacheManager @Inject constructor(
                             mutablePreferences[timestampKey] = currentTimestamp ?: System.currentTimeMillis()
                         }
                     } catch (e: Exception) {
-                        return Resource.Error("Failed to save to cache: ${e.message}")
+                        return Resource.Error(
+                            context.getString(
+                                R.string.cache_save_failed,
+                                e.message
+                            )
+                        )
                     }
             }
             
             return networkResult
         } catch (e: Exception) {
-            return Resource.Error("Cache manager error: ${e.message}")
+            return Resource.Error(context.getString(R.string.cache_manager_error, e.message))
         }
     }
 
@@ -93,15 +104,17 @@ class CacheManager @Inject constructor(
                     }
                     is Resource.Error -> {
                         // If network call fails, try to get cached data
-                        getCachedData(key, deserialize)?.takeIf { it is Resource.Success } ?: Resource.Error("No cached data available but request failed 4")
+                        getCachedData(key, deserialize)?.takeIf { it is Resource.Success }
+                            ?: Resource.Error(context.getString(R.string.no_cached_data_request_failed))
                     }
                 }
             } else {
                 // If no network, return cached data
-                getCachedData(key, deserialize)?.takeIf { it is Resource.Success } ?: Resource.Error("No cached data available and no internet 5")
+                getCachedData(key, deserialize)?.takeIf { it is Resource.Success }
+                    ?: Resource.Error(context.getString(R.string.no_cached_data_no_internet))
             }
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "An unknown error occurred 6")
+            Resource.Error(e.message ?: context.getString(R.string.unknown_error))
         }
     }
 

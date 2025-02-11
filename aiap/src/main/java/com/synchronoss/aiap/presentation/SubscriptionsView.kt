@@ -64,6 +64,7 @@ import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -74,11 +75,12 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.synchronoss.aiap.R
-import com.synchronoss.aiap.domain.models.ProductInfo
+import com.synchronoss.aiap.core.domain.models.ProductInfo
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
 import com.synchronoss.aiap.presentation.ToastComposable
 import com.synchronoss.aiap.utils.Constants
-import kotlinx.coroutines.CoroutineScope
+import com.synchronoss.aiap.utils.getDimension
+import com.synchronoss.aiap.utils.getDimensionText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -92,8 +94,8 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     var showDialog by remember { mutableStateOf(false) }
     val logoUrl = subscriptionsViewModel.finalLogoUrl;
     val configuration = LocalConfiguration.current;
-    val logoUrlWidth = 110.dp
-    val logoUrlHeight = 55.dp
+    val logoUrlWidth = getDimension(R.dimen.logo_width)
+    val logoUrlHeight = getDimension(R.dimen.logo_height)
     Log.d(null, "Logo url is $logoUrl")
     val filteredProducts: List<ProductInfo>? = subscriptionsViewModel.filteredProducts
     if(subscriptionsViewModel.noInternetConnectionAndNoCache.value){
@@ -101,10 +103,10 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
             modifier = Modifier
                 .fillMaxSize()
                 .background(color = if(isSystemInDarkTheme()) Color(0xFF0D0D0D) else Color.White )
-                .padding(vertical = 16.dp),
+                .padding(vertical = getDimension(R.dimen.no_data_box)),
             contentAlignment = Alignment.Center
         ){
-            Text(text = "No Internet Connection", style = LocalTextStyle.current.copy(color = Color.Red, fontSize = 16.sp, fontWeight = FontWeight.Bold))
+            Text(text = stringResource(R.string.no_connection_text))
         }
     }else{
         if (!subscriptionsViewModel.isLoading.value)
@@ -113,7 +115,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     .fillMaxSize()
                     .background(color = MaterialTheme.colorScheme.background)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = getDimension(R.dimen.spacing_xlarge))
                 ) {
                     Row(
                         modifier = Modifier
@@ -122,7 +124,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     ) {
                         Image(
                             painter = rememberAsyncImagePainter(logoUrl),
-                            contentDescription = "Image from URL",
+                            contentDescription = stringResource(R.string.image_url_description),
                             modifier = Modifier
                                 .wrapContentSize()
                                 .width(logoUrlWidth)
@@ -138,37 +140,43 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                             text = Constants.STORAGE_TAGLINE,
                             style = LocalTextStyle.current.copy(
                                 fontWeight = FontWeight.W700,
-                                fontSize = 24.sp,
+                                fontSize = getDimensionText(R.dimen.size_text_storage_tagline_medium),
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 textAlign = TextAlign.Center
                             )
                         )
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    TabSelector(
-                        selectedTab = subscriptionsViewModel.selectedTab?: TabOption.getAvailableTabs(subscriptionsViewModel.products!!).first(),
-                        onTabSelected = { tab ->
-                            subscriptionsViewModel.selectedTab = tab
-                            subscriptionsViewModel.onTabSelected(tab= tab)
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    Spacer(modifier = Modifier.height(getDimension(R.dimen.spacing_small)))
+                    (subscriptionsViewModel.selectedTab?: subscriptionsViewModel.products?.let {
+                        TabOption.getAvailableTabs(
+                            it
+                        ).first()
+                    })?.let {
+                        TabSelector(
+                            selectedTab = it,
+                            onTabSelected = { tab ->
+                                subscriptionsViewModel.selectedTab = tab
+                                subscriptionsViewModel.onTabSelected(tab= tab)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                     TextButton(
                         onClick = { /* Handle restore */ },
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                             .let {
                                 if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                                    it.padding(4.dp)
+                                    it.padding(getDimension(R.dimen.spacing_xsmall))
                                 } else {
-                                    it.padding(12.dp)
+                                    it.padding(getDimension(R.dimen.spacing_medium))
                                 }
                             }
                     ) {
                         Text(
-                            text = "Restore purchase",
+                            text = stringResource(R.string.restore_purchase),
                             color = MaterialTheme.colorScheme.onTertiary,
-                            fontSize = 14.sp,
+                            fontSize = getDimensionText(R.dimen.size_text_storage_tagline_small),
                             fontWeight = FontWeight.W400,
                             style = TextStyle(
                                 textDecoration = TextDecoration.Underline,
@@ -176,16 +184,17 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                         )
                     }
                     ScrollablePlans()
-                    Spacer(modifier = modifier.height(8.dp))
+                    Spacer(modifier = modifier.height(getDimension(R.dimen.spacing_small)))
                 }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .let {
                             if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                                it.height(80.dp)
+                                it.height(if(subscriptionsViewModel.selectedPlan != -1)
+                                    getDimension(R.dimen.box_landscape_selected_height) else getDimension(R.dimen.box_landscape_not_selected_height))
                             } else {
-                                it.height(if(subscriptionsViewModel.selectedPlan != -1)165.dp else 125.dp)
+                                it.height(if(subscriptionsViewModel.selectedPlan != -1)getDimension(R.dimen.box_non_landscape_selected_height) else getDimension(R.dimen.box_non_landscape_not_selected_height))
                             }
                         }
                         .drawBehind {
@@ -203,7 +212,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                 size = Size(size.width, shadowRadius)
                             )
                         }
-                        .clip(RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp))
+                        .clip(RoundedCornerShape(topEnd = getDimension(R.dimen.box_top_corner), topStart =  getDimension(R.dimen.box_top_corner)))
                         .background(color = MaterialTheme.colorScheme.tertiary)
                         .align(Alignment.BottomCenter)
                 )
@@ -212,7 +221,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                         Configuration.ORIENTATION_PORTRAIT -> {
                             Box(
                                 modifier = Modifier
-                                    .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+                                    .padding(top = getDimension(R.dimen.box_portrait_padding), bottom = getDimension(R.dimen.box_portrait_padding), start =getDimension(R.dimen.box_portrait_padding), end =getDimension(R.dimen.box_portrait_padding))
                             ) {
                                 Column(
                                     modifier = Modifier.fillMaxSize(),
@@ -223,11 +232,14 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                         val selectedProduct = filteredProducts?.get(subscriptionsViewModel.selectedPlan)
 
                                         Text(
-                                            text = "Plan auto-renews for ${selectedProduct?.displayPrice} every month. You can cancel anytime you want.",
+                                            text = stringResource(
+                                                R.string.plan_auto_renews,
+                                                selectedProduct?.displayPrice ?: ""
+                                            ),
                                             style = MaterialTheme.typography.bodyMedium.copy(
                                                 fontWeight = FontWeight.W400,
                                                 color = MaterialTheme.colorScheme.onSecondary,
-                                                fontSize = 10.sp,
+                                                fontSize = getDimensionText(R.dimen.box_plan_renew_size),
                                                 textAlign = TextAlign.Center
                                             )
                                         )
@@ -235,8 +247,8 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                     Button(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .height(50.dp)
-                                            .clip(RoundedCornerShape(999.dp)),
+                                            .height(getDimension(R.dimen.continue_btn_height))
+                                            .clip(RoundedCornerShape(getDimension(R.dimen.continue_btn_shape))),
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = MaterialTheme.colorScheme.primary, // Normal state color
                                             contentColor = Color.White, // Normal text/icon color
@@ -246,35 +258,35 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                             disabledContentColor = Color.White.copy(alpha = 0.4f)
                                         ),
                                         onClick = {
-                                            CoroutineScope(Dispatchers.IO).launch {
-                                                subscriptionsViewModel.purchaseSubscription(
-                                                    activity = activity,
-                                                    product = filteredProducts?.get(subscriptionsViewModel.selectedPlan)
-                                                        ?: return@launch,
-                                                    onError = { error ->
-                                                        // Handle error
-                                                        println("Error: $error")
-                                                    }
-                                                )
-                                            }
+                                            filteredProducts?.get(subscriptionsViewModel.selectedPlan)
+                                                ?.let {
+                                                    subscriptionsViewModel.purchaseSubscription(
+                                                        activity = activity,
+                                                        product = it,
+                                                        onError = { error ->
+                                                            // Handle error
+                                                            Log.d("Co", "Error: $error")
+                                                        }
+                                                    )
+                                                }
                                         },
                                         enabled = subscriptionsViewModel.selectedPlan != -1 && !subscriptionsViewModel.isCurrentProductBeingUpdated
                                     ) {
                                         Row {
                                             Text(
-                                                "Continue",
-                                                fontSize = 14.sp,
+                                                text = stringResource(R.string.continue_text),
+                                                fontSize = getDimensionText(R.dimen.continue_btn_font_size),
                                                 fontWeight = FontWeight.W600,
                                                 color = Color.White
                                             )
                                             Spacer(
-                                                modifier = Modifier.width(8.dp)
+                                                modifier = Modifier.width(getDimension(R.dimen.continue_btn_spacer))
                                             )
                                             if (subscriptionsViewModel.isCurrentProductBeingUpdated) {
                                                 CircularProgressIndicator(
                                                     color = Color.White,
-                                                    strokeWidth = 2.dp,
-                                                    modifier = Modifier.size(24.dp)
+                                                    strokeWidth = getDimension(R.dimen.circular_progress_indicator_width),
+                                                    modifier = Modifier.size(getDimension(R.dimen.circular_progress_indicator_modifier_size))
                                                 )
                                             }
                                         }
@@ -285,8 +297,8 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                         }
                                     ) {
                                         Text(
-                                            text = "Apply Coupon",
-                                            fontSize = 14.sp,
+                                            text = stringResource(R.string.apply_coupon),
+                                            fontSize = getDimensionText(R.dimen.apply_btn_font_size),
                                             fontWeight = FontWeight.W600,
                                             color = MaterialTheme.colorScheme.onTertiary
                                         )
@@ -297,7 +309,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                         Configuration.ORIENTATION_LANDSCAPE -> {
                             Box(
                                 modifier = Modifier
-                                    .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+                                    .padding(top = getDimension(R.dimen.box_landscape_padding), bottom = getDimension(R.dimen.box_landscape_padding), start = getDimension(R.dimen.box_landscape_padding), end = getDimension(R.dimen.box_landscape_padding))
                             ) {
 
                                 Column(
@@ -315,7 +327,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 //                                )
 //                            )
                                     Spacer(
-                                        modifier = Modifier.height(4.dp)
+                                        modifier = Modifier.height(getDimension(R.dimen.box_landscape_spacer_height))
                                     )
                                     Row(
                                         modifier=Modifier.fillMaxWidth(),
@@ -326,8 +338,8 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                             modifier = Modifier
                                                 //.fillMaxWidth()
                                                 .weight(1f)
-                                                .height(50.dp)
-                                                .clip(RoundedCornerShape(999.dp)),
+                                                .height(getDimension(R.dimen.landscape_continue_btn_height))
+                                                .clip(RoundedCornerShape(getDimension(R.dimen.landscape_continue_btn_shape))),
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = MaterialTheme.colorScheme.primary, // Normal state color
                                                 contentColor = Color.White, // Normal text/icon color
@@ -337,35 +349,36 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                                 disabledContentColor = Color.White.copy(alpha = 0.4f)
                                             ),
                                             onClick = {
-                                                CoroutineScope(Dispatchers.IO).launch {
-                                                    subscriptionsViewModel.purchaseSubscription(
-                                                        activity = activity,
-                                                        product = filteredProducts?.get(subscriptionsViewModel.selectedPlan)
-                                                            ?: return@launch,
-                                                        onError = { error ->
-                                                            // Handle error
-                                                            println("Error: $error")
-                                                        }
-                                                    )
-                                                }
+                                                filteredProducts?.get(subscriptionsViewModel.selectedPlan)
+                                                    ?.let {
+                                                        subscriptionsViewModel.purchaseSubscription(
+                                                            activity = activity,
+                                                            product = it,
+                                                            onError = { error ->
+                                                                // Handle error
+                                                                Log.d("Co", "Error: $error")
+                                                            }
+                                                        )
+                                                    }
+
                                             },
                                             enabled = subscriptionsViewModel.selectedPlan != -1 && !subscriptionsViewModel.isCurrentProductBeingUpdated
                                         ) {
                                             Row {
                                                 Text(
-                                                    "Continue",
-                                                    fontSize = 14.sp,
+                                                    stringResource(R.string.continue_text),
+                                                    fontSize = getDimensionText(R.dimen.landscape_continue_btn_font_size),
                                                     fontWeight = FontWeight.W600,
                                                     color = Color.White
                                                 )
                                                 Spacer(
-                                                    modifier = Modifier.width(8.dp)
+                                                    modifier = Modifier.width(getDimension(R.dimen.landscape_continue_btn_spacer))
                                                 )
                                                 if (subscriptionsViewModel.isCurrentProductBeingUpdated) {
                                                     CircularProgressIndicator(
                                                         color = Color.White,
-                                                        strokeWidth = 2.dp,
-                                                        modifier = Modifier.size(24.dp)
+                                                        strokeWidth = getDimension(R.dimen.circular_progress_indicator_width),
+                                                        modifier = Modifier.size(getDimension(R.dimen.circular_progress_indicator_modifier_size))
                                                     )
                                                 }
                                             }
@@ -377,8 +390,8 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                             }
                                         ) {
                                             Text(
-                                                text = "Apply Coupon",
-                                                fontSize = 14.sp,
+                                                text = stringResource(R.string.apply_coupon),
+                                                fontSize = getDimensionText(R.dimen.apply_btn_font_size),
                                                 fontWeight = FontWeight.W600,
                                                 color = MaterialTheme.colorScheme.onTertiary
                                             )
@@ -431,36 +444,36 @@ fun ScrollablePlans() {
 //
 //            .padding(bottom = 16.dp)
 //    ) {
-        if (filteredProducts.isNullOrEmpty()) {
-            Text(
-                text = "No products available",
-                style = LocalTextStyle.current.copy(
-                    fontWeight = FontWeight.W700,
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    textAlign = TextAlign.Center
-                )
+    if (filteredProducts.isNullOrEmpty()) {
+        Text(
+            text = stringResource(R.string.no_products_available),
+            style = LocalTextStyle.current.copy(
+                fontWeight = FontWeight.W700,
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onPrimary,
+                textAlign = TextAlign.Center
             )
-            return
-        }
+        )
+        return
+    }
 
-         //Display current plan
-        when {
-            filteredProducts.contains(currentProduct) -> ActualCurrentPlanCard(product = currentProduct!!)
-        }
+    //Display current plan
+    when {
+        filteredProducts.contains(currentProduct) -> currentProduct?.let { ActualCurrentPlanCard(product = it) }
+    }
 
 
 
     // Display other plans
-        Spacer(modifier = Modifier.height(16.dp))
-        filteredProducts.forEachIndexed { index, product ->
-            if (product.productId != currentProductId) {
-                OtherPlanCard(product = product, productIndex = index)
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+    Spacer(modifier = Modifier.height(16.dp))
+    filteredProducts.forEachIndexed { index, product ->
+        if (product.productId != currentProductId) {
+            OtherPlanCard(product = product, productIndex = index)
+            Spacer(modifier = Modifier.height(16.dp))
         }
+    }
 
-        Spacer(modifier = Modifier.height(135.dp))
+    Spacer(modifier = Modifier.height(135.dp))
 //    }
 }
 
@@ -475,14 +488,17 @@ fun ActualCurrentPlanCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp)
+            .height(getDimension(R.dimen.current_plan_card_height))
             .background(
                 color = MaterialTheme.colorScheme.background,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(getDimension(R.dimen.card_corner_radius))
             )
             .border(
-                border = BorderStroke(0.5.dp, color = MaterialTheme.colorScheme.outline),
-                shape = RoundedCornerShape(12.dp)
+                border = BorderStroke(
+                    getDimension(R.dimen.card_border_width), 
+                    color = MaterialTheme.colorScheme.outline
+                ),
+                shape = RoundedCornerShape(getDimension(R.dimen.card_corner_radius))
             )
     ) {
         Column(
@@ -493,17 +509,22 @@ fun ActualCurrentPlanCard(
                 modifier = Modifier
                     .background(
                         color = MaterialTheme.colorScheme.surface,
-                        RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+                        RoundedCornerShape(
+                            topStart = getDimension(R.dimen.card_corner_radius), 
+                            topEnd = getDimension(R.dimen.card_corner_radius)
+                        )
                     )
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp, horizontal = 16.dp),
+                    .padding(
+                        vertical = getDimension(R.dimen.card_padding_vertical), 
+                        horizontal = getDimension(R.dimen.card_padding_horizontal)
+                    ),
             ) {
                 Text(
-                    text = "Current Subscription",
-                    fontSize = 14.sp,
-                    color =MaterialTheme.colorScheme.onSurface,
+                    text = stringResource(R.string.current_subscription),
+                    fontSize = getDimensionText(R.dimen.text_size_current_plan_header),
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.W600,
-//                modifier = Modifier.padding(horizontal = 6.dp)
                 )
             }
 
@@ -523,25 +544,25 @@ fun ActualCurrentPlanCard(
                 ) {
                     Text(
                         text = product.displayPrice,
-                        fontSize = 16.sp,
+                        fontSize = getDimensionText(R.dimen.text_size_plan_price),
                         fontWeight = FontWeight.W700,
                         color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(bottom = 4.dp)
+                        modifier = Modifier.padding(bottom = getDimension(R.dimen.card_content_spacing))
                     )
 
                     Text(
                         text = product.description,
-                        fontSize = 12.sp,
+                        fontSize = getDimensionText(R.dimen.text_size_plan_description),
                         fontWeight = FontWeight.W400,
                         color = MaterialTheme.colorScheme.onSecondary,
-                        lineHeight = 16.sp
+                        lineHeight = getDimensionText(R.dimen.text_line_height)
                     )
                 }
                 Image(
                     painter = painterResource(id = R.drawable.checkmark_circle),
-                    contentDescription = Constants.SELECTED_PLAN_INDICATOR,
+                    contentDescription = stringResource(R.string.selected_plan_indicator),
                     modifier = Modifier
-                        .size(24.dp),
+                        .size(getDimension(R.dimen.icon_size)),
                     alignment = Alignment.Center
 
                 )
@@ -562,10 +583,10 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(95.dp)
+            .height(getDimension(R.dimen.other_plan_card_height))
             .background(
                 color = MaterialTheme.colorScheme.background,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(getDimension(R.dimen.card_corner_radius))
             )
             .then(
                 if (subscriptionsViewModel.selectedPlan == productIndex) {
@@ -573,25 +594,28 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
                     Modifier
                         .shadow(
                             elevation = 1.dp,  // Reduced elevation for softer shadow
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(getDimension(R.dimen.card_corner_radius)),
 //                            spotColor = Color.Black.copy(alpha = 0.1f),  // More transparent shadow
 //                            ambientColor = Color.Black.copy(alpha = 0.1f)  // More transparent ambient shadow
                         )
                         .background(
                             color = MaterialTheme.colorScheme.background,
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(getDimension(R.dimen.card_corner_radius))
                         )
                         .border(
                             border = BorderStroke(
-                                1.5.dp,
+                                getDimension(R.dimen.card_border_width_selected),
                                 color = MaterialTheme.colorScheme.outlineVariant
                             ),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(getDimension(R.dimen.card_corner_radius))
                         )
                 } else {
                     Modifier.border(
-                        border = BorderStroke(0.5.dp, color = MaterialTheme.colorScheme.outline),
-                        shape = RoundedCornerShape(12.dp)
+                        border = BorderStroke(
+                            getDimension(R.dimen.card_border_width),
+                            color = MaterialTheme.colorScheme.outline
+                        ),
+                        shape = RoundedCornerShape(getDimension(R.dimen.card_corner_radius))
                     )
                 }
             )
@@ -599,7 +623,7 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
                 subscriptionsViewModel.selectedPlan = productIndex
                 Log.d("Co", "Current Plan: ${subscriptionsViewModel.selectedPlan}")
             }
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = getDimension(R.dimen.card_padding_horizontal))
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -615,18 +639,18 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
             ) {
                 Text(
                     text = product.displayPrice,
-                    fontSize = 16.sp,
+                    fontSize = getDimensionText(R.dimen.text_size_plan_price),
                     fontWeight = FontWeight.W700,
                     color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(bottom = 4.dp)
+                    modifier = Modifier.padding(bottom = getDimension(R.dimen.card_content_spacing))
                 )
 
                 Text(
                     text = product.description,
-                    fontSize = 12.sp,
+                    fontSize = getDimensionText(R.dimen.text_size_plan_description),
                     fontWeight = FontWeight.W400,
                     color = MaterialTheme.colorScheme.onSecondary,
-                    lineHeight = 16.sp
+                    lineHeight = getDimensionText(R.dimen.text_line_height)
                 )
             }
 
@@ -634,9 +658,9 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
             if (subscriptionsViewModel.selectedPlan == productIndex) {
                 Image(
                     painter = painterResource(id = R.drawable.radio_button_checked),
-                    contentDescription = Constants.SELECTED_PLAN_INDICATOR,
+                    contentDescription = stringResource(R.string.selected_plan_indicator),
                     modifier = Modifier
-                        .size(24.dp),
+                        .size(getDimension(R.dimen.icon_size)),
                     alignment = Alignment.Center,
                     colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
 
@@ -645,9 +669,9 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
             else{
                 Image(
                     painter = painterResource(id = R.drawable.radio_button),
-                    contentDescription = "Unselected Plan Indicator",
+                    contentDescription = stringResource(R.string.unselected_plan_indicator),
                     modifier = Modifier
-                        .size(24.dp),
+                        .size(getDimension(R.dimen.icon_size)),
                 )
             }
         }
@@ -697,17 +721,17 @@ fun TabSelector(
             modifier = modifier
                 .let {
                     if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        it.height(40.dp)
+                        it.height(getDimension(R.dimen.tab_height_landscape))
                     } else {
-                        it.height(50.dp)
+                        it.height(getDimension(R.dimen.tab_height_portrait))
                     }
                 }
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(getDimension(R.dimen.tab_selector_corner_radius)))
                 .background(color = MaterialTheme.colorScheme.secondary),
             color = MaterialTheme.colorScheme.secondary
         ) {
             Row(
-                modifier = Modifier.padding(6.dp),
+                modifier = Modifier.padding(getDimension(R.dimen.tab_selector_padding)),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 availableTabs.forEach { tab ->
@@ -715,7 +739,7 @@ fun TabSelector(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
-                            .clip(RoundedCornerShape(6.dp))
+                            .clip(RoundedCornerShape(getDimension(R.dimen.tab_item_corner_radius)))
                             .background(
                                 if (tab == selectedTab) MaterialTheme.colorScheme.primary
                                 else Color.Transparent
@@ -740,7 +764,6 @@ fun TabSelector(
  * @param onDismiss Callback when dialog is dismissed
  * @param onConfirm Callback when coupon is confirmed
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DialogBox(
     onDismiss: () -> Unit,
@@ -749,28 +772,30 @@ fun DialogBox(
     var text by remember { mutableStateOf("") }
     val context = LocalContext.current
 
-    BasicAlertDialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.4f))
+            .clickable(onClick = onDismiss),
+        contentAlignment = Alignment.Center
     ) {
         Card(
             modifier = Modifier
-                .height(300.dp)
-                .width(400.dp)
-                .padding(24.dp),
-            shape = RoundedCornerShape(16.dp),
+                .height(getDimension(R.dimen.dialog_height))
+                .width(getDimension(R.dimen.dialog_width))
+                .padding(getDimension(R.dimen.dialog_padding))
+                .clickable(enabled = false) {},  // Prevent click propagation
+            shape = RoundedCornerShape(getDimension(R.dimen.dialog_corner_radius)),
             colors = CardDefaults.cardColors(
                 containerColor = Color.White,
             ),
-
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-
+                modifier = Modifier.padding(getDimension(R.dimen.dialog_content_padding)),
+                verticalArrangement = Arrangement.spacedBy(getDimension(R.dimen.dialog_spacing)),
             ) {
                 Text(
-                    text = "Enter Your Coupon Code",
+                    text = stringResource(R.string.dialog_title),
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.Black,
                     fontWeight = FontWeight.W400
@@ -781,7 +806,7 @@ fun DialogBox(
                     onValueChange = { text = it },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(
-                        text = "Coupon Code",
+                        text = stringResource(R.string.dialog_coupon_label),
                         color = Color.Gray
                     ) },
                     colors = OutlinedTextFieldDefaults.colors(
@@ -789,7 +814,9 @@ fun DialogBox(
                     ),
                     textStyle = TextStyle(color = Color.Black)
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+
+                Spacer(modifier = Modifier.height(getDimension(R.dimen.dialog_spacer_height)))
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
@@ -801,9 +828,11 @@ fun DialogBox(
                             contentColor = Color.White
                         )
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.dialog_cancel))
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Spacer(modifier = Modifier.width(getDimension(R.dimen.dialog_spacing)))
+
                     Button(
                         onClick = {
                             onConfirm(text)
@@ -816,7 +845,7 @@ fun DialogBox(
                             contentColor = Color.White
                         )
                     ) {
-                        Text("OK")
+                        Text(stringResource(R.string.dialog_ok))
                     }
                 }
             }

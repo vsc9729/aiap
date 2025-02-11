@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -35,12 +36,16 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun ToastComposable(
-    heading: String,
+     heading: String,
     subText: String,
+    headingResId: Int? = null,
+    messageResId: Int? = null,
     onDismiss: () -> Unit,
     isVisible: Boolean,
-    modifier: Modifier
+    modifier: Modifier = Modifier
 ) {
+    val finalHeading = headingResId?.let { stringResource(it) } ?: heading
+    val finalMessage = messageResId?.let { stringResource(it) } ?: subText
     AnimatedVisibility(
         visible = isVisible,
         enter = slideInVertically(initialOffsetY = { it }),
@@ -81,7 +86,7 @@ fun ToastComposable(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = heading,
+                        text = finalHeading,
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
@@ -93,7 +98,7 @@ fun ToastComposable(
                     )
 
                     Text(
-                        text = subText,
+                        text = finalMessage,
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 14.sp,
                             color = Color(0xFF525252)

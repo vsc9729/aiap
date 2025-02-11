@@ -12,12 +12,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.synchronoss.aiap.di.PurchaseUpdateHandler
-import com.synchronoss.aiap.di.SubscriptionCancelledHandler
-import com.synchronoss.aiap.domain.models.ProductInfo
-import com.synchronoss.aiap.domain.usecases.activity.LibraryActivityManagerUseCases
-import com.synchronoss.aiap.domain.usecases.billing.BillingManagerUseCases
-import com.synchronoss.aiap.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.ui.theme.ThemeColors
 import com.synchronoss.aiap.ui.theme.ThemeLoader
 import com.synchronoss.aiap.utils.Resource
@@ -27,6 +21,16 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import androidx.compose.ui.res.stringResource
+import com.synchronoss.aiap.R
+import android.content.Context
+import com.synchronoss.aiap.core.di.PurchaseUpdateHandler
+import com.synchronoss.aiap.core.di.SubscriptionCancelledHandler
+import com.synchronoss.aiap.core.domain.models.ProductInfo
+import com.synchronoss.aiap.core.domain.usecases.activity.LibraryActivityManagerUseCases
+import com.synchronoss.aiap.core.domain.usecases.billing.BillingManagerUseCases
+import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 /**
  * ViewModel responsible for managing subscription-related UI state and business logic.
@@ -39,7 +43,8 @@ class SubscriptionsViewModel @Inject constructor(
     private val themeLoader: ThemeLoader,
     private val libraryActivityManagerUseCases: LibraryActivityManagerUseCases,
     val purchaseUpdateHandler: PurchaseUpdateHandler,
-    private val subscriptionCancelledHandler: SubscriptionCancelledHandler
+    private val subscriptionCancelledHandler: SubscriptionCancelledHandler,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     // UI State
@@ -50,7 +55,7 @@ class SubscriptionsViewModel @Inject constructor(
 
     
     // Product Management
-    var partnerUserId: String? = null
+    lateinit var partnerUserId: String
     var products: List<ProductInfo>? by mutableStateOf(null)
     var filteredProducts: List<ProductInfo>? by mutableStateOf(null)
     var currentProductId: String? by mutableStateOf(null)
@@ -60,8 +65,8 @@ class SubscriptionsViewModel @Inject constructor(
     var selectedPlan: Int by mutableIntStateOf(-1)
     
     // Theme Management
-    var darkThemeColors: ThemeColors? = null
-    var lightThemeColors: ThemeColors? = null
+    lateinit var darkThemeColors: ThemeColors
+    lateinit var lightThemeColors: ThemeColors
     var lightThemeLogoUrl: String? = null
     var darkThemeLogoUrl: String? = null
     var finalLogoUrl: String? = null
@@ -79,6 +84,20 @@ class SubscriptionsViewModel @Inject constructor(
     var toastState by mutableStateOf(ToastState())
         private set
 
+    fun showToast(headingResId: Int, messageResId: Int) {
+    toastJob?.cancel()
+    toastState = ToastState(
+        isVisible = true,
+        headingResId = headingResId,
+        messageResId = messageResId
+    )
+    toastJob = viewModelScope.launch {
+        delay(3000)
+        hideToast()
+    }
+}
+
+    // Overload for string messages
     fun showToast(heading: String, message: String) {
         toastJob?.cancel()
         toastState = ToastState(
@@ -106,7 +125,7 @@ class SubscriptionsViewModel @Inject constructor(
             partnerUserId = id
             viewModelScope.launch {
 
-                val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(userId = partnerUserId!!) }
+                val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(userId = partnerUserId) }
                 val startConnection =  async { startConnection() }
                 startConnection.await()
                 val activeSubResult =  activeSubResultDeferred.await()
@@ -130,41 +149,41 @@ class SubscriptionsViewModel @Inject constructor(
 
                     lightThemeColorScheme = lightColorScheme(
 
-                        primary = lightThemeColors!!.primary,
-                        secondary = lightThemeColors!!.secondary,
-                        background = lightThemeColors!!.background,
-                        onPrimary = lightThemeColors!!.textHeading,
-                        onSecondary = lightThemeColors!!.textBody,
-                        onBackground = lightThemeColors!!.textBodyAlt,
-                        surface = lightThemeColors!!.surface,
-                        onSurface = lightThemeColors!!.onSurface,
-                        outline = lightThemeColors!!.outline,
-                        outlineVariant = lightThemeColors!!.outlineVariant,
-                        tertiary = lightThemeColors!!.tertiary,
-                        onTertiary = lightThemeColors!!.onTertiary
+                        primary = lightThemeColors.primary,
+                        secondary = lightThemeColors.secondary,
+                        background = lightThemeColors.background,
+                        onPrimary = lightThemeColors.textHeading,
+                        onSecondary = lightThemeColors.textBody,
+                        onBackground = lightThemeColors.textBodyAlt,
+                        surface = lightThemeColors.surface,
+                        onSurface = lightThemeColors.onSurface,
+                        outline = lightThemeColors.outline,
+                        outlineVariant = lightThemeColors.outlineVariant,
+                        tertiary = lightThemeColors.tertiary,
+                        onTertiary = lightThemeColors.onTertiary
 
                     )
                     darkThemeColorScheme = darkColorScheme(
-                        primary = darkThemeColors!!.primary,
-                        secondary = darkThemeColors!!.secondary,
-                        background = darkThemeColors!!.background,
-                        onPrimary = darkThemeColors!!.textHeading,
-                        onSecondary = darkThemeColors!!.textBody,
-                        onBackground = darkThemeColors!!.textBodyAlt,
-                        surface = darkThemeColors!!.surface,
-                        onSurface = darkThemeColors!!.onSurface,
-                        outline = darkThemeColors!!.outline,
-                        outlineVariant = darkThemeColors!!.outlineVariant,
-                        tertiary = darkThemeColors!!.tertiary,
-                        onTertiary = darkThemeColors!!.onTertiary
+                        primary = darkThemeColors.primary,
+                        secondary = darkThemeColors.secondary,
+                        background = darkThemeColors.background,
+                        onPrimary = darkThemeColors.textHeading,
+                        onSecondary = darkThemeColors.textBody,
+                        onBackground = darkThemeColors.textBodyAlt,
+                        surface = darkThemeColors.surface,
+                        onSurface = darkThemeColors.onSurface,
+                        outline = darkThemeColors.outline,
+                        outlineVariant = darkThemeColors.outlineVariant,
+                        tertiary = darkThemeColors.tertiary,
+                        onTertiary = darkThemeColors.onTertiary
                     )
                     initProducts()
                 }else{
 
                     noInternetConnectionAndNoCache.value = true
                     showToast(
-                        heading = "No Connection",
-                        message = "Please check your internet connection"
+                        headingResId = R.string.no_connection_title,
+                        messageResId = R.string.no_connection_message
                     )
                 }
 
@@ -177,8 +196,8 @@ class SubscriptionsViewModel @Inject constructor(
             subscriptionCancelledHandler.onSubscriptionCancelled = {
                 viewModelScope.launch {
                     showToast(
-                        heading = "Subscription Cancelled",
-                        message = "Your subscription has been cancelled"
+                        heading = context.getString(R.string.subscription_cancelled_title),
+                        message = context.getString(R.string.subscription_cancelled_message)
                     )
                     isLoading.value = true
                     products = null
@@ -209,8 +228,8 @@ class SubscriptionsViewModel @Inject constructor(
                     val init = async { initProducts(purchaseUpdate = true) }
                     init.await()
                     showToast(
-                        heading = "Something went wrong",
-                        message = "Any debited amount will be refunded."
+                        heading = context.getString(R.string.purchase_failed_title),
+                        message = context.getString(R.string.purchase_failed_message)
                     )
                 }
             }
@@ -224,14 +243,14 @@ class SubscriptionsViewModel @Inject constructor(
             viewModelScope.launch {
                 billingManagerUseCases.startConnection(
                     {
-                        Log.d("Co", "Connected to billing service")
+                        Log.d("Co", context.getString(R.string.billing_connected))
                         isConnectionStarted = true
                         viewModelScope.launch {
                             val checkSubscriptionDeferred = async {
                                 billingManagerUseCases.checkExistingSubscription(
                                     onError = {
                                         isLoading.value = false
-                                        Log.d("Co", "Error checking subscriptions: $it")
+                                        Log.d("Co", context.getString(R.string.billing_check_error, it))
                                     }
                                 )
                             }
@@ -240,7 +259,7 @@ class SubscriptionsViewModel @Inject constructor(
                     },
                     {
                         isLoading.value = false
-                        Log.d("Co", "Failed to connect to billing service")
+                        Log.d("Co", context.getString(R.string.billing_connection_failed))
                     }
                 )
             }
@@ -253,13 +272,13 @@ class SubscriptionsViewModel @Inject constructor(
 //             filteredProducts = null
 //             selectedPlan = -1
              viewModelScope.launch {
-                 val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(partnerUserId!!) }
+                 val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(partnerUserId) }
                  val activeSubResult = activeSubResultDeferred.await()
                  val checkSubscriptionDeferred = async {
                      billingManagerUseCases.checkExistingSubscription(
                          onError = {
                              isLoading.value = false
-                             Log.d("Co", "Error checking subscriptions: $it")
+                             Log.d("Co", context.getString(R.string.products_fetch_failed))
                          }
                      )
                  }
@@ -280,7 +299,6 @@ class SubscriptionsViewModel @Inject constructor(
     }
 
     fun  onTabSelected(tab: TabOption?) {
-        print("onTabSelected: $tab")
         selectedPlan = -1
         selectedTab = tab
         if (selectedTab == TabOption.MONTHLY){
@@ -307,7 +325,7 @@ class SubscriptionsViewModel @Inject constructor(
                     if(currentProduct != null && (products?.contains(currentProduct) != true)){
                         products = products?.plus(currentProduct!!)
                     }
-                    val recurringPeriodCode: String = products!!.findLast { it.productId == currentProductId }?.recurringPeriodCode ?: products!!.first().recurringPeriodCode
+                    val recurringPeriodCode: String = products?.findLast { it.productId == currentProductId }?.recurringPeriodCode ?: products?.first()!!.recurringPeriodCode
                     selectedTab =
                         when (recurringPeriodCode) {
                             "P1M" -> TabOption.MONTHLY
@@ -315,7 +333,7 @@ class SubscriptionsViewModel @Inject constructor(
                             else -> TabOption.WEEKlY
                         }
 
-                    filteredProducts = products!!.filter {
+                    filteredProducts = products?.filter {
                         it.recurringPeriodCode.endsWith(recurringPeriodCode.last())
                     }
 
@@ -323,10 +341,10 @@ class SubscriptionsViewModel @Inject constructor(
             }
             is Resource.Error -> {
                 showToast(
-                    heading = "Error",
-                    message = "Failed to load products. Please try again later."
+                    heading = context.getString(R.string.error_title),
+                    message = context.getString(R.string.error_products_message)
                 )
-                Log.d("Co", "Failed to fetch products from API")
+                Log.d("Co", context.getString(R.string.products_fetch_failed))
             }
          }
         isLoading.value = false
@@ -342,9 +360,12 @@ class SubscriptionsViewModel @Inject constructor(
                  startConnection()
             } else {
                 billingManagerUseCases.purchaseSubscription(activity, product, { error -> 
-                    showToast("Purchase Failed", error)
+                    showToast(
+                        heading = context.getString(R.string.purchase_failed),
+                        message = error
+                    )
                     onError(error)
-                }, userId = partnerUserId!!)
+                }, userId = partnerUserId)
             }
 
         }

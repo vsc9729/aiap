@@ -32,7 +32,7 @@ class ThemeLoaderTest {
         themeManagerUseCases = ThemeManagerUseCases(getThemeApi)
         cacheManager = mockk()
 
-        themeLoader = ThemeLoader(themeManagerUseCases, cacheManager)
+        themeLoader = ThemeLoader(themeManagerUseCases)
     }
 
     @Test
