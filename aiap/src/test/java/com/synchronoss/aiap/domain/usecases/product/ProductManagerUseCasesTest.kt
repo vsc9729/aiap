@@ -48,17 +48,17 @@ class ProductManagerUseCasesTest {
         )
 
         coEvery {
-            productManager.getProducts(any())
+            productManager.getProducts(any(), any())
         } returns Resource.Success(mockProducts)
 
         // When
-        val result = getProductsApi(123L)
+        val result = getProductsApi(123L, apiKey = "")
 
         // Then
         assertTrue(result is Resource.Success)
         assertEquals(mockProducts, (result as Resource.Success).data)
 
         // Verify
-        coVerify { productManager.getProducts(123L) }
+        coVerify { productManager.getProducts(123L, apiKey =  "") }
     }
 }
