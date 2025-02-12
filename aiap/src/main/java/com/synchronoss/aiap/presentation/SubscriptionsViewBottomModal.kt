@@ -49,6 +49,7 @@ import com.synchronoss.aiap.R
 import com.synchronoss.aiap.utils.getDimension
 import com.synchronoss.aiap.presentation.SubscriptionsViewModel
 import com.synchronoss.aiap.presentation.ToastComposable
+import com.synchronoss.aiap.ui.theme.AiAPTheme
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -76,73 +77,56 @@ fun SubscriptionsViewBottomSheet(
     val screenHeight = configuration.screenHeightDp.dp
     val sheetHeight = screenHeight * 0.98f
 
-    var isVisible by remember { mutableStateOf(false) }
+//    var isVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(visible) {
-        isVisible = visible
+        subscriptionsViewModel.dialogState.value = visible
     }
 
     val animatedAlpha by animateFloatAsState(
-        targetValue = if (isVisible) 0.4f else 0f,
+        targetValue = if (subscriptionsViewModel.dialogState.value) 0.4f else 0f,
         animationSpec = tween(300),
         label = "overlay_animation"
     )
 
     val animatedOffset by animateFloatAsState(
-        targetValue = if (isVisible) 0f else 1f,
+        targetValue = if (subscriptionsViewModel.dialogState.value) 0f else 1f,
         animationSpec = spring(
             dampingRatio = 1f,  // Critical damping - no oscillation
             stiffness = Spring.StiffnessMediumLow,
             visibilityThreshold = 0.001f
         ),
         label = "sheet_animation",
-        finishedListener = { if (!isVisible) onDismissRequest() }
+        finishedListener = { if (!subscriptionsViewModel.dialogState.value) onDismissRequest() }
     )
 
     if (visible || animatedOffset < 1f) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = animatedAlpha))
-                .clickable(
-                    enabled = isVisible,
-                    onClick = { isVisible = false }
-                )
-        ) {
+        AiAPTheme {
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .height(sheetHeight)
-                    .offset(y = animatedOffset * sheetHeight)
-                    .clip(RoundedCornerShape(
-                        topStart = getDimension(R.dimen.bottom_sheet_corner_radius),
-                        topEnd = getDimension(R.dimen.bottom_sheet_corner_radius)
-                    ))
-                    .background(if (isSystemInDarkTheme()) Color(0xFF0D0D0D) else Color.White)
-                    .clickable(enabled = false) {}
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = animatedAlpha))
+                    .clickable(
+                        enabled = subscriptionsViewModel.dialogState.value,
+                        onClick = { subscriptionsViewModel.dialogState.value = false }
+                    )
             ) {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(getDimension(R.dimen.bottom_sheet_header_padding)),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        IconButton(onClick = { isVisible = false }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Close",
-                                tint = if (isSystemInDarkTheme()) Color.White else Color(0xFF6B7280),
-                                modifier = Modifier.size(getDimension(R.dimen.bottom_sheet_icon_size))
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .height(sheetHeight)
+                        .offset(y = animatedOffset * sheetHeight)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = getDimension(R.dimen.bottom_sheet_corner_radius),
+                                topEnd = getDimension(R.dimen.bottom_sheet_corner_radius)
                             )
-                        }
-                    }
-
-                    Box(modifier = Modifier.weight(1f)) {
-                        AiAPTheme1 {
+                        )
+                        .background(if (isSystemInDarkTheme()) Color(0xFF0D0D0D) else Color.White)
+                        .clickable(enabled = false) {}
+                ) {
                             SubscriptionsView(activity = activity)
-
                             ToastComposable(
                                 heading = subscriptionsViewModel.toastState.heading,
                                 subText = subscriptionsViewModel.toastState.message,
@@ -157,9 +141,10 @@ fun SubscriptionsViewBottomSheet(
                                     )
                             )
                         }
-                    }
+
+
                 }
-            }
+
         }
     }
 }

@@ -12,4 +12,7 @@
     <color name="dark_secondary_default">#262627</color>
     <color name="dark_fallback_primary">#000000</color>
     <color name="dark_fallback_secondary">#ffffff</color>
+
+    <!-- Common -->
+    <color name="more_button_border">#ffffff</color>
 </resources> 

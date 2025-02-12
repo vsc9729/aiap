@@ -24,13 +24,16 @@ import kotlinx.coroutines.delay
 import androidx.compose.ui.res.stringResource
 import com.synchronoss.aiap.R
 import android.content.Context
+import androidx.compose.runtime.remember
 import com.synchronoss.aiap.core.di.PurchaseUpdateHandler
 import com.synchronoss.aiap.core.di.SubscriptionCancelledHandler
 import com.synchronoss.aiap.core.domain.models.ProductInfo
+import com.synchronoss.aiap.core.domain.repository.activity.LibraryActivityManager
 import com.synchronoss.aiap.core.domain.usecases.activity.LibraryActivityManagerUseCases
 import com.synchronoss.aiap.core.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import dagger.hilt.android.qualifiers.ApplicationContext
+import com.synchronoss.aiap.core.domain.usecases.analytics.LocalyticsManagerUseCases
 
 /**
  * ViewModel responsible for managing subscription-related UI state and business logic.
@@ -40,6 +43,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 class SubscriptionsViewModel @Inject constructor(
     private val billingManagerUseCases: BillingManagerUseCases,
     private val productManagerUseCases: ProductManagerUseCases,
+//    private val localyticsManagerUseCases: LocalyticsManagerUseCases,
     private val themeLoader: ThemeLoader,
     private val libraryActivityManagerUseCases: LibraryActivityManagerUseCases,
     val purchaseUpdateHandler: PurchaseUpdateHandler,
@@ -117,9 +121,17 @@ class SubscriptionsViewModel @Inject constructor(
     }
 
     fun initialize(id:String, intentLaunch: Boolean) {
+        // Track initialization event with user profile
+//        localyticsManagerUseCases.setUserProfile(id)
+//        localyticsManagerUseCases.trackSubscriptionEvent(
+//            eventName = "subscription_view_initialized",
+//            productId = "",
+//            userId = id,
+//            additionalParams = mapOf("intent_launch" to intentLaunch.toString())
+//        )
+        
         isLaunchedViaIntent = intentLaunch
-        if(!isInitialised){
-
+        if((!isInitialised || id != partnerUserId)){
             isInitialised = true
             isLoading.value = true
             partnerUserId = id
@@ -195,15 +207,23 @@ class SubscriptionsViewModel @Inject constructor(
 
             subscriptionCancelledHandler.onSubscriptionCancelled = {
                 viewModelScope.launch {
-                    showToast(
-                        heading = context.getString(R.string.subscription_cancelled_title),
-                        message = context.getString(R.string.subscription_cancelled_message)
-                    )
+                    val initialCurrentProduct = currentProduct
+//                    showToast(
+//                        heading = context.getString(R.string.subscription_cancelled_title),
+//                        message = context.getString(R.string.subscription_cancelled_message)
+//                    )
                     isLoading.value = true
                     products = null
                     filteredProducts = null
 
-                    initProducts(subscriptionCancelled =  true)
+                    val init =  async { initProducts(subscriptionCancelled = true) }
+                    init.await()
+                    if(initialCurrentProduct != currentProduct && currentProduct == null){
+                        showToast(
+                            heading = context.getString(R.string.subscription_cancelled_title),
+                            message = context.getString(R.string.subscription_cancelled_message)
+                        )
+                    }
                 }
             }
             libraryActivityManagerUseCases.launchLibrary()
@@ -356,10 +376,22 @@ class SubscriptionsViewModel @Inject constructor(
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {
+//            localyticsManagerUseCases.trackSubscriptionEvent(
+//                eventName = "purchase_subscription_started",
+//                productId = product.productId,
+//                userId = partnerUserId
+//            )
+            
             if (!isConnectionStarted) {
-                 startConnection()
+                startConnection()
             } else {
                 billingManagerUseCases.purchaseSubscription(activity, product, { error -> 
+//                    localyticsManagerUseCases.trackSubscriptionEvent(
+//                        eventName = "purchase_subscription_failed",
+//                        productId = product.productId,
+//                        userId = partnerUserId,
+//                        additionalParams = mapOf("error" to error)
+//                    )
                     showToast(
                         heading = context.getString(R.string.purchase_failed),
                         message = error
@@ -367,8 +399,12 @@ class SubscriptionsViewModel @Inject constructor(
                     onError(error)
                 }, userId = partnerUserId)
             }
-
         }
+    }
+
+    override fun onCleared() {
+        libraryActivityManagerUseCases.cleanup()
+        super.onCleared()
 
     }
 }

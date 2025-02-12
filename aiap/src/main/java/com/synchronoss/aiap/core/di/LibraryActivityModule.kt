@@ -3,6 +3,7 @@ package com.synchronoss.aiap.core.di
 import android.app.Application
 import com.synchronoss.aiap.core.data.repository.activity.LibraryActivityManagerImpl
 import com.synchronoss.aiap.core.domain.repository.activity.LibraryActivityManager
+import com.synchronoss.aiap.core.domain.usecases.activity.Cleanup
 import com.synchronoss.aiap.core.domain.usecases.activity.LaunchLibrary
 import com.synchronoss.aiap.core.domain.usecases.activity.LibraryActivityManagerUseCases
 
@@ -39,7 +40,8 @@ object LibraryActivityModule {
         libraryActivityManager: LibraryActivityManager
     ): LibraryActivityManagerUseCases {
         return LibraryActivityManagerUseCases(
-            launchLibrary = LaunchLibrary(libraryActivityManager)
+            launchLibrary = LaunchLibrary(libraryActivityManager),
+            cleanup = Cleanup(libraryActivityManager)
         )
     }
 

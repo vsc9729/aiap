@@ -43,7 +43,7 @@
     <dimen name="box_landscape_selected_height">115dp</dimen>
     <dimen name="box_landscape_not_selected_height">80dp</dimen>
     <dimen name="box_non_landscape_selected_height">165dp</dimen>
-    <dimen name="box_non_landscape_not_selected_height">125dp</dimen>
+    <dimen name="box_non_landscape_not_selected_height">135dp</dimen>
     <dimen name="box_shadow_radius">35dp</dimen>
     <dimen name="box_top_corner">16dp</dimen>
     <dimen name="box_portrait_padding">16dp</dimen>
@@ -108,5 +108,13 @@
     <dimen name="bottom_sheet_icon_size">24dp</dimen>
     <dimen name="bottom_sheet_toast_padding_bottom">30dp</dimen>
     <dimen name="bottom_sheet_toast_padding_horizontal">16dp</dimen>
+
+    <!-- More Bottom Sheet -->
+    <dimen name="more_bottom_sheet_height_fraction">0.3</dimen>
+    <dimen name="more_bottom_sheet_item_height">56dp</dimen>
+    <dimen name="more_bottom_sheet_item_padding">16dp</dimen>
+    <dimen name="more_bottom_sheet_item_text_size">16sp</dimen>
+    <dimen name="more_bottom_sheet_divider_height">1dp</dimen>
+    <dimen name="more_bottom_sheet_corner_radius">16dp</dimen>
 
 </resources> 

@@ -32,12 +32,19 @@ class LibraryActivityManagerImpl(
         isInitialized = true
     }
 
+    override fun cleanup() {
+        if (isInitialized) {
+            ProcessLifecycleOwner.get().lifecycle.removeObserver(lifecycleObserver)
+            isInitialized = false
+        }
+    }
+
     internal fun refreshSubscriptions() {
         try {
-                subscriptionCancelledHandler.handleSubscriptionCancelled()
-            } catch (e: Exception) {
-                Log.e("LibraryManager", "Failed to refresh subscriptions", e)
-            }
+            subscriptionCancelledHandler.handleSubscriptionCancelled()
+        } catch (e: Exception) {
+            Log.e("LibraryManager", "Failed to refresh subscriptions", e)
+        }
     }
 }
 

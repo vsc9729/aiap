@@ -217,10 +217,9 @@ class BillingManagerImpl(
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     override fun onPurchasesUpdated(
         billingResult: BillingResult,
-        purchases: MutableList<Purchase>?,
+        purchases: List<Purchase>?
     ) {
         purchaseUpdateHandler.handlePurchaseStarted()
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
@@ -230,7 +229,7 @@ class BillingManagerImpl(
                 purchaseToken = purchases[0].purchaseToken,
                 partnerUserId = partnerUserId ?: "",
 
-            )
+                )
             CoroutineScope(Dispatchers.IO).launch {
                 val handlePurchaseResponse = async {
                     productApi.handlePurchase(

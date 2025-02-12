@@ -49,7 +49,6 @@ class ProductManagerImpl @Inject constructor(
                         val productInfo: ProductInfo = productDataDto.toProductInfo()
                         productInfos.add(productInfo)
                     }
-                    productInfos = productInfos.filter { it.platform == "ANDROID" } as MutableList<ProductInfo>
                     Resource.Success(productInfos)
                 } catch (e: Exception) {
                     Resource.Error(e.message ?: "Failed to fetch data. Unknown error")

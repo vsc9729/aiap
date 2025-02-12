@@ -51,6 +51,17 @@
     <string name="current_subscription">Current Subscription</string>
     <string name="selected_plan_indicator">Selected Plan Indicator</string>
     <string name="unselected_plan_indicator">Unselected Plan Indicator</string>
-    <string name="plan_auto_renews">Plan auto-renews for %1$s every month. You can cancel anytime you want.</string>
+    <string name="plan_auto_renews">Plan auto-renews for %1$s every month until cancelled</string>
     <string name="continue_text">Continue</string>
+    <string name="more_button_text">More</string>
+
+    <!-- Bottom Sheet strings -->
+    <string name="bottom_sheet_apply_coupon">Apply Coupon</string>
+    <string name="bottom_sheet_restore_purchase">Restore Purchase</string>
+    <string name="bottom_sheet_go_to_subscriptions">Go to Subscriptions</string>
+    
+    <!-- Bottom Sheet Image Content Descriptions -->
+    <string name="bottom_sheet_coupon_icon">Coupon Icon</string>
+    <string name="bottom_sheet_restore_icon">Restore Icon</string>
+    <string name="bottom_sheet_subscriptions_icon">Subscriptions Icon</string>
 </resources> 

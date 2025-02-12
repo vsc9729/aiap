@@ -188,6 +188,9 @@ dependencies {
     // Billing
     implementation(libs.android.billing.client)
 
+    // Localytics - using a newer version from their repository
+    implementation("com.localytics.androidx:library:6.4.3")
+
 //    // BouncyCastle Dependencies
 //    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
 //    implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
