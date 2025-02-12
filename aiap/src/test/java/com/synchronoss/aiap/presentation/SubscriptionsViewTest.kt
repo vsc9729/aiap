@@ -2,12 +2,12 @@ package com.synchronoss.aiap.presentation
 
 import android.app.Application
 import android.util.Log
-import com.synchronoss.aiap.di.PurchaseUpdateHandler
-import com.synchronoss.aiap.di.SubscriptionCancelledHandler
-import com.synchronoss.aiap.domain.models.ProductInfo
-import com.synchronoss.aiap.domain.usecases.activity.LibraryActivityManagerUseCases
-import com.synchronoss.aiap.domain.usecases.billing.BillingManagerUseCases
-import com.synchronoss.aiap.domain.usecases.product.ProductManagerUseCases
+import com.synchronoss.aiap.core.di.PurchaseUpdateHandler
+import com.synchronoss.aiap.core.di.SubscriptionCancelledHandler
+import com.synchronoss.aiap.core.domain.models.ProductInfo
+import com.synchronoss.aiap.core.domain.usecases.activity.LibraryActivityManagerUseCases
+import com.synchronoss.aiap.core.domain.usecases.billing.BillingManagerUseCases
+import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.ui.theme.ThemeLoader
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers

@@ -2,6 +2,7 @@ package com.synchronoss.aiap.data.remote.theme
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.synchronoss.aiap.core.data.remote.theme.ThemeApi
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer

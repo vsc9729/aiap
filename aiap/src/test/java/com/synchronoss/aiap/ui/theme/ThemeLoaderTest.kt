@@ -2,10 +2,10 @@ package com.synchronoss.aiap.ui.theme
 
 import android.util.Log
 import androidx.compose.ui.graphics.Color
-import com.synchronoss.aiap.domain.models.theme.Theme
-import com.synchronoss.aiap.domain.models.theme.ThemeInfo
-import com.synchronoss.aiap.domain.usecases.theme.GetThemeApi
-import com.synchronoss.aiap.domain.usecases.theme.ThemeManagerUseCases
+import com.synchronoss.aiap.core.domain.models.theme.Theme
+import com.synchronoss.aiap.core.domain.models.theme.ThemeInfo
+import com.synchronoss.aiap.core.domain.usecases.theme.GetThemeApi
+import com.synchronoss.aiap.core.domain.usecases.theme.ThemeManagerUseCases
 import com.synchronoss.aiap.utils.CacheManager
 import com.synchronoss.aiap.utils.Resource
 import io.mockk.*

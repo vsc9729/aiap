@@ -2,6 +2,11 @@ package com.synchronoss.aiap.data.remote.product
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.synchronoss.aiap.core.data.remote.product.ActiveSubscriptionResponse
+import com.synchronoss.aiap.core.data.remote.product.HandlePurchaseRequest
+import com.synchronoss.aiap.core.data.remote.product.HandlePurchaseResponse
+import com.synchronoss.aiap.core.data.remote.product.ProductDataDto
+import com.synchronoss.aiap.core.data.remote.product.SubscriptionResponseDTO
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test

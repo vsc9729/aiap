@@ -1,6 +1,6 @@
-import com.synchronoss.aiap.domain.models.ProductInfo
-import com.synchronoss.aiap.domain.repository.product.ProductManager
-import com.synchronoss.aiap.domain.usecases.product.GetProductsApi
+import com.synchronoss.aiap.core.domain.models.ProductInfo
+import com.synchronoss.aiap.core.domain.repository.product.ProductManager
+import com.synchronoss.aiap.core.domain.usecases.product.GetProductsApi
 import com.synchronoss.aiap.utils.Resource
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery

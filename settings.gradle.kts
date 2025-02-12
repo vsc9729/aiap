@@ -17,10 +17,13 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
+        maven {
+            url = uri("https://maven.localytics.com/public")
+        }
     }
 
 }
 
 rootProject.name = "AIAP"
 include(":aiap")
-//include(":app")
+include(":app")

@@ -8,17 +8,18 @@ import com.android.billingclient.api.BillingResult
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesResponseListener
 import com.android.billingclient.api.QueryPurchasesParams
-import com.synchronoss.aiap.data.remote.common.ApiResponse
+import com.synchronoss.aiap.core.data.remote.common.ApiResponse
+import com.synchronoss.aiap.core.data.remote.product.HandlePurchaseResponse
+import com.synchronoss.aiap.core.data.remote.product.ProductApi
+import com.synchronoss.aiap.core.data.repository.billing.BillingManagerImpl
+import com.synchronoss.aiap.core.di.PurchaseUpdateHandler
+import com.synchronoss.aiap.core.domain.models.ProductInfo
+import com.synchronoss.aiap.core.domain.usecases.billing.BillingManagerUseCases
+import com.synchronoss.aiap.core.domain.usecases.billing.CheckExistingSubscription
+import com.synchronoss.aiap.core.domain.usecases.billing.PurchaseSubscription
+import com.synchronoss.aiap.core.domain.usecases.billing.StartConnection
 
-import com.synchronoss.aiap.data.remote.product.HandlePurchaseResponse
-import com.synchronoss.aiap.data.remote.product.ProductApi
-import com.synchronoss.aiap.data.repository.billing.BillingManagerImpl
-import com.synchronoss.aiap.di.PurchaseUpdateHandler
-import com.synchronoss.aiap.domain.models.ProductInfo
-import com.synchronoss.aiap.domain.usecases.billing.BillingManagerUseCases
-import com.synchronoss.aiap.domain.usecases.billing.CheckExistingSubscription
-import com.synchronoss.aiap.domain.usecases.billing.PurchaseSubscription
-import com.synchronoss.aiap.domain.usecases.billing.StartConnection
+
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.Before

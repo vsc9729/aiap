@@ -2,6 +2,8 @@ package com.synchronoss.aiap.data.remote.product
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.synchronoss.aiap.core.data.remote.product.HandlePurchaseRequest
+import com.synchronoss.aiap.core.data.remote.product.ProductApi
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer

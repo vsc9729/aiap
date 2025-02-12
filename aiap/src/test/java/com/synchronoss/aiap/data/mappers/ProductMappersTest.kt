@@ -1,11 +1,13 @@
 package com.synchronoss.aiap.data.mappers
 
+import com.synchronoss.aiap.core.data.mappers.toActiveSubscriptionInfo
+import com.synchronoss.aiap.core.data.mappers.toProductInfo
 import org.junit.Assert.*
 import org.junit.Test
-import com.synchronoss.aiap.data.remote.product.ProductDataDto
-import com.synchronoss.aiap.data.remote.product.ActiveSubscriptionResponse
-import com.synchronoss.aiap.data.remote.product.SubscriptionResponseDTO
-import com.synchronoss.aiap.domain.models.ProductInfo
+import com.synchronoss.aiap.core.data.remote.product.ProductDataDto
+import com.synchronoss.aiap.core.data.remote.product.ActiveSubscriptionResponse
+import com.synchronoss.aiap.core.data.remote.product.SubscriptionResponseDTO
+import com.synchronoss.aiap.core.domain.models.ProductInfo
 
 class ProductMappersTest {
 
