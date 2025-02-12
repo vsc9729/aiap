@@ -2,6 +2,7 @@ package com.synchronoss.aiap.core.di
 
 import android.app.Application
 import com.synchronoss.aiap.core.data.repository.activity.LibraryActivityManagerImpl
+import com.synchronoss.aiap.core.domain.handlers.SubscriptionCancelledHandler
 import com.synchronoss.aiap.core.domain.repository.activity.LibraryActivityManager
 import com.synchronoss.aiap.core.domain.usecases.activity.Cleanup
 import com.synchronoss.aiap.core.domain.usecases.activity.LaunchLibrary

@@ -5,10 +5,11 @@ import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.synchronoss.aiap.core.di.SubscriptionCancelledHandler
+import com.synchronoss.aiap.core.domain.handlers.SubscriptionCancelledHandler
 import com.synchronoss.aiap.core.domain.repository.activity.LibraryActivityManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.synchronoss.aiap.utils.LogUtils
 
 class LibraryActivityManagerImpl(
     private val context: Context,
@@ -43,7 +44,7 @@ class LibraryActivityManagerImpl(
         try {
             subscriptionCancelledHandler.handleSubscriptionCancelled()
         } catch (e: Exception) {
-            Log.e("LibraryManager", "Failed to refresh subscriptions", e)
+            LogUtils.e("LibraryActivityManager", "Failed to refresh subscriptions", e)
         }
     }
 }

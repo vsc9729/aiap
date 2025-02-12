@@ -7,6 +7,7 @@ import com.synchronoss.aiap.core.domain.usecases.theme.ThemeManagerUseCases
 import com.synchronoss.aiap.utils.Resource
 import com.synchronoss.aiap.utils.toColor
 import javax.inject.Inject
+import com.synchronoss.aiap.utils.LogUtils
 
 open class ThemeColors(
     val primary: Color,
@@ -53,6 +54,7 @@ class ThemeLoader @Inject constructor(
         val DEFAULT_LIGHT_SECONDARY = Color(0xFFE7F8FF)
         val DEFAULT_DARK_PRIMARY = Color(0xFF0096D5)
         val DEFAULT_DARK_SECONDARY = Color(0xFF262627)
+        private const val TAG = "ThemeLoader"
     }
 
     suspend fun loadTheme() {
@@ -66,11 +68,11 @@ class ThemeLoader @Inject constructor(
                     }
                 }
                 is Resource.Error -> {
-                    Log.e("ThemeLoader", "Failed to fetch theme: ${result.message}")
+                    LogUtils.e(TAG, "Failed to fetch theme: ${result.message}")
                 }
             }
         } catch (e: Exception) {
-            Log.e("ThemeLoader", "Error loading theme", e)
+            LogUtils.e(TAG, "Error loading theme", e)
         }
     }
 

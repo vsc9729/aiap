@@ -14,6 +14,7 @@ import com.synchronoss.aiap.utils.Vendors
 import com.synchronoss.aiap.utils.vendorThemeMap
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import com.synchronoss.aiap.utils.LogUtils
 
 class ThemeManagerImpl @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -55,7 +56,7 @@ class ThemeManagerImpl @Inject constructor(
                 )
             )
 
-            Log.d("ThemeData", "Loaded theme from JSON: $themeInfo")
+            LogUtils.d("ThemeManager", "Loaded theme from JSON: $themeInfo")
             Resource.Success(themeInfo)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to load theme from JSON")

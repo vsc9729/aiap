@@ -7,7 +7,7 @@ import com.synchronoss.aiap.utils.Resource
 class GetProductsApi(
     private val productManager: ProductManager
 ) {
-    suspend operator fun invoke(timestamp: Long?): Resource<List<ProductInfo>> {
-        return productManager.getProducts(timestamp)
+    suspend operator fun invoke(timestamp: Long?, apiKey: String): Resource<List<ProductInfo>> {
+        return productManager.getProducts(timestamp, apiKey)
     }
 }

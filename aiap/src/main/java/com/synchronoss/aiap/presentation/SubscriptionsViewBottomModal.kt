@@ -67,10 +67,11 @@ fun SubscriptionsViewBottomSheet(
     partnerUserId: String,
     activity: ComponentActivity,
     subscriptionsViewModel: SubscriptionsViewModel = hiltViewModel(),
-    isLaunchedViaIntent: Boolean = false
+    isLaunchedViaIntent: Boolean = false,
+    apiKey: String
 ) {
     LaunchedEffect(partnerUserId) {
-        subscriptionsViewModel.initialize(id = partnerUserId, intentLaunch = isLaunchedViaIntent)
+        subscriptionsViewModel.initialize(id = partnerUserId, intentLaunch = isLaunchedViaIntent, apiKey = apiKey)
     }
 
     val configuration = LocalConfiguration.current

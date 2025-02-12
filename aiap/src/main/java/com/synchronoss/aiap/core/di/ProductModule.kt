@@ -8,6 +8,7 @@ import com.synchronoss.aiap.core.domain.repository.billing.BillingManager
 import com.synchronoss.aiap.core.domain.repository.product.ProductManager
 import com.synchronoss.aiap.core.domain.usecases.product.GetActiveSubscription
 import com.synchronoss.aiap.core.domain.usecases.product.GetProductsApi
+import com.synchronoss.aiap.core.domain.usecases.product.HandlePurchase
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.utils.CacheManager
 import com.synchronoss.aiap.utils.Constants.BASE_URL
@@ -31,15 +32,17 @@ import java.security.cert.X509Certificate
 @InstallIn(SingletonComponent::class)
 object ProductModule {
 
-
+    @Provides
+    @Singleton
+    fun provideMoshi(): Moshi {
+        return Moshi.Builder()
+            .add(KotlinJsonAdapterFactory())
+            .build()
+    }
 
     @Provides
     @Singleton
-    fun provideProductApi(): ProductApi {
-        val moshi = Moshi.Builder()
-            .add(KotlinJsonAdapterFactory())
-            .build()
-
+    fun provideOkHttpClient(): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply {
             setLevel(HttpLoggingInterceptor.Level.BODY)
         }
@@ -55,27 +58,33 @@ object ProductModule {
         val sslContext = SSLContext.getInstance("SSL")
         sslContext.init(null, trustAllCerts, SecureRandom())
 
-        val client = OkHttpClient.Builder()
+        return OkHttpClient.Builder()
             .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
             .hostnameVerifier { _, _ -> true }
             .addInterceptor(logging)
             .build()
-
-        val retrofit = Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .client(client)
-            .build()
-
-        return retrofit.create(ProductApi::class.java)
     }
-
-
 
     @Provides
     @Singleton
-    fun provideProductManager(api: ProductApi, billingManager: BillingManager, cacheManager: CacheManager ): ProductManager {
-        return ProductManagerImpl(api, billingManager, cacheManager)
+    fun provideRetrofit(moshi: Moshi, okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .client(okHttpClient)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideProductApi(retrofit: Retrofit): ProductApi {
+        return retrofit.create(ProductApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideProductManager(api: ProductApi, cacheManager: CacheManager): ProductManager {
+        return ProductManagerImpl(api, cacheManager)
     }
 
     @Provides
@@ -84,6 +93,7 @@ object ProductModule {
         return ProductManagerUseCases(
             getProductsApi = GetProductsApi(productManager),
             getActiveSubscription = GetActiveSubscription(productManager),
+            handlePurchase = HandlePurchase(productManager)
         )
     }
 }

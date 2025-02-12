@@ -11,13 +11,15 @@ class PurchaseSubscription(
         activity: ComponentActivity,
         product: ProductInfo,
         onError: (String) -> Unit,
-        userId: String
+        userId: String,
+        apiKey: String
     ) {
         billingManager.purchaseSubscription(
             activity = activity,
             productInfo = product,
             onError = onError,
-            userId = userId
+            userId = userId,
+            apiKey = apiKey
         )
     }
 }

@@ -14,7 +14,8 @@ interface BillingManager {
         activity: ComponentActivity,
         productInfo: ProductInfo,
         onError: (String) -> Unit,
-        userId: String
+        userId: String,
+        apiKey: String
     )
     suspend fun checkExistingSubscriptions(
         onError: (String) -> Unit

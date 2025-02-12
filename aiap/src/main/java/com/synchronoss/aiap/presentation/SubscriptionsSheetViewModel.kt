@@ -25,8 +25,8 @@ import androidx.compose.ui.res.stringResource
 import com.synchronoss.aiap.R
 import android.content.Context
 import androidx.compose.runtime.remember
-import com.synchronoss.aiap.core.di.PurchaseUpdateHandler
-import com.synchronoss.aiap.core.di.SubscriptionCancelledHandler
+import com.synchronoss.aiap.core.domain.handlers.PurchaseUpdateHandler
+import com.synchronoss.aiap.core.domain.handlers.SubscriptionCancelledHandler
 import com.synchronoss.aiap.core.domain.models.ProductInfo
 import com.synchronoss.aiap.core.domain.repository.activity.LibraryActivityManager
 import com.synchronoss.aiap.core.domain.usecases.activity.LibraryActivityManagerUseCases
@@ -34,6 +34,7 @@ import com.synchronoss.aiap.core.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import dagger.hilt.android.qualifiers.ApplicationContext
 import com.synchronoss.aiap.core.domain.usecases.analytics.LocalyticsManagerUseCases
+import com.synchronoss.aiap.utils.LogUtils
 
 /**
  * ViewModel responsible for managing subscription-related UI state and business logic.
@@ -59,6 +60,7 @@ class SubscriptionsViewModel @Inject constructor(
 
     
     // Product Management
+    lateinit var apiKey: String
     lateinit var partnerUserId: String
     var products: List<ProductInfo>? by mutableStateOf(null)
     var filteredProducts: List<ProductInfo>? by mutableStateOf(null)
@@ -120,7 +122,7 @@ class SubscriptionsViewModel @Inject constructor(
         toastState = toastState.copy(isVisible = false)
     }
 
-    fun initialize(id:String, intentLaunch: Boolean) {
+    fun initialize(id:String, apiKey:String,  intentLaunch: Boolean) {
         // Track initialization event with user profile
 //        localyticsManagerUseCases.setUserProfile(id)
 //        localyticsManagerUseCases.trackSubscriptionEvent(
@@ -135,9 +137,10 @@ class SubscriptionsViewModel @Inject constructor(
             isInitialised = true
             isLoading.value = true
             partnerUserId = id
+            this.apiKey = apiKey
             viewModelScope.launch {
 
-                val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(userId = partnerUserId) }
+                val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(userId = partnerUserId, apiKey = apiKey) }
                 val startConnection =  async { startConnection() }
                 startConnection.await()
                 val activeSubResult =  activeSubResultDeferred.await()
@@ -263,14 +266,14 @@ class SubscriptionsViewModel @Inject constructor(
             viewModelScope.launch {
                 billingManagerUseCases.startConnection(
                     {
-                        Log.d("Co", context.getString(R.string.billing_connected))
+                        LogUtils.d(TAG, context.getString(R.string.billing_connected))
                         isConnectionStarted = true
                         viewModelScope.launch {
                             val checkSubscriptionDeferred = async {
                                 billingManagerUseCases.checkExistingSubscription(
                                     onError = {
                                         isLoading.value = false
-                                        Log.d("Co", context.getString(R.string.billing_check_error, it))
+                                        LogUtils.d(TAG, context.getString(R.string.billing_check_error, it))
                                     }
                                 )
                             }
@@ -279,7 +282,7 @@ class SubscriptionsViewModel @Inject constructor(
                     },
                     {
                         isLoading.value = false
-                        Log.d("Co", context.getString(R.string.billing_connection_failed))
+                        LogUtils.d(TAG, context.getString(R.string.billing_connection_failed))
                     }
                 )
             }
@@ -292,13 +295,13 @@ class SubscriptionsViewModel @Inject constructor(
 //             filteredProducts = null
 //             selectedPlan = -1
              viewModelScope.launch {
-                 val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(partnerUserId) }
+                 val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(partnerUserId, apiKey) }
                  val activeSubResult = activeSubResultDeferred.await()
                  val checkSubscriptionDeferred = async {
                      billingManagerUseCases.checkExistingSubscription(
                          onError = {
                              isLoading.value = false
-                             Log.d("Co", context.getString(R.string.products_fetch_failed))
+                             LogUtils.d(TAG, context.getString(R.string.products_fetch_failed))
                          }
                      )
                  }
@@ -338,7 +341,7 @@ class SubscriptionsViewModel @Inject constructor(
 
     private suspend fun fetchAndLoadProducts(purchaseUpdate: Boolean = false) {
 
-         when (val result = productManagerUseCases.getProductsApi(lastKnownProductTimestamp)) {
+         when (val result = productManagerUseCases.getProductsApi(lastKnownProductTimestamp, apiKey)) {
             is Resource.Success -> {
                 if(result.data!=null){
                     products = result.data
@@ -364,7 +367,7 @@ class SubscriptionsViewModel @Inject constructor(
                     heading = context.getString(R.string.error_title),
                     message = context.getString(R.string.error_products_message)
                 )
-                Log.d("Co", context.getString(R.string.products_fetch_failed))
+                LogUtils.d(TAG, context.getString(R.string.products_fetch_failed))
             }
          }
         isLoading.value = false
@@ -376,28 +379,22 @@ class SubscriptionsViewModel @Inject constructor(
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {
-//            localyticsManagerUseCases.trackSubscriptionEvent(
-//                eventName = "purchase_subscription_started",
-//                productId = product.productId,
-//                userId = partnerUserId
-//            )
-            
             if (!isConnectionStarted) {
                 startConnection()
             } else {
-                billingManagerUseCases.purchaseSubscription(activity, product, { error -> 
-//                    localyticsManagerUseCases.trackSubscriptionEvent(
-//                        eventName = "purchase_subscription_failed",
-//                        productId = product.productId,
-//                        userId = partnerUserId,
-//                        additionalParams = mapOf("error" to error)
-//                    )
-                    showToast(
-                        heading = context.getString(R.string.purchase_failed),
-                        message = error
-                    )
-                    onError(error)
-                }, userId = partnerUserId)
+                billingManagerUseCases.purchaseSubscription(
+                    activity, 
+                    product, 
+                    { error -> 
+                        showToast(
+                            heading = context.getString(R.string.purchase_failed),
+                            message = error
+                        )
+                        onError(error)
+                    }, 
+                    userId = partnerUserId,
+                    apiKey = apiKey
+                )
             }
         }
     }
@@ -406,5 +403,9 @@ class SubscriptionsViewModel @Inject constructor(
         libraryActivityManagerUseCases.cleanup()
         super.onCleared()
 
+    }
+
+    companion object {
+        private const val TAG = "SubscriptionsSheetVM"
     }
 }

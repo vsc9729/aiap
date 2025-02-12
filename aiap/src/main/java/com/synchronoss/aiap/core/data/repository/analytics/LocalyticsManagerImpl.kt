@@ -9,6 +9,10 @@ class LocalyticsManagerImpl @Inject constructor(
     private val application: Application
 ) : LocalyticsManager {
 
+    init {
+        initialize()
+    }
+
     override fun initialize() {
         Localytics.integrate(application)
         Localytics.setLoggingEnabled(true)

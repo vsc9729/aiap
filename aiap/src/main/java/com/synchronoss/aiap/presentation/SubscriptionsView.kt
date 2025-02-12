@@ -96,6 +96,7 @@ import com.synchronoss.aiap.presentation.ToastComposable
 import com.synchronoss.aiap.utils.Constants
 import com.synchronoss.aiap.utils.getDimension
 import com.synchronoss.aiap.utils.getDimensionText
+import com.synchronoss.aiap.utils.LogUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -105,13 +106,14 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier) {
+    val TAG: String = "SubscriptionsView"
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
     var showDialog by remember { mutableStateOf(false) }
     val logoUrl = subscriptionsViewModel.finalLogoUrl;
     val configuration = LocalConfiguration.current;
     val logoUrlWidth = getDimension(R.dimen.logo_width)
     val logoUrlHeight = getDimension(R.dimen.logo_height)
-    Log.d(null, "Logo url is $logoUrl")
+    LogUtils.d(TAG, "Logo url is $logoUrl")
     val filteredProducts: List<ProductInfo>? = subscriptionsViewModel.filteredProducts
 
     Column {
@@ -279,8 +281,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                                             activity = activity,
                                                             product = it,
                                                             onError = { error ->
-                                                                // Handle error
-                                                                Log.d("Co", "Error: $error")
+                                                                LogUtils.d(TAG, "Error: $error")
                                                             }
                                                         )
                                                     }
@@ -385,8 +386,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                                                 activity = activity,
                                                                 product = it,
                                                                 onError = { error ->
-                                                                    // Handle error
-                                                                    Log.d("Co", "Error: $error")
+                                                                    LogUtils.d(TAG, "Error: $error")
                                                                 }
                                                             )
                                                         }
@@ -465,8 +465,8 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     if(showDialog){
         MoreBottomSheet(
             onDismiss = {showDialog = false},
-            onApplyCoupon = { Log.d("Co", "Apply coupon") },
-            onGoToSubscriptions = { Log.d("Co", "Go to subscriptions") }
+            onApplyCoupon = { LogUtils.d(TAG, "Apply coupon") },
+            onGoToSubscriptions = { LogUtils.d(TAG, "Go to subscriptions") }
         )
     }
 
@@ -624,6 +624,7 @@ fun ActualCurrentPlanCard(
  */
 @Composable
 fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
+    val TAG  = "OtherPlanCard"
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
 
     Box(
@@ -636,7 +637,7 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
             )
             .then(
                 if (subscriptionsViewModel.selectedPlan == productIndex) {
-                    Log.d("Co", "Current Plan: ${subscriptionsViewModel.selectedPlan}")
+                    LogUtils.d(TAG, "Current Plan: ${subscriptionsViewModel.selectedPlan}")
                     Modifier
                         .shadow(
                             elevation = 1.dp,  // Reduced elevation for softer shadow
@@ -667,7 +668,7 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
             )
             .clickable {
                 subscriptionsViewModel.selectedPlan = productIndex
-                Log.d("Co", "Current Plan: ${subscriptionsViewModel.selectedPlan}")
+                LogUtils.d(TAG, "Current Plan: ${subscriptionsViewModel.selectedPlan}")
             }
             .padding(horizontal = getDimension(R.dimen.card_padding_horizontal))
     ) {
@@ -811,6 +812,7 @@ fun MoreBottomSheet(
     onApplyCoupon: () -> Unit,
     onGoToSubscriptions: () -> Unit
 ) {
+    val TAG = "MoreBottomSheet"
     var showCouponDialog by remember { mutableStateOf(false) }
     var isVisible by remember { mutableStateOf(false) }
     val configuration = LocalConfiguration.current
@@ -883,7 +885,6 @@ fun MoreBottomSheet(
                         showCouponDialog = true
                     }
                 )
-
 //                BottomSheetItem(
 //                    text = stringResource(R.string.bottom_sheet_restore_purchase),
 //                    iconResId = R.drawable.restore,
@@ -893,7 +894,6 @@ fun MoreBottomSheet(
 //                        onRestorePurchase()
 //                    }
 //                )
-
                 BottomSheetItem(
                     text = stringResource(R.string.bottom_sheet_go_to_subscriptions),
                     iconResId = R.drawable.subscriptions,
@@ -916,7 +916,7 @@ fun MoreBottomSheet(
                 },
                 onConfirm = { input -> 
                     onApplyCoupon()
-                    Log.d("Co", "Input: $input")
+                    LogUtils.d(TAG, "Input: $input")
                 }
             )
         }

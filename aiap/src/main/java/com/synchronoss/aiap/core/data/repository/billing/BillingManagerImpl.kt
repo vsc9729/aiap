@@ -16,9 +16,10 @@ import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
 import com.synchronoss.aiap.core.data.remote.product.HandlePurchaseRequest
 import com.synchronoss.aiap.core.data.remote.product.ProductApi
-import com.synchronoss.aiap.core.di.PurchaseUpdateHandler
+import com.synchronoss.aiap.core.domain.handlers.PurchaseUpdateHandler
 import com.synchronoss.aiap.core.domain.models.ProductInfo
 import com.synchronoss.aiap.core.domain.repository.billing.BillingManager
+import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -29,14 +30,15 @@ import retrofit2.Response
 
 class BillingManagerImpl(
     context: Context,
-    private val productApi: ProductApi,
+    private val productManagerUseCases: ProductManagerUseCases,
     private val purchaseUpdateHandler: PurchaseUpdateHandler
 ) : PurchasesUpdatedListener,
     BillingManager {
 
     private val productDetailsMap = mutableMapOf<String, ProductDetails>()
-    private var currentProduct :Purchase? = null
-    private var partnerUserId :String? = null
+    private var currentProduct: Purchase? = null
+    private var partnerUserId: String? = null
+    private var apiKey: String? = null
     private val billingClient: BillingClient = BillingClient.newBuilder(context)
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .setListener(this)
@@ -63,9 +65,11 @@ class BillingManagerImpl(
         activity: ComponentActivity,
         productInfo: ProductInfo,
         onError: (String) -> Unit,
-        userId: String
+        userId: String,
+        apiKey: String
     ) {
         partnerUserId = userId
+        this.apiKey = apiKey
 
         try {
             val productParams = createProductParams(productInfo)
@@ -227,30 +231,25 @@ class BillingManagerImpl(
                 productId = purchases[0].products.first().toString(),
                 purchaseTime = purchases[0].purchaseTime,
                 purchaseToken = purchases[0].purchaseToken,
-                partnerUserId = partnerUserId ?: "",
-
-                )
+                partnerUserId = partnerUserId ?: ""
+            )
             CoroutineScope(Dispatchers.IO).launch {
-                val handlePurchaseResponse = async {
-                    productApi.handlePurchase(
-                        handleRequest
-                    )
-                }
+                apiKey?.let { key ->
+                    val handlePurchaseResponse = async {
+                        productManagerUseCases.handlePurchase(handleRequest, key)
+                    }
 
-                handlePurchaseResponse.await(
-                ).let { response ->
-                    if (response.isSuccessful) {
+                    val success = handlePurchaseResponse.await()
+                    if (success) {
                         purchaseUpdateHandler.handlePurchaseUpdate()
                     } else {
                         purchaseUpdateHandler.handlePurchaseFailed()
                     }
-                    partnerUserId = null
-                }
+                } ?: purchaseUpdateHandler.handlePurchaseFailed()
+                
+                partnerUserId = null
+                apiKey = null
             }
-
-        } else {
-            partnerUserId = null
-            purchaseUpdateHandler.handlePurchaseUpdate()
         }
     }
 }

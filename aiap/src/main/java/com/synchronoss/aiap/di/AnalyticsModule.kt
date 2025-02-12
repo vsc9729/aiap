@@ -16,8 +16,6 @@ object AnalyticsModule {
     @Provides
     @Singleton
     fun provideLocalyticsManager(application: Application): LocalyticsManager {
-        return LocalyticsManagerImpl(application).apply {
-            initialize()
-        }
+        return LocalyticsManagerImpl(application)
     }
 } 

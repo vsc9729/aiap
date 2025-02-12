@@ -5,6 +5,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.synchronoss.aiap.core.data.mappers.toActiveSubscriptionInfo
 import com.synchronoss.aiap.core.data.mappers.toProductInfo
 import com.synchronoss.aiap.core.data.remote.common.ApiResponse
+import com.synchronoss.aiap.core.data.remote.product.HandlePurchaseRequest
 import com.synchronoss.aiap.core.data.remote.product.ProductApi
 import com.synchronoss.aiap.core.data.remote.product.ProductDataDto
 import com.synchronoss.aiap.core.domain.models.ActiveSubscriptionInfo
@@ -17,7 +18,6 @@ import javax.inject.Inject
 
 class ProductManagerImpl @Inject constructor(
     private val api: ProductApi,
-    private val billingManager: BillingManager,
     private val cacheManager: CacheManager
 ) : ProductManager {
 
@@ -36,14 +36,14 @@ class ProductManagerImpl @Inject constructor(
     private val jsonAdapter = moshi.adapter<List<ProductInfo>>(listType).lenient()
     private val subscriptionAdapter = moshi.adapter(ActiveSubscriptionInfo::class.java).lenient()
 
-    override suspend fun getProducts(timestamp: Long?): Resource<List<ProductInfo>> {
+    override suspend fun getProducts(timestamp: Long?, apiKey: String): Resource<List<ProductInfo>> {
         return cacheManager.getCachedDataWithTimestamp(
             key = PRODUCTS_CACHE_KEY,
             currentTimestamp = timestamp,
             fetchFromNetwork = {
                 try {
                     var productInfos: MutableList<ProductInfo> = mutableListOf()
-                    val apiResponse: ApiResponse<List<ProductDataDto>> = api.getProducts()
+                    val apiResponse: ApiResponse<List<ProductDataDto>> = api.getProducts(apiKey = apiKey)
                     val productDataDtos: List<ProductDataDto> = apiResponse.data
                     for (productDataDto in productDataDtos) {
                         val productInfo: ProductInfo = productDataDto.toProductInfo()
@@ -63,13 +63,12 @@ class ProductManagerImpl @Inject constructor(
         )
     }
 
-    override suspend fun getActiveSubscription(userId: String): Resource<ActiveSubscriptionInfo?> {
+    override suspend fun getActiveSubscription(userId: String, apiKey: String): Resource<ActiveSubscriptionInfo?> {
         return cacheManager.getCachedDataWithNetwork(
             key = "${ACTIVE_SUBSCRIPTION_CACHE_KEY}_${userId}",
             fetchFromNetwork = {
                 try {
-                
-                        val response = api.getActiveSubscription(userId = userId)
+                        val response = api.getActiveSubscription(apiKey = apiKey, userId = userId)
                         if (response.isSuccessful) {
                             response.body()?.let { activeSubscriptionResponse ->
                                 Resource.Success(activeSubscriptionResponse.data.toActiveSubscriptionInfo())
@@ -77,7 +76,6 @@ class ProductManagerImpl @Inject constructor(
                         } else {
                             Resource.Error("Failed to fetch active subscription: ${response.message()} 2")
                         }
-                    
                 } catch (e: Exception) {
                     Resource.Error(e.message ?: "Failed to fetch active subscription. Unknown error 3")
                 }
@@ -89,5 +87,14 @@ class ProductManagerImpl @Inject constructor(
                 subscriptionAdapter.fromJson(jsonString)
             }
         )
+    }
+
+    override suspend fun handlePurchase(request: HandlePurchaseRequest, apiKey: String): Boolean {
+        return try {
+            val response = api.handlePurchase(request, apiKey)
+            response.isSuccessful
+        } catch (e: Exception) {
+            false
+        }
     }
 }
