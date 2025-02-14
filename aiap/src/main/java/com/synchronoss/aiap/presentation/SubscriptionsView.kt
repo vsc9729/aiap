@@ -589,7 +589,7 @@ fun ActualCurrentPlanCard(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = product.displayPrice,
+                        text = product.displayPrice ?: "",
                         fontSize = getDimensionText(R.dimen.text_size_plan_price),
                         fontWeight = FontWeight.W700,
                         color = MaterialTheme.colorScheme.onBackground,
@@ -597,7 +597,7 @@ fun ActualCurrentPlanCard(
                     )
 
                     Text(
-                        text = product.description,
+                        text = product.description?: "",
                         fontSize = getDimensionText(R.dimen.text_size_plan_description),
                         fontWeight = FontWeight.W400,
                         color = MaterialTheme.colorScheme.onSecondary,
@@ -685,7 +685,7 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = product.displayPrice,
+                    text = product.displayPrice?: "",
                     fontSize = getDimensionText(R.dimen.text_size_plan_price),
                     fontWeight = FontWeight.W700,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -693,7 +693,7 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
                 )
 
                 Text(
-                    text = product.description,
+                    text = product.description?: "",
                     fontSize = getDimensionText(R.dimen.text_size_plan_description),
                     fontWeight = FontWeight.W400,
                     color = MaterialTheme.colorScheme.onSecondary,

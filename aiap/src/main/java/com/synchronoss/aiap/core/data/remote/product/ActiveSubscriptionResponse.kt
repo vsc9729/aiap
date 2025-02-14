@@ -12,5 +12,8 @@ data class ActiveSubscriptionResponse(
     val productUpdateTimeStamp: Long?,
 
     @Json(name = "themConfigTimeStamp")
-    val themConfigTimeStamp: Long?
+    val themConfigTimeStamp: Long?,
+
+    @Json(name = "userUUID")
+    val userUUID: String
 )

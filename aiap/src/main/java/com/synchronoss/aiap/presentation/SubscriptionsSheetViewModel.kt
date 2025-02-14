@@ -62,6 +62,7 @@ class SubscriptionsViewModel @Inject constructor(
     // Product Management
     lateinit var apiKey: String
     lateinit var partnerUserId: String
+    lateinit var userUUID: String
     var products: List<ProductInfo>? by mutableStateOf(null)
     var filteredProducts: List<ProductInfo>? by mutableStateOf(null)
     var currentProductId: String? by mutableStateOf(null)
@@ -153,6 +154,7 @@ class SubscriptionsViewModel @Inject constructor(
                     lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
                     currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
                     currentProduct = activeSubResult.data?.subscriptionResponseInfo?.product
+                    userUUID = activeSubResult.data?.userUUID!! //Always returns if call succeeds
                     val theme =  async { themeLoader.loadTheme() }
                     theme.await()
                     lightThemeColors = themeLoader.getThemeColors().themeColors
@@ -391,8 +393,8 @@ class SubscriptionsViewModel @Inject constructor(
                             message = error
                         )
                         onError(error)
-                    }, 
-                    userId = partnerUserId,
+                    },
+                    userId = userUUID,
                     apiKey = apiKey
                 )
             }
