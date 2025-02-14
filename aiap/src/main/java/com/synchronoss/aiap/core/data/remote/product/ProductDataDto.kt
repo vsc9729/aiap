@@ -3,10 +3,12 @@ package com.synchronoss.aiap.core.data.remote.product
 import com.squareup.moshi.Json
 
 data class ProductDataDto(
+    @field:Json(name = "id")
+    val id: String,
     @field:Json(name = "productId")
     val productId: String,
     @field:Json(name = "displayName")
-    val displayName: String,
+    val displayName: String?,
     @field:Json(name = "description")
     val description: String?,
     @field:Json(name = "vendorName")
@@ -16,7 +18,7 @@ data class ProductDataDto(
     @field:Json(name = "price")
     val price: Double,
     @field:Json(name = "displayPrice")
-    val displayPrice: String,
+    val displayPrice: String?,
     @field:Json(name = "platform")
     val platform: String,
     @field:Json(name = "serviceLevel")
@@ -24,7 +26,7 @@ data class ProductDataDto(
     @field:Json(name = "isActive")
     val isActive: Boolean,
     @field:Json(name = "recurringPeriodCode")
-    val recurringPeriodCode: String,
+    val recurringPeriodCode: String?,
     @field:Json(name = "productType")
     val productType: String,
     @field:Json(name = "entitlementId")

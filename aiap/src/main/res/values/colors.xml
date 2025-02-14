@@ -15,4 +15,10 @@
 
     <!-- Common -->
     <color name="more_button_border">#ffffff</color>
+
+    <!-- iOS Platform Warning Colors -->
+    <color name="ios_warning_border">#FECDAA</color>
+    <color name="ios_warning_background">#FFF9F5</color>
+    <color name="ios_warning_text">#6B7280</color>
+    <color name="ios_warning_text_heading">#D76C1F</color>
 </resources> 

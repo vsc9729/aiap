@@ -1,3 +1,5 @@
+package com.synchronoss.aiap.domain.repository.product
+
 import com.synchronoss.aiap.core.data.remote.common.ApiResponse
 import com.synchronoss.aiap.core.data.remote.product.ActiveSubscriptionResponse
 import com.synchronoss.aiap.core.data.remote.product.ProductApi
@@ -9,25 +11,18 @@ import com.synchronoss.aiap.core.domain.repository.billing.BillingManager
 import com.synchronoss.aiap.core.domain.repository.product.ProductManager
 import com.synchronoss.aiap.utils.CacheManager
 import com.synchronoss.aiap.utils.Resource
-import kotlinx.coroutines.runBlocking
-
-
-import io.mockk.MockKAnnotations.init
+import io.mockk.MockKAnnotations
+import io.mockk.coEvery
 import io.mockk.coVerify
-
 import io.mockk.impl.annotations.MockK
-
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertNotNull
-
-
 import org.junit.Before
 import org.junit.Test
 import retrofit2.Response
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import io.mockk.coEvery
-
 
 class ProductManagerTest {
     @MockK
@@ -47,7 +42,7 @@ class ProductManagerTest {
 
     @Before
     fun setUp() {
-        init(this)
+        MockKAnnotations.init(this)
         productManager = ProductManagerImpl(productApi, billingManager, cacheManager)
     }
 

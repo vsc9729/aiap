@@ -10,9 +10,10 @@ import com.synchronoss.aiap.core.domain.models.SubscriptionResponseInfo
 
 fun ProductDataDto.toProductInfo(): ProductInfo {
     return ProductInfo(
+        id = id,
         productId = productId,
         displayName = displayName,
-        description = description ?: "Test Description",
+        description = description,
         vendorName = vendorName,
         appName = appName,
         price = price,
@@ -30,7 +31,8 @@ fun ActiveSubscriptionResponse.toActiveSubscriptionInfo(): ActiveSubscriptionInf
     return ActiveSubscriptionInfo(
         subscriptionResponseInfo = subscriptionResponseDTO?.toSubscriptionResponseInfo(),
         productUpdateTimeStamp = productUpdateTimeStamp,
-        themConfigTimeStamp = themConfigTimeStamp
+        themConfigTimeStamp = themConfigTimeStamp,
+        userUUID = userUUID
     )
 }
 

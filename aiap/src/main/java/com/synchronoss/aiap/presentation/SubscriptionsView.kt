@@ -99,6 +99,7 @@ import com.synchronoss.aiap.utils.getDimensionText
 import com.synchronoss.aiap.utils.LogUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.android.billingclient.api.ProductDetails
 
 /**
  * Main composable for displaying subscription plans and handling user interactions.
@@ -114,7 +115,8 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
     val logoUrlWidth = getDimension(R.dimen.logo_width)
     val logoUrlHeight = getDimension(R.dimen.logo_height)
     LogUtils.d(TAG, "Logo url is $logoUrl")
-    val filteredProducts: List<ProductInfo>? = subscriptionsViewModel.filteredProducts
+    val context = LocalContext.current
+    val filteredProductDetails: List<ProductDetails>? = subscriptionsViewModel.filteredProductDetails
 
     Column {
         Row(
@@ -137,13 +139,13 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = if(isSystemInDarkTheme()) Color(0xFF0D0D0D) else Color.White )
+                    .background(color = if (isSystemInDarkTheme()) Color(0xFF0D0D0D) else Color.White)
                     .padding(vertical = getDimension(R.dimen.no_data_box)),
                 contentAlignment = Alignment.Center
             ){
                 Text(text = stringResource(R.string.no_connection_text))
             }
-        }else{
+        } else {
             if (!subscriptionsViewModel.isLoading.value)
                 Box {
                     Column(modifier = Modifier
@@ -152,6 +154,56 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = getDimension(R.dimen.spacing_xlarge))
                     ) {
+                        if (subscriptionsViewModel.isIosPlatform) {
+//                            Spacer(modifier = Modifier.height(16.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = getDimension(R.dimen.ios_warning_vertical_padding))
+                                    .background(
+                                        color = Color(context.getColor(R.color.ios_warning_background)),
+                                        shape = RoundedCornerShape(getDimension(R.dimen.ios_warning_corner_radius))
+                                    )
+                                    .border(
+                                        width = getDimension(R.dimen.ios_warning_border_width),
+                                        color = Color(context.getColor(R.color.ios_warning_border)),
+                                        shape = RoundedCornerShape(getDimension(R.dimen.ios_warning_corner_radius))
+                                    )
+                                    .padding(getDimension(R.dimen.ios_warning_internal_padding))
+                            ) {
+                                Column{
+                                    Row (
+                                        horizontalArrangement = Arrangement.Start,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ){
+                                        Image(
+                                            painter = painterResource(id = R.drawable.important),
+                                            contentDescription = "Important Icon",
+                                            modifier = Modifier.size(12.dp),
+                                        )
+                                        Spacer(Modifier.width(getDimension(R.dimen.ios_warning_internal_padding)/2))
+                                        Text("Important", color = Color(context.getColor(R.color.ios_warning_text_heading)), fontWeight = FontWeight.W600, fontSize = getDimensionText(R.dimen.ios_warning_text_size  ))
+                                    }
+//                                    Spacer(Modifier.height(getDimension(R.dimen.ios_warning_spacing)/2))
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = getDimension(R.dimen.ios_warning_internal_padding))
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.ios_platform_warning),
+                                            color = Color(context.getColor(R.color.ios_warning_text)),
+                                            fontSize = getDimensionText(R.dimen.ios_warning_text_size),
+                                            fontWeight = FontWeight.W400,
+                                            textAlign = TextAlign.Left,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                }
+
+                            }
+                            Spacer(modifier = Modifier.height(getDimension(R.dimen.ios_warning_spacing)))
+                        }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth(),
@@ -182,7 +234,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                             )
                         }
                         Spacer(modifier = Modifier.height(getDimension(R.dimen.spacing_small)))
-                        (subscriptionsViewModel.selectedTab?: subscriptionsViewModel.products?.let {
+                        (subscriptionsViewModel.selectedTab?: subscriptionsViewModel.productDetails?.let {
                             TabOption.getAvailableTabs(
                                 it
                             ).first()
@@ -197,6 +249,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                             )
                         }
                         Spacer(modifier = modifier.height(getDimension(R.dimen.spacing_small)))
+                        
                         ScrollablePlans()
                         Spacer(modifier = modifier.height(getDimension(R.dimen.spacing_small)))
                     }
@@ -205,10 +258,18 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                             .fillMaxWidth()
                             .let {
                                 if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                                    it.height(if(subscriptionsViewModel.selectedPlan != -1)
-                                        getDimension(R.dimen.box_landscape_selected_height) else getDimension(R.dimen.box_landscape_not_selected_height))
+                                    it.height(
+                                        if (subscriptionsViewModel.selectedPlan != -1)
+                                            getDimension(R.dimen.box_landscape_selected_height) else getDimension(
+                                            R.dimen.box_landscape_not_selected_height
+                                        )
+                                    )
                                 } else {
-                                    it.height(if(subscriptionsViewModel.selectedPlan != -1)getDimension(R.dimen.box_non_landscape_selected_height) else getDimension(R.dimen.box_non_landscape_not_selected_height))
+                                    it.height(
+                                        if (subscriptionsViewModel.selectedPlan != -1) getDimension(
+                                            R.dimen.box_non_landscape_selected_height
+                                        ) else getDimension(R.dimen.box_non_landscape_not_selected_height)
+                                    )
                                 }
                             }
                             .drawBehind {
@@ -217,7 +278,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                 val offsetY = -shadowRadius / 2
                                 drawRect(
                                     brush = Brush.verticalGradient(
-                                        colors = listOf( Color.Transparent, shadowColor),
+                                        colors = listOf(Color.Transparent, shadowColor),
                                         startY = offsetY,
                                         endY = offsetY + shadowRadius,
                                         tileMode = TileMode.Clamp
@@ -226,7 +287,12 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                     size = Size(size.width, shadowRadius)
                                 )
                             }
-                            .clip(RoundedCornerShape(topEnd = getDimension(R.dimen.box_top_corner), topStart =  getDimension(R.dimen.box_top_corner)))
+                            .clip(
+                                RoundedCornerShape(
+                                    topEnd = getDimension(R.dimen.box_top_corner),
+                                    topStart = getDimension(R.dimen.box_top_corner)
+                                )
+                            )
                             .background(color = MaterialTheme.colorScheme.tertiary)
                             .align(Alignment.BottomCenter)
                     )
@@ -243,12 +309,15 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
                                         if(subscriptionsViewModel.selectedPlan != -1){
-                                            val selectedProduct = filteredProducts?.get(subscriptionsViewModel.selectedPlan)
-
+                                            val selectedProduct = filteredProductDetails?.get(subscriptionsViewModel.selectedPlan)
+                                            val offerDetails = selectedProduct?.subscriptionOfferDetails?.firstOrNull()
+                                            val pricingPhases = offerDetails?.pricingPhases?.pricingPhaseList
+                                            
+                                            // Display auto-renewal text
                                             Text(
                                                 text = stringResource(
                                                     R.string.plan_auto_renews,
-                                                    selectedProduct?.displayPrice ?: ""
+                                                    selectedProduct?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice ?: ""
                                                 ),
                                                 style = MaterialTheme.typography.bodyMedium.copy(
                                                     fontWeight = FontWeight.W400,
@@ -267,26 +336,23 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                                 .height(getDimension(R.dimen.continue_btn_height))
                                                 .clip(RoundedCornerShape(getDimension(R.dimen.continue_btn_shape))),
                                             colors = ButtonDefaults.buttonColors(
-                                                containerColor = MaterialTheme.colorScheme.primary, // Normal state color
-                                                contentColor = Color.White, // Normal text/icon color
-                                                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(
-                                                    alpha = 0.4f
-                                                ),
+                                                containerColor = MaterialTheme.colorScheme.primary,
+                                                contentColor = Color.White,
+                                                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
                                                 disabledContentColor = Color.White.copy(alpha = 0.4f)
                                             ),
                                             onClick = {
-                                                filteredProducts?.get(subscriptionsViewModel.selectedPlan)
-                                                    ?.let {
-                                                        subscriptionsViewModel.purchaseSubscription(
-                                                            activity = activity,
-                                                            product = it,
-                                                            onError = { error ->
-                                                                LogUtils.d(TAG, "Error: $error")
-                                                            }
-                                                        )
-                                                    }
+                                                filteredProductDetails?.get(subscriptionsViewModel.selectedPlan)?.let {
+                                                    subscriptionsViewModel.purchaseSubscription(
+                                                        activity = activity,
+                                                        productDetails = it,
+                                                        onError = { error ->
+                                                            LogUtils.d(TAG, "Error: $error")
+                                                        }
+                                                    )
+                                                }
                                             },
-                                            enabled = subscriptionsViewModel.selectedPlan != -1 && !subscriptionsViewModel.isCurrentProductBeingUpdated
+                                            enabled = subscriptionsViewModel.selectedPlan != -1 && !subscriptionsViewModel.isCurrentProductBeingUpdated && !subscriptionsViewModel.isIosPlatform
                                         ) {
                                             Row {
                                                 Text(
@@ -356,7 +422,6 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 //                                    fontSize = 12.sp,
 //                                    textAlign = TextAlign.Center
 //                                )
-//                            )
                                         Spacer(
                                             modifier = Modifier.height(getDimension(R.dimen.box_landscape_spacer_height))
                                         )
@@ -380,19 +445,18 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                                     disabledContentColor = Color.White.copy(alpha = 0.4f)
                                                 ),
                                                 onClick = {
-                                                    filteredProducts?.get(subscriptionsViewModel.selectedPlan)
-                                                        ?.let {
-                                                            subscriptionsViewModel.purchaseSubscription(
-                                                                activity = activity,
-                                                                product = it,
-                                                                onError = { error ->
-                                                                    LogUtils.d(TAG, "Error: $error")
-                                                                }
-                                                            )
-                                                        }
+                                                    filteredProductDetails?.get(subscriptionsViewModel.selectedPlan)?.let {
+                                                        subscriptionsViewModel.purchaseSubscription(
+                                                            activity = activity,
+                                                            productDetails = it,
+                                                            onError = { error ->
+                                                                LogUtils.d(TAG, "Error: $error")
+                                                            }
+                                                        )
+                                                    }
 
                                                 },
-                                                enabled = subscriptionsViewModel.selectedPlan != -1 && !subscriptionsViewModel.isCurrentProductBeingUpdated
+                                                enabled = subscriptionsViewModel.selectedPlan != -1 && !subscriptionsViewModel.isCurrentProductBeingUpdated && !subscriptionsViewModel.isIosPlatform
                                             ) {
                                                 Row {
                                                     Text(
@@ -479,17 +543,10 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
 @Composable
 fun ScrollablePlans() {
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
-    val filteredProducts = subscriptionsViewModel.filteredProducts
-    val currentProductId = subscriptionsViewModel.currentProductId
-    val currentProduct = subscriptionsViewModel.products?.find { it.productId == currentProductId }
+    val filteredProductDetails = subscriptionsViewModel.filteredProductDetails
+    val currentProductDetails = subscriptionsViewModel.currentProductDetails
 
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//
-//            .padding(bottom = 16.dp)
-//    ) {
-    if (filteredProducts.isNullOrEmpty()) {
+    if (filteredProductDetails.isNullOrEmpty()) {
         Text(
             text = stringResource(R.string.no_products_available),
             style = LocalTextStyle.current.copy(
@@ -503,34 +560,70 @@ fun ScrollablePlans() {
     }
 
     //Display current plan
-    if(currentProduct !=  null &&filteredProducts.contains(currentProduct)){
+    if(currentProductDetails != null ) {
+        val currentProductTab = when {
+            currentProductDetails.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("W") == true -> TabOption.WEEKlY
+            currentProductDetails.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("M") == true -> TabOption.MONTHLY
+            else -> TabOption.YEARLY
+        }
         Spacer(modifier = Modifier.height(16.dp))
-        ActualCurrentPlanCard(product = currentProduct)
-        Spacer(modifier = Modifier.height(16.dp))
-    }else{
+        if(subscriptionsViewModel.selectedTab == currentProductTab){
+            ActualCurrentPlanCard(productDetails = currentProductDetails)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    } else {
         Spacer(modifier = Modifier.height(16.dp))
     }
+    
     // Display other plans
+    filteredProductDetails.forEachIndexed { productIndex, productDetails ->
+        if (productDetails.productId != subscriptionsViewModel.currentProductId) {
+            // Get subscription offers for this product
+            val offers = productDetails.subscriptionOfferDetails
+            if (offers != null) {
+                // Determine which offer to show based on the number of offers
+                val offerToShow = if (offers.size > 1) {
+                    offers[offers.size - 2]  // Get second to last offer if multiple offers exist
+                } else {
+                    offers.last()  // Get last offer if only one exists
+                }
 
-    filteredProducts.forEachIndexed { index, product ->
-        if (product.productId != currentProductId) {
-            OtherPlanCard(product = product, productIndex = index)
-            Spacer(modifier = Modifier.height(16.dp))
+                // Get the final recurring phase of the selected offer
+                val finalPhase = offerToShow.pricingPhases.pricingPhaseList.last()
+                val selectedTab = subscriptionsViewModel.selectedTab
+
+                // Check if this offer should be shown in current tab based on final billing period
+                val shouldShowInCurrentTab = when (selectedTab) {
+                    TabOption.WEEKlY -> finalPhase.billingPeriod.endsWith("W")
+                    TabOption.MONTHLY -> finalPhase.billingPeriod.endsWith("M")
+                    TabOption.YEARLY -> finalPhase.billingPeriod.endsWith("Y")
+                    else -> false
+                }
+
+                if (shouldShowInCurrentTab) {
+                    // Calculate unique index for this offer
+                    val uniqueOfferIndex = productIndex * 100  // Since we're only showing one offer per product now
+                    
+                    OtherPlanCard(
+                        productDetails = productDetails,
+                        offerDetails = offerToShow,
+                        productIndex = uniqueOfferIndex
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
         }
     }
 
     Spacer(modifier = Modifier.height(135.dp))
-//    }
 }
 
 /**
  * Displays the current active subscription plan card.
- * @param product The currently active subscription product
+ * @param productDetails The currently active subscription product
  */
 @Composable
-fun ActualCurrentPlanCard(
-    product: ProductInfo
-) {
+fun ActualCurrentPlanCard(productDetails: ProductDetails) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -588,8 +681,11 @@ fun ActualCurrentPlanCard(
                         .fillMaxHeight(),
                     verticalArrangement = Arrangement.Center
                 ) {
+                    val offerDetails = productDetails.subscriptionOfferDetails?.firstOrNull()
+                    val price = offerDetails?.pricingPhases?.pricingPhaseList?.lastOrNull()?.formattedPrice ?: ""
+                    
                     Text(
-                        text = product.displayPrice,
+                        text = price,
                         fontSize = getDimensionText(R.dimen.text_size_plan_price),
                         fontWeight = FontWeight.W700,
                         color = MaterialTheme.colorScheme.onBackground,
@@ -597,7 +693,7 @@ fun ActualCurrentPlanCard(
                     )
 
                     Text(
-                        text = product.description,
+                        text = productDetails.description,
                         fontSize = getDimensionText(R.dimen.text_size_plan_description),
                         fontWeight = FontWeight.W400,
                         color = MaterialTheme.colorScheme.onSecondary,
@@ -610,20 +706,24 @@ fun ActualCurrentPlanCard(
                     modifier = Modifier
                         .size(getDimension(R.dimen.icon_size)),
                     alignment = Alignment.Center
-
                 )
             }
         }
-
     }
 }
+
 /**
  * Displays available subscription plan cards for selection.
- * @param product The subscription product to display
+ * @param productDetails The subscription product to display
+ * @param offerDetails The specific offer details to display
  * @param productIndex Index for tracking selected plan
  */
 @Composable
-fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
+fun OtherPlanCard(
+    productDetails: ProductDetails,
+    offerDetails: ProductDetails.SubscriptionOfferDetails,
+    productIndex: Int
+) {
     val TAG  = "OtherPlanCard"
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
 
@@ -640,10 +740,8 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
                     LogUtils.d(TAG, "Current Plan: ${subscriptionsViewModel.selectedPlan}")
                     Modifier
                         .shadow(
-                            elevation = 1.dp,  // Reduced elevation for softer shadow
+                            elevation = 1.dp,
                             shape = RoundedCornerShape(getDimension(R.dimen.card_corner_radius)),
-//                            spotColor = Color.Black.copy(alpha = 0.1f),  // More transparent shadow
-//                            ambientColor = Color.Black.copy(alpha = 0.1f)  // More transparent ambient shadow
                         )
                         .background(
                             color = MaterialTheme.colorScheme.background,
@@ -684,8 +782,11 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
                     .fillMaxHeight(),
                 verticalArrangement = Arrangement.Center
             ) {
+                val pricingPhases = offerDetails.pricingPhases.pricingPhaseList
+                val finalPhase = pricingPhases.last()  // Always show the final price
+                
                 Text(
-                    text = product.displayPrice,
+                    text = finalPhase.formattedPrice,
                     fontSize = getDimensionText(R.dimen.text_size_plan_price),
                     fontWeight = FontWeight.W700,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -693,12 +794,52 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
                 )
 
                 Text(
-                    text = product.description,
+                    text = productDetails.description,
                     fontSize = getDimensionText(R.dimen.text_size_plan_description),
                     fontWeight = FontWeight.W400,
                     color = MaterialTheme.colorScheme.onSecondary,
                     lineHeight = getDimensionText(R.dimen.text_line_height)
                 )
+
+                // Show special offer text if there are multiple pricing phases
+                if (pricingPhases.size > 1) {
+                    val firstPhase = pricingPhases.first()
+                    val offerText = when {
+                        firstPhase.formattedPrice == "₹0.00" || firstPhase.formattedPrice == "$0.00" -> {
+                            val period = firstPhase.billingPeriod.replace("P", "")
+                            val (count, type) = period.partition { it.isDigit() }
+                            val periodText = when (type) {
+                                "D" -> if (count.toInt() > 1) "$count Days" else "$count Day"
+                                "W" -> if (count.toInt() > 1) "$count Weeks" else "$count Week"
+                                "M" -> if (count.toInt() > 1) "$count Months" else "$count Month"
+                                "Y" -> if (count.toInt() > 1) "$count Years" else "$count Year"
+                                else -> period
+                            }
+                            stringResource(R.string.free_trial_offer, periodText)
+                        }
+                        else -> {
+                            val period = firstPhase.billingPeriod.replace("P", "")
+                            val (count, type) = period.partition { it.isDigit() }
+                            val periodText = when (type) {
+                                "D" -> if (count.toInt() > 1) "$count Days" else "$count Day"
+                                "W" -> if (count.toInt() > 1) "$count Weeks" else "$count Week"
+                                "M" -> if (count.toInt() > 1) "$count Months" else "$count Month"
+                                "Y" -> if (count.toInt() > 1) "$count Years" else "$count Year"
+                                else -> period
+                            }
+                            stringResource(R.string.introductory_price_info, firstPhase.formattedPrice, periodText)
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = offerText,
+                        fontSize = getDimensionText(R.dimen.text_size_plan_intro_price),
+                        fontWeight = FontWeight.W400,
+                        color = MaterialTheme.colorScheme.primary,
+                        lineHeight = getDimensionText(R.dimen.text_line_height)
+                    )
+                }
             }
 
             // Checkmark Icon
@@ -710,7 +851,6 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
                         .size(getDimension(R.dimen.icon_size)),
                     alignment = Alignment.Center,
                     colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
-
                 )
             }
             else{
@@ -726,29 +866,36 @@ fun OtherPlanCard( product: ProductInfo, productIndex: Int) {
 }
 
 enum class TabOption {
-    MONTHLY,
     WEEKlY,
+    MONTHLY,
     YEARLY;
 
     companion object {
-        fun getAvailableTabs(products: List<ProductInfo>): List<TabOption> {
-            val tabsInOrder = mutableListOf<TabOption>()
-            val seenPeriods = mutableSetOf<Char>()
+        fun getAvailableTabs(productDetails: List<ProductDetails>): List<TabOption> {
+            val orderedTabs = mutableListOf<TabOption>()
 
-            // Iterate through products in order
-            for (product in products) {
-                val periodCode = product.recurringPeriodCode.last()
-                if (!seenPeriods.contains(periodCode)) {
-                    when (periodCode) {
-                        'M' -> tabsInOrder.add(MONTHLY)
-                        'Y' -> tabsInOrder.add(YEARLY)
-                        'W' -> tabsInOrder.add(WEEKlY)
-                    }
-                    seenPeriods.add(periodCode)
-                    }
-                }
+            // Check for weekly plans first
+            if (productDetails.any { details ->
+                    details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("W") == true
+                }) {
+                orderedTabs.add(WEEKlY)
+            }
 
-            return tabsInOrder
+            // Then check for monthly plans
+            if (productDetails.any { details ->
+                    details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("M") == true
+                }) {
+                orderedTabs.add(MONTHLY)
+            }
+
+            // Finally check for yearly plans
+            if (productDetails.any { details ->
+                    details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("Y") == true
+                }) {
+                orderedTabs.add(YEARLY)
+            }
+
+            return orderedTabs
         }
     }
 }
@@ -761,7 +908,7 @@ fun TabSelector(
 ) {
     val configuration = LocalConfiguration.current
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
-    val availableTabs = subscriptionsViewModel.products?.let { TabOption.getAvailableTabs(it) } ?: emptyList()
+    val availableTabs = subscriptionsViewModel.productDetails?.let { TabOption.getAvailableTabs(it) } ?: emptyList()
 
     if (availableTabs.isNotEmpty()) {
         Surface(
@@ -860,7 +1007,7 @@ fun MoreBottomSheet(
                     val offsetY = -shadowRadius / 2
                     drawRect(
                         brush = Brush.verticalGradient(
-                            colors = listOf( Color.Transparent, shadowColor),
+                            colors = listOf(Color.Transparent, shadowColor),
                             startY = offsetY,
                             endY = offsetY + shadowRadius,
                             tileMode = TileMode.Clamp
@@ -869,10 +1016,12 @@ fun MoreBottomSheet(
                         size = Size(size.width, shadowRadius)
                     )
                 }
-                .clip(RoundedCornerShape(
-                    topStart = getDimension(R.dimen.more_bottom_sheet_corner_radius),
-                    topEnd = getDimension(R.dimen.more_bottom_sheet_corner_radius)
-                ))
+                .clip(
+                    RoundedCornerShape(
+                        topStart = getDimension(R.dimen.more_bottom_sheet_corner_radius),
+                        topEnd = getDimension(R.dimen.more_bottom_sheet_corner_radius)
+                    )
+                )
                 .background(color = MaterialTheme.colorScheme.tertiary)
                 .clickable(enabled = false) {}
         ) {

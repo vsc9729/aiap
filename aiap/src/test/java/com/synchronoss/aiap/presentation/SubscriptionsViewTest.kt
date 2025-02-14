@@ -2,8 +2,8 @@ package com.synchronoss.aiap.presentation
 
 import android.app.Application
 import android.util.Log
-import com.synchronoss.aiap.core.di.PurchaseUpdateHandler
-import com.synchronoss.aiap.core.di.SubscriptionCancelledHandler
+import com.synchronoss.aiap.core.domain.handlers.PurchaseUpdateHandler
+import com.synchronoss.aiap.core.domain.handlers.SubscriptionCancelledHandler
 import com.synchronoss.aiap.core.domain.models.ProductInfo
 import com.synchronoss.aiap.core.domain.usecases.activity.LibraryActivityManagerUseCases
 import com.synchronoss.aiap.core.domain.usecases.billing.BillingManagerUseCases

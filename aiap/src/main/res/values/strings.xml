@@ -64,4 +64,12 @@
     <string name="bottom_sheet_coupon_icon">Coupon Icon</string>
     <string name="bottom_sheet_restore_icon">Restore Icon</string>
     <string name="bottom_sheet_subscriptions_icon">Subscriptions Icon</string>
+
+    <!-- New string for iOS platform warning -->
+    <string name="ios_platform_warning">You are currently subscribed to a plan from an iOS device</string>
+
+    <!-- New string for free trial offer -->
+    <string name="free_trial_offer">Start with a %1$s free trial</string>
+    <string name="introductory_offer">Special offer: %1$s for first %2$s</string>
+    <string name="introductory_price_info">Special intro price: %1$s for first %2$s</string>
 </resources> 

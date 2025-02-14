@@ -2,31 +2,23 @@ package com.synchronoss.aiap.domain.repository.billing
 
 import android.content.Context
 import androidx.activity.ComponentActivity
-import com.android.billingclient.api.BillingClient
-import com.android.billingclient.api.BillingClientStateListener
-import com.android.billingclient.api.BillingResult
-import com.android.billingclient.api.Purchase
-import com.android.billingclient.api.PurchasesResponseListener
-import com.android.billingclient.api.QueryPurchasesParams
+import com.android.billingclient.api.*
 import com.synchronoss.aiap.core.data.remote.common.ApiResponse
 import com.synchronoss.aiap.core.data.remote.product.HandlePurchaseResponse
 import com.synchronoss.aiap.core.data.remote.product.ProductApi
 import com.synchronoss.aiap.core.data.repository.billing.BillingManagerImpl
-import com.synchronoss.aiap.core.di.PurchaseUpdateHandler
+import com.synchronoss.aiap.core.domain.handlers.PurchaseUpdateHandler
 import com.synchronoss.aiap.core.domain.models.ProductInfo
 import com.synchronoss.aiap.core.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.core.domain.usecases.billing.CheckExistingSubscription
 import com.synchronoss.aiap.core.domain.usecases.billing.PurchaseSubscription
 import com.synchronoss.aiap.core.domain.usecases.billing.StartConnection
-
-
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import retrofit2.Response
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class BillingManagerTest {
@@ -131,7 +123,7 @@ class BillingManagerTest {
         // When
         billingManager.purchaseSubscription(
             activity = mockActivity,
-            productInfo = mockProductInfo,
+            productDetails = mockProductInfo,
             onError = { errorMessage = it },
             userId = "test-user"
         )

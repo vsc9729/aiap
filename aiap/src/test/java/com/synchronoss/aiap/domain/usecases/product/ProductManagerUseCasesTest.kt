@@ -1,6 +1,6 @@
-import com.synchronoss.aiap.core.domain.models.ProductInfo
-import com.synchronoss.aiap.core.domain.repository.product.ProductManager
-import com.synchronoss.aiap.core.domain.usecases.product.GetProductsApi
+import com.synchronoss.aiap.domain.models.ProductInfo
+import com.synchronoss.aiap.domain.repository.product.ProductManager
+import com.synchronoss.aiap.domain.usecases.product.GetProductsApi
 import com.synchronoss.aiap.utils.Resource
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -48,17 +48,17 @@ class ProductManagerUseCasesTest {
         )
 
         coEvery {
-            productManager.getProducts(any(), any())
+            productManager.getProducts(any())
         } returns Resource.Success(mockProducts)
 
         // When
-        val result = getProductsApi(123L, apiKey = "")
+        val result = getProductsApi(123L)
 
         // Then
         assertTrue(result is Resource.Success)
         assertEquals(mockProducts, (result as Resource.Success).data)
 
         // Verify
-        coVerify { productManager.getProducts(123L, apiKey =  "") }
+        coVerify { productManager.getProducts(123L) }
     }
 }

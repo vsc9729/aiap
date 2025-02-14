@@ -35,6 +35,7 @@ import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import dagger.hilt.android.qualifiers.ApplicationContext
 import com.synchronoss.aiap.core.domain.usecases.analytics.LocalyticsManagerUseCases
 import com.synchronoss.aiap.utils.LogUtils
+import com.android.billingclient.api.ProductDetails
 
 /**
  * ViewModel responsible for managing subscription-related UI state and business logic.
@@ -62,10 +63,13 @@ class SubscriptionsViewModel @Inject constructor(
     // Product Management
     lateinit var apiKey: String
     lateinit var partnerUserId: String
+    lateinit var userUUID: String
     var products: List<ProductInfo>? by mutableStateOf(null)
-    var filteredProducts: List<ProductInfo>? by mutableStateOf(null)
+    var productDetails: List<ProductDetails>? by mutableStateOf(null)
+    var filteredProductDetails: List<ProductDetails>? by mutableStateOf(null)
     var currentProductId: String? by mutableStateOf(null)
     var currentProduct: ProductInfo? by mutableStateOf(null)
+    var currentProductDetails: ProductDetails? by mutableStateOf(null)
     var selectedTab: TabOption? by mutableStateOf(null)
     var isConnectionStarted: Boolean by mutableStateOf(false)
     var selectedPlan: Int by mutableIntStateOf(-1)
@@ -82,6 +86,7 @@ class SubscriptionsViewModel @Inject constructor(
     // State Management
     var isInitialised: Boolean by mutableStateOf(false)
     var isCurrentProductBeingUpdated: Boolean by mutableStateOf(false)
+    var isIosPlatform: Boolean by mutableStateOf(false)
     private var lastKnownProductTimestamp: Long? = null
     private var lastKnownThemeTimestamp: Long? = null
 
@@ -153,6 +158,8 @@ class SubscriptionsViewModel @Inject constructor(
                     lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
                     currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
                     currentProduct = activeSubResult.data?.subscriptionResponseInfo?.product
+                    userUUID = activeSubResult.data?.userUUID!! //Always returns if call succeeds
+                    isIosPlatform = activeSubResult.data.subscriptionResponseInfo?.platform?.equals("IOS", ignoreCase = true) ?: false
                     val theme =  async { themeLoader.loadTheme() }
                     theme.await()
                     lightThemeColors = themeLoader.getThemeColors().themeColors
@@ -194,7 +201,6 @@ class SubscriptionsViewModel @Inject constructor(
                     )
                     initProducts()
                 }else{
-
                     noInternetConnectionAndNoCache.value = true
                     showToast(
                         headingResId = R.string.no_connection_title,
@@ -216,8 +222,8 @@ class SubscriptionsViewModel @Inject constructor(
 //                        message = context.getString(R.string.subscription_cancelled_message)
 //                    )
                     isLoading.value = true
-                    products = null
-                    filteredProducts = null
+//                    products = null
+//                    filteredProductDetails = null
 
                     val init =  async { initProducts(subscriptionCancelled = true) }
                     init.await()
@@ -250,6 +256,7 @@ class SubscriptionsViewModel @Inject constructor(
                 viewModelScope.launch {
                     val init = async { initProducts(purchaseUpdate = true) }
                     init.await()
+                    isCurrentProductBeingUpdated = false
                     showToast(
                         heading = context.getString(R.string.purchase_failed_title),
                         message = context.getString(R.string.purchase_failed_message)
@@ -270,12 +277,13 @@ class SubscriptionsViewModel @Inject constructor(
                         isConnectionStarted = true
                         viewModelScope.launch {
                             val checkSubscriptionDeferred = async {
-                                billingManagerUseCases.checkExistingSubscription(
+                                currentProductDetails = billingManagerUseCases.checkExistingSubscription(
                                     onError = {
                                         isLoading.value = false
                                         LogUtils.d(TAG, context.getString(R.string.billing_check_error, it))
                                     }
                                 )
+                                currentProductId = currentProductDetails?.productId
                             }
                             checkSubscriptionDeferred.await()
                         }
@@ -291,75 +299,110 @@ class SubscriptionsViewModel @Inject constructor(
 
      private suspend fun initProducts(purchaseUpdate: Boolean = false, subscriptionCancelled: Boolean = false) {
          if(purchaseUpdate || subscriptionCancelled){
-//             products = null
-//             filteredProducts = null
-//             selectedPlan = -1
              viewModelScope.launch {
                  val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(partnerUserId, apiKey) }
                  val activeSubResult = activeSubResultDeferred.await()
                  val checkSubscriptionDeferred = async {
-                     billingManagerUseCases.checkExistingSubscription(
+                     currentProductDetails = billingManagerUseCases.checkExistingSubscription(
                          onError = {
                              isLoading.value = false
                              LogUtils.d(TAG, context.getString(R.string.products_fetch_failed))
                          }
                      )
+                     currentProductId = currentProductDetails?.productId
                  }
 
                  // Wait for the check to complete
                  checkSubscriptionDeferred.await()
-                 currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
                  currentProduct = activeSubResult.data?.subscriptionResponseInfo?.product
                  fetchAndLoadProducts()
              }
-         }else{
+         } else {
              fetchAndLoadProducts()
          }
+     }
 
-
-
-
-    }
-
-    fun  onTabSelected(tab: TabOption?) {
+    fun onTabSelected(tab: TabOption?) {
         selectedPlan = -1
         selectedTab = tab
-        if (selectedTab == TabOption.MONTHLY){
-            filteredProducts = products?.filter { product ->
-                product.recurringPeriodCode.endsWith("M")
+        when (selectedTab) {
+            TabOption.MONTHLY -> {
+                // Filter productDetails where billing period ends with "M"
+                filteredProductDetails = productDetails?.filter { details ->
+                    details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("M") == true
+                }
             }
-        }else if(selectedTab == TabOption.YEARLY){
-            filteredProducts = products?.filter { product ->
-                product.recurringPeriodCode.endsWith("Y")
+            TabOption.YEARLY -> {
+                // Filter productDetails where billing period ends with "Y"
+                filteredProductDetails = productDetails?.filter { details ->
+                    details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("Y") == true
+                }
             }
-        }else {
-            filteredProducts = products?.filter { product ->
-                product.recurringPeriodCode.endsWith("W")
+            else -> {
+                // Filter productDetails where billing period ends with "W"
+                filteredProductDetails = productDetails?.filter { details ->
+                    details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("W") == true
+                }
             }
         }
     }
 
     private suspend fun fetchAndLoadProducts(purchaseUpdate: Boolean = false) {
-
-         when (val result = productManagerUseCases.getProductsApi(lastKnownProductTimestamp, apiKey)) {
+        when (val result = productManagerUseCases.getProductsApi(lastKnownProductTimestamp, apiKey)) {
             is Resource.Success -> {
-                if(result.data!=null){
-                    products = result.data
-                    if(currentProduct != null && (products?.contains(currentProduct) != true)){
-                        products = products?.plus(currentProduct!!)
-                    }
-                    val recurringPeriodCode: String = products?.findLast { it.productId == currentProductId }?.recurringPeriodCode ?: products?.first()!!.recurringPeriodCode
-                    selectedTab =
-                        when (recurringPeriodCode) {
-                            "P1M" -> TabOption.MONTHLY
-                            "P1Y" -> TabOption.YEARLY
-                            else -> TabOption.WEEKlY
+                products = result.data
+                // Get product IDs from ProductInfo objects
+                val productIds = products?.map { it.productId } ?: emptyList()
+
+                // Fetch product details from Google Play Billing Library
+                productDetails = billingManagerUseCases.getProductDetails(productIds, onError = { error ->
+                    showToast(
+                        heading = context.getString(R.string.error_title),
+                        message = error
+                    )
+                    LogUtils.d(TAG, "Failed to fetch product details: $error")
+                })
+
+//                val currentProduct: ProductInfo? = products?.find { it.productId == currentProductId }
+                if(selectedTab == null){
+                    if(currentProductDetails != null){
+                        selectedTab = when {
+                            currentProductDetails?.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("W") == true -> TabOption.WEEKlY
+                            currentProductDetails?.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("M") == true -> TabOption.MONTHLY
+                            else -> TabOption.YEARLY
                         }
 
-                    filteredProducts = products?.filter {
-                        it.recurringPeriodCode.endsWith(recurringPeriodCode.last())
+                        // Filter based on the current product's billing period
+                        val currentBillingPeriod = currentProductDetails?.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod
+                        if (currentBillingPeriod != null) {
+                            filteredProductDetails = productDetails?.filter { details ->
+                                details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.last() == currentBillingPeriod.last()
+                            }
+                        }
+                    } else {
+                        // If no current product, check available periods in productDetails
+                        if (productDetails?.any { details -> 
+                            details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("W") == true 
+                        } == true) {
+                            selectedTab = TabOption.WEEKlY
+                            filteredProductDetails = productDetails?.filter { details ->
+                                details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("W") == true
+                            }
+                        } else if (productDetails?.any { details ->
+                            details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("M") == true
+                        } == true) {
+                            selectedTab = TabOption.MONTHLY
+                            filteredProductDetails = productDetails?.filter { details ->
+                                details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("M") == true
+                            }
+                        } else {
+                            selectedTab = TabOption.YEARLY
+                            filteredProductDetails = productDetails?.filter { details ->
+                                details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("Y") == true
+                            }
+                        }
                     }
-
+                    selectedTab?.let { onTabSelected(it) }
                 }
             }
             is Resource.Error -> {
@@ -369,13 +412,13 @@ class SubscriptionsViewModel @Inject constructor(
                 )
                 LogUtils.d(TAG, context.getString(R.string.products_fetch_failed))
             }
-         }
+        }
         isLoading.value = false
     }
 
     fun purchaseSubscription(
         activity: ComponentActivity,
-        product: ProductInfo,
+        productDetails: ProductDetails,
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {
@@ -384,15 +427,15 @@ class SubscriptionsViewModel @Inject constructor(
             } else {
                 billingManagerUseCases.purchaseSubscription(
                     activity, 
-                    product, 
+                    productDetails, 
                     { error -> 
                         showToast(
                             heading = context.getString(R.string.purchase_failed),
                             message = error
                         )
                         onError(error)
-                    }, 
-                    userId = partnerUserId,
+                    },
+                    userId = userUUID,
                     apiKey = apiKey
                 )
             }
@@ -409,3 +452,4 @@ class SubscriptionsViewModel @Inject constructor(
         private const val TAG = "SubscriptionsSheetVM"
     }
 }
+
