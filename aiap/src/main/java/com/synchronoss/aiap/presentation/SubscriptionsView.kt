@@ -1,5 +1,6 @@
 package com.synchronoss.aiap.presentation
 
+import android.app.Activity
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Paint.Style
@@ -38,6 +39,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
@@ -106,7 +108,7 @@ import com.android.billingclient.api.ProductDetails
  * Provides a complete subscription interface with plan selection, purchase flow, and coupon handling.
  */
 @Composable
-fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier) {
+fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier, launchedViaIntent: Boolean) {
     val TAG: String = "SubscriptionsView"
     val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
     var showDialog by remember { mutableStateOf(false) }
@@ -122,11 +124,11 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
         Row(
             modifier = Modifier
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = if(launchedViaIntent) Arrangement.Start else Arrangement.End
         ) {
-            IconButton(onClick = { subscriptionsViewModel.dialogState.value = false }) {
+            IconButton(onClick = { if(launchedViaIntent) (context as? Activity)?.finish()  else subscriptionsViewModel.dialogState.value = false }) {
                 Icon(
-                    imageVector = Icons.Default.Close,
+                    imageVector = if(launchedViaIntent) Icons.Default.ArrowBack else Icons.Default.Close,
                     contentDescription = "Close",
                     tint = if (isSystemInDarkTheme()) Color.White else Color(
                         0xFF6B7280

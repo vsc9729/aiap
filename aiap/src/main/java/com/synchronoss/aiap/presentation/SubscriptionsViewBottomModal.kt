@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -78,35 +79,11 @@ fun SubscriptionsViewBottomSheet(
     val screenHeight = configuration.screenHeightDp.dp
     val sheetHeight = screenHeight * 0.98f
 
-//    var isVisible by remember { mutableStateOf(false) }
-
-    LaunchedEffect(visible) {
-        subscriptionsViewModel.dialogState.value = visible
-    }
-
-    val animatedAlpha by animateFloatAsState(
-        targetValue = if (subscriptionsViewModel.dialogState.value) 0.4f else 0f,
-        animationSpec = tween(300),
-        label = "overlay_animation"
-    )
-
-    val animatedOffset by animateFloatAsState(
-        targetValue = if (subscriptionsViewModel.dialogState.value) 0f else 1f,
-        animationSpec = spring(
-            dampingRatio = 1f,  // Critical damping - no oscillation
-            stiffness = Spring.StiffnessMediumLow,
-            visibilityThreshold = 0.001f
-        ),
-        label = "sheet_animation",
-        finishedListener = { if (!subscriptionsViewModel.dialogState.value) onDismissRequest() }
-    )
-
-    if (visible || animatedOffset < 1f) {
+    if(isLaunchedViaIntent){
         AiAPTheme {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = animatedAlpha))
                     .clickable(
                         enabled = subscriptionsViewModel.dialogState.value,
                         onClick = { subscriptionsViewModel.dialogState.value = false }
@@ -116,36 +93,109 @@ fun SubscriptionsViewBottomSheet(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .height(sheetHeight)
-                        .offset(y = animatedOffset * sheetHeight)
-                        .clip(
-                            RoundedCornerShape(
-                                topStart = getDimension(R.dimen.bottom_sheet_corner_radius),
-                                topEnd = getDimension(R.dimen.bottom_sheet_corner_radius)
-                            )
-                        )
+                        .fillMaxHeight()
+//                        .clip(
+//                            RoundedCornerShape(
+//                                topStart = getDimension(R.dimen.bottom_sheet_corner_radius),
+//                                topEnd = getDimension(R.dimen.bottom_sheet_corner_radius)
+//                            )
+//                        )
                         .background(if (isSystemInDarkTheme()) Color(0xFF0D0D0D) else Color.White)
                         .clickable(enabled = false) {}
                 ) {
-                            SubscriptionsView(activity = activity)
-                            ToastComposable(
-                                heading = subscriptionsViewModel.toastState.heading,
-                                subText = subscriptionsViewModel.toastState.message,
-                                onDismiss = { subscriptionsViewModel.hideToast() },
-                                isVisible = subscriptionsViewModel.toastState.isVisible,
-                                modifier = Modifier
-                                    .align(Alignment.BottomCenter)
-                                    .padding(
-                                        bottom = getDimension(R.dimen.bottom_sheet_toast_padding_bottom),
-                                        start = getDimension(R.dimen.bottom_sheet_toast_padding_horizontal),
-                                        end = getDimension(R.dimen.bottom_sheet_toast_padding_horizontal)
-                                    )
+                    SubscriptionsView(activity = activity, launchedViaIntent = isLaunchedViaIntent)
+                    ToastComposable(
+                        heading = subscriptionsViewModel.toastState.heading,
+                        subText = subscriptionsViewModel.toastState.message,
+                        onDismiss = { subscriptionsViewModel.hideToast() },
+                        isVisible = subscriptionsViewModel.toastState.isVisible,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(
+                                bottom = getDimension(R.dimen.bottom_sheet_toast_padding_bottom),
+                                start = getDimension(R.dimen.bottom_sheet_toast_padding_horizontal),
+                                end = getDimension(R.dimen.bottom_sheet_toast_padding_horizontal)
                             )
-                        }
+                    )
+                }
+
+
+            }
+
+        }
+    }else{
+        LaunchedEffect(visible) {
+            subscriptionsViewModel.dialogState.value = visible
+        }
+
+        val animatedAlpha by animateFloatAsState(
+            targetValue = if (subscriptionsViewModel.dialogState.value) 0.4f else 0f,
+            animationSpec = tween(300),
+            label = "overlay_animation"
+        )
+
+        val animatedOffset by animateFloatAsState(
+            targetValue = if (subscriptionsViewModel.dialogState.value) 0f else 1f,
+            animationSpec = spring(
+                dampingRatio = 1f,  // Critical damping - no oscillation
+                stiffness = Spring.StiffnessMediumLow,
+                visibilityThreshold = 0.001f
+            ),
+            label = "sheet_animation",
+            finishedListener = { if (!subscriptionsViewModel.dialogState.value) onDismissRequest() }
+        )
+
+        if (visible || animatedOffset < 1f) {
+            AiAPTheme {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = animatedAlpha))
+                        .clickable(
+                            enabled = subscriptionsViewModel.dialogState.value,
+                            onClick = { subscriptionsViewModel.dialogState.value = false }
+                        )
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .height(sheetHeight)
+                            .offset(y = animatedOffset * sheetHeight)
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = getDimension(R.dimen.bottom_sheet_corner_radius),
+                                    topEnd = getDimension(R.dimen.bottom_sheet_corner_radius)
+                                )
+                            )
+                            .background(if (isSystemInDarkTheme()) Color(0xFF0D0D0D) else Color.White)
+                            .clickable(enabled = false) {}
+                    ) {
+                        SubscriptionsView(activity = activity, launchedViaIntent = isLaunchedViaIntent)
+                        ToastComposable(
+                            heading = subscriptionsViewModel.toastState.heading,
+                            subText = subscriptionsViewModel.toastState.message,
+                            onDismiss = { subscriptionsViewModel.hideToast() },
+                            isVisible = subscriptionsViewModel.toastState.isVisible,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(
+                                    bottom = getDimension(R.dimen.bottom_sheet_toast_padding_bottom),
+                                    start = getDimension(R.dimen.bottom_sheet_toast_padding_horizontal),
+                                    end = getDimension(R.dimen.bottom_sheet_toast_padding_horizontal)
+                                )
+                        )
+                    }
 
 
                 }
 
+            }
         }
     }
+
+
+//    var isVisible by remember { mutableStateOf(false) }
+
+
 }
