@@ -171,7 +171,20 @@ class SubscriptionsViewModel @Inject constructor(
                         outlineVariant = lightThemeColors.outlineVariant,
                         tertiary = lightThemeColors.tertiary,
                         onTertiary = lightThemeColors.onTertiary
-
+                    )
+                    darkThemeColorScheme = darkColorScheme(
+                        primary = darkThemeColors.primary,
+                        secondary = darkThemeColors.secondary,
+                        background = darkThemeColors.background,
+                        onPrimary = darkThemeColors.textHeading,
+                        onSecondary = darkThemeColors.textBody,
+                        onBackground = darkThemeColors.textBodyAlt,
+                        surface = darkThemeColors.surface,
+                        onSurface = darkThemeColors.onSurface,
+                        outline = darkThemeColors.outline,
+                        outlineVariant = darkThemeColors.outlineVariant,
+                        tertiary = darkThemeColors.tertiary,
+                        onTertiary = darkThemeColors.onTertiary
                     )
                     initProducts()
                 } else {
@@ -219,6 +232,7 @@ class SubscriptionsViewModel @Inject constructor(
             }
             purchaseUpdateHandler.onPurchaseUpdated = {
                 viewModelScope.launch {
+                    selectedPlan = -1
                     val init = async { initProducts(purchaseUpdate = true) }
                     init.await()
                     isCurrentProductBeingUpdated = false

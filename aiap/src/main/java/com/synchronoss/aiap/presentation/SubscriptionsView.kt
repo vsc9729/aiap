@@ -390,10 +390,10 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                                 containerColor = Color.Transparent,
                                                 contentColor = MaterialTheme.colorScheme.primary
                                             ),
-                                            border = BorderStroke(
-                                                width = getDimension(R.dimen.card_border_width_selected),
-                                                color = Color(0xff9CA3AF)
-                                            )
+//                                            border = BorderStroke(
+//                                                width = getDimension(R.dimen.card_border_width_selected),
+//                                                color = Color(0xff9CA3AF)
+//                                            )
                                         ) {
                                             Text(
                                                 text = stringResource(R.string.more_button_text),
@@ -494,10 +494,10 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                                     containerColor = Color.Transparent,
                                                     contentColor = MaterialTheme.colorScheme.primary
                                                 ),
-                                                border = BorderStroke(
-                                                    width = getDimension(R.dimen.card_border_width_selected),
-                                                    color = Color(0xff9CA3AF)
-                                                )
+//                                                border = BorderStroke(
+//                                                    width = getDimension(R.dimen.card_border_width_selected),
+//                                                    color = Color(0xff9CA3AF)
+//                                                )
                                             ) {
                                                 Text(
                                                     text = stringResource(R.string.more_button_text),

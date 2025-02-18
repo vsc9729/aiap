@@ -58,7 +58,7 @@
     <!-- Bottom Sheet strings -->
     <string name="bottom_sheet_apply_coupon">Apply Coupon</string>
     <string name="bottom_sheet_restore_purchase">Restore Purchase</string>
-    <string name="bottom_sheet_go_to_subscriptions">Go to Subscriptions</string>
+    <string name="bottom_sheet_go_to_subscriptions">Manage Subscription</string>
     
     <!-- Bottom Sheet Image Content Descriptions -->
     <string name="bottom_sheet_coupon_icon">Coupon Icon</string>
