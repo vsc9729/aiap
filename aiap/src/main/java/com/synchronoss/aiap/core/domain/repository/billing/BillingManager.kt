@@ -3,13 +3,11 @@ package com.synchronoss.aiap.core.domain.repository.billing
 import androidx.activity.ComponentActivity
 import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.core.domain.models.ProductInfo
+import kotlinx.coroutines.CompletableDeferred
 
 
 interface BillingManager {
-    suspend fun startConnection(
-        onConnected: () -> Unit,
-        onDisconnected: () -> Unit
-    )
+    suspend fun startConnection(): CompletableDeferred<Unit>
 
     suspend fun purchaseSubscription(
         activity: ComponentActivity,

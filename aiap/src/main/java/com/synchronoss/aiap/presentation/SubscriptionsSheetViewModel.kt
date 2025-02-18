@@ -128,15 +128,6 @@ class SubscriptionsViewModel @Inject constructor(
     }
 
     fun initialize(id:String, apiKey:String,  intentLaunch: Boolean) {
-        // Track initialization event with user profile
-//        localyticsManagerUseCases.setUserProfile(id)
-//        localyticsManagerUseCases.trackSubscriptionEvent(
-//            eventName = "subscription_view_initialized",
-//            productId = "",
-//            userId = id,
-//            additionalParams = mapOf("intent_launch" to intentLaunch.toString())
-//        )
-        
         isLaunchedViaIntent = intentLaunch
         if((!isInitialised || id != partnerUserId)){
             isInitialised = true
@@ -144,16 +135,13 @@ class SubscriptionsViewModel @Inject constructor(
             partnerUserId = id
             this.apiKey = apiKey
             viewModelScope.launch {
-
                 val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(userId = partnerUserId, apiKey = apiKey) }
-                val startConnection =  async { startConnection() }
-                startConnection.await()
-                val activeSubResult =  activeSubResultDeferred.await()
+                val startConnectionDeferred = async { startConnection() }
+
+                startConnectionDeferred.await()
+                val activeSubResult = activeSubResultDeferred.await()
+                
                 if (activeSubResult is Resource.Success) {
-//                    if(!isConnectionStarted){
-//                        val billing = async { startConnection() }
-//                        billing.await()
-//                    }
                     lastKnownProductTimestamp = activeSubResult.data?.productUpdateTimeStamp
                     lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
                     currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
@@ -185,29 +173,14 @@ class SubscriptionsViewModel @Inject constructor(
                         onTertiary = lightThemeColors.onTertiary
 
                     )
-                    darkThemeColorScheme = darkColorScheme(
-                        primary = darkThemeColors.primary,
-                        secondary = darkThemeColors.secondary,
-                        background = darkThemeColors.background,
-                        onPrimary = darkThemeColors.textHeading,
-                        onSecondary = darkThemeColors.textBody,
-                        onBackground = darkThemeColors.textBodyAlt,
-                        surface = darkThemeColors.surface,
-                        onSurface = darkThemeColors.onSurface,
-                        outline = darkThemeColors.outline,
-                        outlineVariant = darkThemeColors.outlineVariant,
-                        tertiary = darkThemeColors.tertiary,
-                        onTertiary = darkThemeColors.onTertiary
-                    )
                     initProducts()
-                }else{
+                } else {
                     noInternetConnectionAndNoCache.value = true
                     showToast(
                         headingResId = R.string.no_connection_title,
                         messageResId = R.string.no_connection_message
                     )
                 }
-
             }
             // Only runs after subscription check is complete
 
@@ -268,31 +241,23 @@ class SubscriptionsViewModel @Inject constructor(
 
     }
 
-     fun startConnection() {
-        if(!isConnectionStarted){
-            viewModelScope.launch {
-                billingManagerUseCases.startConnection(
-                    {
-                        LogUtils.d(TAG, context.getString(R.string.billing_connected))
-                        isConnectionStarted = true
-                        viewModelScope.launch {
-                            val checkSubscriptionDeferred = async {
-                                currentProductDetails = billingManagerUseCases.checkExistingSubscription(
-                                    onError = {
-                                        isLoading.value = false
-                                        LogUtils.d(TAG, context.getString(R.string.billing_check_error, it))
-                                    }
-                                )
-                                currentProductId = currentProductDetails?.productId
-                            }
-                            checkSubscriptionDeferred.await()
-                        }
-                    },
-                    {
+    suspend fun startConnection() {
+        if(!isConnectionStarted) {
+            try {
+                billingManagerUseCases.startConnection().await()
+                LogUtils.d(TAG, context.getString(R.string.billing_connected))
+                isConnectionStarted = true
+                
+                currentProductDetails = billingManagerUseCases.checkExistingSubscription(
+                    onError = {
                         isLoading.value = false
-                        LogUtils.d(TAG, context.getString(R.string.billing_connection_failed))
+                        LogUtils.d(TAG, context.getString(R.string.billing_check_error, it))
                     }
                 )
+                currentProductId = currentProductDetails?.productId
+            } catch (e: Exception) {
+                isLoading.value = false
+                LogUtils.d(TAG, context.getString(R.string.billing_connection_failed))
             }
         }
     }

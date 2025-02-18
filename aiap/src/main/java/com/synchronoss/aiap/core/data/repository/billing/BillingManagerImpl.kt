@@ -41,19 +41,25 @@ class BillingManagerImpl(
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .build()
 
-    override suspend fun startConnection(onConnected: () -> Unit, onDisconnected: () -> Unit) {
+    override suspend fun startConnection(): CompletableDeferred<Unit> {
+        val deferred = CompletableDeferred<Unit>()
+        
+        billingClient.startConnection(object : BillingClientStateListener {
+            override fun onBillingSetupFinished(billingResult: BillingResult) {
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    deferred.complete(Unit)
+                    apiKey = null
+                } else {
+                    deferred.completeExceptionally(Exception(billingResult.debugMessage))
+                }
+            }
 
-             billingClient.startConnection(object : BillingClientStateListener {
-                 override fun onBillingSetupFinished(billingResult: BillingResult) {
-                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                         onConnected()
-                         apiKey = null  }
-                 }
-
-                 override fun onBillingServiceDisconnected() {
-                     onDisconnected()
-                 }
-             })
+            override fun onBillingServiceDisconnected() {
+                deferred.completeExceptionally(Exception("Billing service disconnected"))
+            }
+        })
+        
+        return deferred
     }
 
 

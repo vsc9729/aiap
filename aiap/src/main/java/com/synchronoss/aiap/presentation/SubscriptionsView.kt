@@ -604,12 +604,11 @@ fun ScrollablePlans() {
 
                 if (shouldShowInCurrentTab) {
                     // Calculate unique index for this offer
-                    val uniqueOfferIndex = productIndex * 100  // Since we're only showing one offer per product now
                     
                     OtherPlanCard(
                         productDetails = productDetails,
                         offerDetails = offerToShow,
-                        productIndex = uniqueOfferIndex
+                        productIndex = productIndex
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -968,7 +967,7 @@ fun MoreBottomSheet(
     val context = LocalContext.current
     val screenHeight = configuration.screenHeightDp.dp
     val bottomSheetHeight = screenHeight * (0.147f)
-
+    val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
     // Start animation immediately when composable is created
     LaunchedEffect(Unit) {
         isVisible = true
@@ -1051,7 +1050,14 @@ fun MoreBottomSheet(
                     contentDescription = stringResource(R.string.bottom_sheet_subscriptions_icon),
                     onClick = {
                         isVisible = false
-                        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/account/subscriptions"))
+                        val currentProductId = subscriptionsViewModel.currentProductId
+                        val packageName = context.packageName
+                        val subscriptionUrl = if (currentProductId != null) {
+                            "https://play.google.com/store/account/subscriptions?sku=$currentProductId&package=$packageName"
+                        } else {
+                            "https://play.google.com/store/account/subscriptions"
+                        }
+                        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(subscriptionUrl))
                         context.startActivity(webIntent)
                         onGoToSubscriptions()
                     }
