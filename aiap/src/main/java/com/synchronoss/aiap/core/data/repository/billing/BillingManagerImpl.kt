@@ -287,7 +287,7 @@ class BillingManagerImpl(
                 partnerUserId = null
             }
         }else{
-            purchaseUpdateHandler.handlePurchaseFailed()
+            purchaseUpdateHandler.handlePurchaseStopped()
             partnerUserId = null
         }
         partnerUserId = null

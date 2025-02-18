@@ -3,7 +3,8 @@ package com.synchronoss.aiap.core.domain.handlers
 class PurchaseUpdateHandler(
     var onPurchaseUpdated: () -> Unit,
     var onPurchaseStarted: () -> Unit,
-    var onPurchaseFailed: () -> Unit
+    var onPurchaseFailed: () -> Unit,
+    var onPurchaseStopped: () -> Unit
 ) {
     var isLaunchedViaIntent: Boolean = false
     
@@ -17,5 +18,9 @@ class PurchaseUpdateHandler(
     
     fun handlePurchaseFailed() {
         onPurchaseFailed()
+    }
+
+    fun handlePurchaseStopped() {
+        onPurchaseStopped()
     }
 } 

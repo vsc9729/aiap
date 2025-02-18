@@ -237,6 +237,13 @@ class SubscriptionsViewModel @Inject constructor(
                 }
             }
 
+            purchaseUpdateHandler.onPurchaseStopped = {
+                viewModelScope.launch {
+                    isCurrentProductBeingUpdated = false
+
+                }
+            }
+
         }
 
     }

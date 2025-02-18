@@ -27,7 +27,8 @@ object BillingModule {
         return PurchaseUpdateHandler(
             onPurchaseUpdated = { /* Do nothing */ },
             onPurchaseStarted = { /* Do nothing */ },
-            onPurchaseFailed = { /* Do nothing */ }
+            onPurchaseFailed = { /* Do nothing */ },
+            onPurchaseStopped = { /* Do nothing */ }
         )
     }
 
