@@ -16,6 +16,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import com.synchronoss.aiap.utils.LogUtils
 
+/**
+ * Implementation of ThemeManager interface that handles theme-related operations.
+ * Manages theme loading from JSON assets and theme configuration.
+ *
+ * @property context Android application context
+ * @property currentVendor Current vendor for theme selection
+ */
 class ThemeManagerImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val currentVendor: Vendors = Vendors.Capsyl
@@ -25,6 +32,11 @@ class ThemeManagerImpl @Inject constructor(
         .addLast(KotlinJsonAdapterFactory())
         .build()
 
+    /**
+     * Retrieves theme configuration from JSON assets.
+     * Loads and parses theme data for both light and dark themes.
+     * @return Resource containing theme information or error
+     */
     override suspend fun getTheme(): Resource<ThemeInfo> {
         return try {
             val jsonFileName = vendorThemeMap[currentVendor] 

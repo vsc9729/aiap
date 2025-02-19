@@ -16,6 +16,13 @@ import com.synchronoss.aiap.utils.CacheManager
 import com.synchronoss.aiap.utils.Resource
 import javax.inject.Inject
 
+/**
+ * Implementation of ProductManager interface that handles product-related operations.
+ * Manages product information retrieval, caching, and purchase handling.
+ *
+ * @property api ProductApi instance for network operations
+ * @property cacheManager CacheManager instance for data caching
+ */
 class ProductManagerImpl @Inject constructor(
     private val api: ProductApi,
     private val cacheManager: CacheManager
@@ -36,6 +43,12 @@ class ProductManagerImpl @Inject constructor(
     private val jsonAdapter = moshi.adapter<List<ProductInfo>>(listType).lenient()
     private val subscriptionAdapter = moshi.adapter(ActiveSubscriptionInfo::class.java).lenient()
 
+    /**
+     * Retrieves a list of available products, with caching support.
+     * @param timestamp Optional timestamp for cache validation
+     * @param apiKey API key for authentication
+     * @return Resource containing list of products or error
+     */
     override suspend fun getProducts(timestamp: Long?, apiKey: String): Resource<List<ProductInfo>> {
         return cacheManager.getCachedDataWithTimestamp(
             key = PRODUCTS_CACHE_KEY,
@@ -63,6 +76,12 @@ class ProductManagerImpl @Inject constructor(
         )
     }
 
+    /**
+     * Retrieves active subscription information for a user, with caching support.
+     * @param userId User identifier
+     * @param apiKey API key for authentication
+     * @return Resource containing subscription information or error
+     */
     override suspend fun getActiveSubscription(userId: String, apiKey: String): Resource<ActiveSubscriptionInfo?> {
         return cacheManager.getCachedDataWithNetwork(
             key = "${ACTIVE_SUBSCRIPTION_CACHE_KEY}_${userId}",
@@ -89,6 +108,12 @@ class ProductManagerImpl @Inject constructor(
         )
     }
 
+    /**
+     * Handles a purchase transaction.
+     * @param request Purchase request details
+     * @param apiKey API key for authentication
+     * @return Boolean indicating success or failure
+     */
     override suspend fun handlePurchase(request: HandlePurchaseRequest, apiKey: String): Boolean {
         return try {
             val response = api.handlePurchase(request, apiKey)

@@ -24,6 +24,14 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CompletableDeferred
 
+/**
+ * Implementation of BillingManager interface that handles Google Play Billing operations.
+ * Manages subscription purchases, billing client connection, and purchase updates.
+ *
+ * @property context Android application context
+ * @property productManagerUseCases Use cases for product management operations
+ * @property purchaseUpdateHandler Handler for purchase-related events
+ */
 class BillingManagerImpl(
     context: Context,
     private val productManagerUseCases: ProductManagerUseCases,
@@ -41,6 +49,10 @@ class BillingManagerImpl(
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .build()
 
+    /**
+     * Establishes connection with the billing service.
+     * @return CompletableDeferred that completes when connection is established
+     */
     override suspend fun startConnection(): CompletableDeferred<Unit> {
         val deferred = CompletableDeferred<Unit>()
         
@@ -62,7 +74,14 @@ class BillingManagerImpl(
         return deferred
     }
 
-
+    /**
+     * Initiates a subscription purchase flow.
+     * @param activity Activity from which to launch the purchase flow
+     * @param productDetails Details of the product to purchase
+     * @param onError Callback for error handling
+     * @param userId User identifier for the purchase
+     * @param apiKey API key for authentication
+     */
     override suspend fun purchaseSubscription(
         activity: ComponentActivity,
         productDetails: ProductDetails,
@@ -106,6 +125,12 @@ class BillingManagerImpl(
 //        }
 //    }
 
+    /**
+     * Handles product details for purchase flow.
+     * @param activity Activity context
+     * @param productDetailsList List of product details
+     * @param onError Error callback
+     */
     private fun handleProductDetails(
         activity: ComponentActivity,
         productDetailsList: List<ProductDetails>,
@@ -121,6 +146,11 @@ class BillingManagerImpl(
         }
     }
 
+    /**
+     * Creates product details parameters for billing flow.
+     * @param product Product details
+     * @return List of product details parameters
+     */
     private fun createProductDetailsParams(product: ProductDetails): List<BillingFlowParams.ProductDetailsParams> {
         val offerToken: String = when {
             product.subscriptionOfferDetails!!.size > 1 ->  product.subscriptionOfferDetails!![product.subscriptionOfferDetails!!.size-2].offerToken
@@ -134,6 +164,12 @@ class BillingManagerImpl(
         )
     }
 
+    /**
+     * Launches the billing flow for purchase.
+     * @param activity Activity context
+     * @param productDetailsParams Product details parameters
+     * @param onError Error callback
+     */
     private fun launchBillingFlow(
         activity: ComponentActivity,
         productDetailsParams: List<BillingFlowParams.ProductDetailsParams>,
@@ -193,6 +229,11 @@ class BillingManagerImpl(
         }
     }
 
+    /**
+     * Checks for existing subscriptions.
+     * @param onError Error callback
+     * @return ProductDetails of existing subscription or null if none exists
+     */
     override suspend fun checkExistingSubscriptions(
         onError: (String) -> Unit
     ): ProductDetails? = coroutineScope {
@@ -258,6 +299,11 @@ class BillingManagerImpl(
         }
     }
 
+    /**
+     * Callback for purchase updates from the billing client.
+     * @param billingResult Result of the purchase operation
+     * @param purchases List of purchases
+     */
     override fun onPurchasesUpdated(
         billingResult: BillingResult,
         purchases: List<Purchase>?
@@ -293,6 +339,12 @@ class BillingManagerImpl(
         partnerUserId = null
     }
 
+    /**
+     * Retrieves details of products from the billing client.
+     * @param productIds List of product identifiers
+     * @param onError Error callback
+     * @return List of product details or null if retrieval fails
+     */
     override suspend fun getProductDetails(
         productIds: List<String>,
         onError: (String) -> Unit

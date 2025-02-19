@@ -18,9 +18,17 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+/**
+ * Dagger Hilt module for providing billing-related dependencies.
+ * Provides singleton instances of billing components for dependency injection.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object BillingModule {
+    /**
+     * Provides a singleton instance of PurchaseUpdateHandler.
+     * @return A new instance of PurchaseUpdateHandler with empty callbacks
+     */
     @Provides
     @Singleton
     fun providePurchaseUpdateHandler(): PurchaseUpdateHandler {
@@ -32,6 +40,13 @@ object BillingModule {
         )
     }
 
+    /**
+     * Provides a singleton instance of BillingManager.
+     * @param application The Android Application instance
+     * @param productManagerUseCases Use cases for product management
+     * @param purchaseUpdateHandler Handler for purchase updates
+     * @return A new instance of BillingManagerImpl
+     */
     @Provides
     @Singleton
     fun provideBillingManager(
@@ -42,6 +57,11 @@ object BillingModule {
         return BillingManagerImpl(application, productManagerUseCases, purchaseUpdateHandler)
     }
 
+    /**
+     * Provides a singleton instance of BillingManagerUseCases.
+     * @param billingManager The BillingManager instance
+     * @return A new instance of BillingManagerUseCases with all required use cases
+     */
     @Provides
     @Singleton
     fun provideBillingManagerUseCases(billingManager: BillingManager): BillingManagerUseCases {

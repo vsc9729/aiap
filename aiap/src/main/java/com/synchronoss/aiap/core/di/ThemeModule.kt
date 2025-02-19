@@ -21,9 +21,18 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
 import dagger.hilt.android.qualifiers.ApplicationContext
 
+/**
+ * Dagger Hilt module for providing theme-related dependencies.
+ * Provides singleton instances of theme management components.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object ThemeModule {
+    /**
+     * Provides a singleton instance of ThemeManager.
+     * @param context The application context
+     * @return A new instance of ThemeManagerImpl
+     */
     @Provides
     @Singleton
     fun provideThemeManager(
@@ -32,6 +41,11 @@ object ThemeModule {
         return ThemeManagerImpl(context)
     }
 
+    /**
+     * Provides a singleton instance of ThemeManagerUseCases.
+     * @param themeManager The ThemeManager instance
+     * @return A new instance of ThemeManagerUseCases with all required use cases
+     */
     @Provides
     @Singleton
     fun provideThemeManagerUseCases(themeManager: ThemeManager): ThemeManagerUseCases {
@@ -40,6 +54,11 @@ object ThemeModule {
         )
     }
 
+    /**
+     * Provides a singleton instance of ThemeLoader.
+     * @param themeManagerUseCases The ThemeManagerUseCases instance
+     * @return A new instance of ThemeLoader
+     */
     @Provides
     @Singleton
     fun provideThemeLoader(
@@ -47,5 +66,4 @@ object ThemeModule {
     ): ThemeLoader {
         return ThemeLoader(themeManagerUseCases)
     }
-
 }

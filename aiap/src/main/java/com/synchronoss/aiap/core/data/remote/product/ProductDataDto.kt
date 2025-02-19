@@ -2,6 +2,24 @@ package com.synchronoss.aiap.core.data.remote.product
 
 import com.squareup.moshi.Json
 
+/**
+ * Data Transfer Object representing product information from the remote API.
+ *
+ * @property id Unique identifier for the product
+ * @property productId Product identifier used for billing
+ * @property displayName Optional display name of the product
+ * @property description Optional description of the product
+ * @property vendorName Name of the vendor providing the product
+ * @property appName Name of the application
+ * @property price Price of the product
+ * @property displayPrice Optional formatted price string for display
+ * @property platform Platform identifier (e.g., Android, iOS)
+ * @property serviceLevel Service level of the product
+ * @property isActive Whether the product is currently active
+ * @property recurringPeriodCode Optional code indicating subscription period
+ * @property productType Type of the product
+ * @property entitlementId Optional identifier for product entitlement
+ */
 data class ProductDataDto(
     @field:Json(name = "id")
     val id: String,
