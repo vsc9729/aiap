@@ -70,6 +70,7 @@ class SubscriptionsViewModel @Inject constructor(
     var filteredProductDetails: List<ProductDetails>? by mutableStateOf(null)
     var currentProductId: String? by mutableStateOf(null)
     var currentProduct: ProductInfo? by mutableStateOf(null)
+    var activeProduct: ProductInfo? by mutableStateOf(null)
     var currentProductDetails: ProductDetails? by mutableStateOf(null)
     var selectedTab: TabOption? by mutableStateOf(null)
     var isConnectionStarted: Boolean by mutableStateOf(false)
@@ -138,11 +139,11 @@ class SubscriptionsViewModel @Inject constructor(
             viewModelScope.launch {
                 val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(userId = partnerUserId, apiKey = apiKey) }
                 val startConnectionDeferred = async { startConnection() }
-
-                startConnectionDeferred.await()
                 val activeSubResult = activeSubResultDeferred.await()
                 
                 if (activeSubResult is Resource.Success) {
+                    activeProduct = activeSubResult.data?.subscriptionResponseInfo?.product
+                    startConnectionDeferred.await()
                     lastKnownProductTimestamp = activeSubResult.data?.productUpdateTimeStamp
                     lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
                     currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
@@ -269,14 +270,13 @@ class SubscriptionsViewModel @Inject constructor(
                 billingManagerUseCases.startConnection().await()
                 LogUtils.d(TAG, context.getString(R.string.billing_connected))
                 isConnectionStarted = true
-                
-                currentProductDetails = billingManagerUseCases.checkExistingSubscription(
+
+                 billingManagerUseCases.checkExistingSubscription(
                     onError = {
                         isLoading.value = false
                         LogUtils.d(TAG, context.getString(R.string.billing_check_error, it))
                     }
                 )
-                currentProductId = currentProductDetails?.productId
             } catch (e: Exception) {
                 isLoading.value = false
                 LogUtils.d(TAG, context.getString(R.string.billing_connection_failed))
@@ -289,20 +289,22 @@ class SubscriptionsViewModel @Inject constructor(
              viewModelScope.launch {
                  val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(partnerUserId, apiKey) }
                  val activeSubResult = activeSubResultDeferred.await()
-                 val checkSubscriptionDeferred = async {
-                     currentProductDetails = billingManagerUseCases.checkExistingSubscription(
-                         onError = {
-                             isLoading.value = false
-                             LogUtils.d(TAG, context.getString(R.string.products_fetch_failed))
-                         }
-                     )
-                     currentProductId = currentProductDetails?.productId
+                 if(activeSubResult is Resource.Success){
+                     activeProduct = activeSubResult.data?.subscriptionResponseInfo?.product
+                     currentProduct = activeProduct
+                     currentProductId = currentProduct?.productId
+                     val checkSubscriptionDeferred = async {
+                         billingManagerUseCases.checkExistingSubscription(
+                             onError = {
+                                 isLoading.value = false
+                                 LogUtils.d(TAG, context.getString(R.string.products_fetch_failed))
+                             }
+                         )
+                     }
+                     checkSubscriptionDeferred.await()
+                     fetchAndLoadProducts()
                  }
 
-                 // Wait for the check to complete
-                 checkSubscriptionDeferred.await()
-                 currentProduct = activeSubResult.data?.subscriptionResponseInfo?.product
-                 fetchAndLoadProducts()
              }
          } else {
              fetchAndLoadProducts()
@@ -349,6 +351,27 @@ class SubscriptionsViewModel @Inject constructor(
                     )
                     LogUtils.d(TAG, "Failed to fetch product details: $error")
                 })
+                if (isIosPlatform) {
+                        // Get the recurring period and service level from iOS subscription
+                        val iosRecurringPeriod = activeProduct?.recurringPeriodCode
+                        val iosServiceLevel = activeProduct?.serviceLevel
+                        // Find matching Android product based on recurring period and service level
+                        currentProduct = products?.firstOrNull { product ->
+                            product.recurringPeriodCode == iosRecurringPeriod &&
+                                    product.serviceLevel == iosServiceLevel
+                        }
+                        // Set currentProductDetails based on currentProduct if found
+                        if (currentProduct != null) {
+                            currentProductId = currentProduct?.productId
+                            currentProductDetails = productDetails?.firstOrNull { details ->
+                                details.productId == currentProductId
+                        }
+                    }
+
+                }else{
+                    currentProductDetails = productDetails?.firstOrNull { it.productId == currentProductId }
+                }
+
 
 //                val currentProduct: ProductInfo? = products?.find { it.productId == currentProductId }
                 if(selectedTab == null){
@@ -410,8 +433,23 @@ class SubscriptionsViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             if (!isConnectionStarted) {
-                startConnection()
+                val startConnectionDeferred = async { startConnection() }
+                startConnectionDeferred.await()
             } else {
+                // Check for existing subscriptions before proceeding
+                val existingSubscriptionDeferred = async {
+                    billingManagerUseCases.checkExistingSubscription(
+                        onError = { error ->
+                            showToast(
+                                heading = context.getString(R.string.error_title),
+                                message = error
+                            )
+                            onError(error)
+                        })
+                }
+
+                existingSubscriptionDeferred.await()
+
                 billingManagerUseCases.purchaseSubscription(
                     activity, 
                     productDetails, 
