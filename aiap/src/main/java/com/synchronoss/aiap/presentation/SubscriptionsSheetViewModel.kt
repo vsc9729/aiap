@@ -36,6 +36,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import com.synchronoss.aiap.core.domain.usecases.analytics.LocalyticsManagerUseCases
 import com.synchronoss.aiap.utils.LogUtils
 import com.android.billingclient.api.ProductDetails
+import com.synchronoss.aiap.presentation.subscriptions.TabOption
 
 /**
  * ViewModel responsible for managing subscription-related UI state and business logic.
