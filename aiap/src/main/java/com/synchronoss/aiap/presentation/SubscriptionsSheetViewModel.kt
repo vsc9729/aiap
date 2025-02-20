@@ -138,12 +138,13 @@ class SubscriptionsViewModel @Inject constructor(
             this.apiKey = apiKey
             viewModelScope.launch {
                 val activeSubResultDeferred = async { productManagerUseCases.getActiveSubscription(userId = partnerUserId, apiKey = apiKey) }
-                val startConnectionDeferred = async { startConnection() }
+
                 val activeSubResult = activeSubResultDeferred.await()
-                
                 if (activeSubResult is Resource.Success) {
-                    activeProduct = activeSubResult.data?.subscriptionResponseInfo?.product
+                    val startConnectionDeferred = async { startConnection() }
                     startConnectionDeferred.await()
+                    activeProduct = activeSubResult.data?.subscriptionResponseInfo?.product
+
                     lastKnownProductTimestamp = activeSubResult.data?.productUpdateTimeStamp
                     lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
                     currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
