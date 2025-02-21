@@ -59,7 +59,7 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                 Icon(
                     imageVector = if(launchedViaIntent) Icons.Default.ArrowBack else Icons.Default.Close,
                     contentDescription = "Close",
-                    tint = Color(R.color.light_primary_default),
+                    tint = Color(context.getColor(R.color.light_primary_default)),
                     modifier = Modifier.size(getDimension(R.dimen.bottom_sheet_icon_size))
                 )
             }
