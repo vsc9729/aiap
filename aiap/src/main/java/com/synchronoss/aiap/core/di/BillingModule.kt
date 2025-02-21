@@ -5,13 +5,8 @@ import com.synchronoss.aiap.core.data.remote.product.ProductApi
 import com.synchronoss.aiap.core.data.repository.billing.BillingManagerImpl
 import com.synchronoss.aiap.core.domain.handlers.PurchaseUpdateHandler
 import com.synchronoss.aiap.core.domain.repository.billing.BillingManager
-import com.synchronoss.aiap.core.domain.usecases.billing.BillingManagerUseCases
-import com.synchronoss.aiap.core.domain.usecases.billing.CheckExistingSubscription
-import com.synchronoss.aiap.core.domain.usecases.billing.GetProductDetails
-import com.synchronoss.aiap.core.domain.usecases.billing.PurchaseSubscription
-import com.synchronoss.aiap.core.domain.usecases.billing.StartConnection
+import com.synchronoss.aiap.core.domain.usecases.billing.*
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
-
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -69,6 +64,7 @@ object BillingModule {
             startConnection = StartConnection(billingManager),
             purchaseSubscription = PurchaseSubscription(billingManager),
             checkExistingSubscription = CheckExistingSubscription(billingManager),
+            handleUnacknowledgedPurchases = HandleUnacknowledgedPurchases(billingManager),
             getProductDetails = GetProductDetails(billingManager)
         )
     }

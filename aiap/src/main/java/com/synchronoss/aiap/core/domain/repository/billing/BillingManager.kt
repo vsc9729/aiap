@@ -42,6 +42,16 @@ interface BillingManager {
     ): ProductDetails?
 
     /**
+     * Handles any unacknowledged purchases and syncs them with the backend.
+     * This is particularly important for purchases made while the app was terminated.
+     * @param onError Callback function to handle any errors during the process
+     * @return Boolean indicating if any unacknowledged purchases were handled
+     */
+    suspend fun handleUnacknowledgedPurchases(
+        onError: (String) -> Unit
+    ): Boolean
+
+    /**
      * Retrieves details for specified products.
      * @param productIds List of product identifiers to fetch details for
      * @param onError Callback function to handle any errors during the retrieval

@@ -41,8 +41,6 @@ class BillingManagerImpl(
 
     private val productDetailsMap = mutableMapOf<String, ProductDetails>()
     private var currentProduct: Purchase? = null
-    private var partnerUserId: String? = null
-    private var apiKey: String? = null
     private val billingClient: BillingClient = BillingClient.newBuilder(context)
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .setListener(this)
@@ -60,7 +58,6 @@ class BillingManagerImpl(
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     deferred.complete(Unit)
-                    apiKey = null
                 } else {
                     deferred.completeExceptionally(Exception(billingResult.debugMessage))
                 }
@@ -89,8 +86,8 @@ class BillingManagerImpl(
         userId: String,
         apiKey: String
     ) {
-        partnerUserId = userId
-        this.apiKey = apiKey
+//        GlobalBillingConfig.partnerUserId = userId
+//        GlobalBillingConfig.apiKey = apiKey
 
         try {
             handleProductDetails(activity, listOf(productDetails), onError)
@@ -98,32 +95,6 @@ class BillingManagerImpl(
             onError(e.message ?: "Unknown error")
         }
     }
-
-//    private fun createProductParams(productInfo: ProductInfo): QueryProductDetailsParams {
-//        val product = QueryProductDetailsParams.Product.newBuilder()
-//            .setProductId(productInfo.productId)
-//            .setProductType(BillingClient.ProductType.SUBS)
-//            .build()
-//
-//        return QueryProductDetailsParams.newBuilder()
-//            .setProductList(listOf(product))
-//            .build()
-//    }
-//
-//    private fun queryAndProcessProduct(
-//        activity: ComponentActivity,
-//        params: QueryProductDetailsParams,
-//        onError: (String) -> Unit
-//    ) {
-//        billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
-//            if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
-//                onError(billingResult.debugMessage)
-//                return@queryProductDetailsAsync
-//            }
-//
-//            handleProductDetails(activity, productDetailsList, onError)
-//        }
-//    }
 
     /**
      * Handles product details for purchase flow.
@@ -206,7 +177,7 @@ class BillingManagerImpl(
         }
 
         return subscriptionParams?.let {
-            partnerUserId?.let { id ->
+            GlobalBillingConfig.userUUID?.let { id ->
                 BillingFlowParams.newBuilder()
                     .setProductDetailsParamsList(productDetailsParams)
                     .setObfuscatedAccountId(id)
@@ -220,7 +191,7 @@ class BillingManagerImpl(
     private fun createNewSubscriptionFlowParams(
         productDetailsParams: List<BillingFlowParams.ProductDetailsParams>
     ): BillingFlowParams? {
-        return partnerUserId?.let {
+        return GlobalBillingConfig.userUUID.let {
             BillingFlowParams.newBuilder()
                 .setProductDetailsParamsList(productDetailsParams)
                 .setObfuscatedAccountId(it)
@@ -310,16 +281,21 @@ class BillingManagerImpl(
     ) {
         purchaseUpdateHandler.handlePurchaseStarted()
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-            val handleRequest = HandlePurchaseRequest(
-                productId = purchases[0].products.first().toString(),
-                purchaseTime = purchases[0].purchaseTime,
-                purchaseToken = purchases[0].purchaseToken,
-                partnerUserId = partnerUserId ?: ""
-            )
+            val productId = purchases[0].products.first().toString()
+            val purchaseTime = purchases[0].purchaseTime
+            val purchaseToken = purchases[0].purchaseToken
+            val partnerUserId = GlobalBillingConfig.userUUID
+            
             CoroutineScope(Dispatchers.IO).launch {
-                apiKey?.let { key ->
+                GlobalBillingConfig.apiKey.let { key ->
                     val handlePurchaseResponse = async {
-                        productManagerUseCases.handlePurchase(handleRequest, key)
+                        productManagerUseCases.handlePurchase(
+                            productId = productId,
+                            purchaseTime = purchaseTime,
+                            purchaseToken = purchaseToken,
+                            partnerUserId = partnerUserId,
+                            apiKey = key
+                        )
                     }
 
                     val success = handlePurchaseResponse.await()
@@ -328,15 +304,11 @@ class BillingManagerImpl(
                     } else {
                         purchaseUpdateHandler.handlePurchaseFailed()
                     }
-                } ?: purchaseUpdateHandler.handlePurchaseFailed()
-                
-                partnerUserId = null
+                }
             }
-        }else{
+        } else {
             purchaseUpdateHandler.handlePurchaseStopped()
-            partnerUserId = null
         }
-        partnerUserId = null
     }
 
     /**
@@ -381,6 +353,72 @@ class BillingManagerImpl(
         } catch (e: Exception) {
             onError(e.message ?: "Unknown error fetching product details")
             null
+        }
+    }
+
+    override suspend fun handleUnacknowledgedPurchases(onError: (String) -> Unit): Boolean = coroutineScope {
+        if (billingClient.connectionState != BillingClient.ConnectionState.CONNECTED) {
+            onError("Billing client not connected")
+            return@coroutineScope false
+        }
+
+        try {
+            val params = QueryPurchasesParams.newBuilder()
+                .setProductType(BillingClient.ProductType.SUBS)
+                .build()
+
+            val deferred = CompletableDeferred<Boolean>()
+
+            billingClient.queryPurchasesAsync(params) { billingResult, purchaseList ->
+                when (billingResult.responseCode) {
+                    BillingClient.BillingResponseCode.OK -> {
+                        val unacknowledgedPurchase = purchaseList.find { purchase ->
+                            !purchase.isAcknowledged && 
+                            (purchase.purchaseState == Purchase.PurchaseState.PURCHASED || 
+                             purchase.purchaseState == Purchase.PurchaseState.UNSPECIFIED_STATE)
+                        }
+
+                        if (unacknowledgedPurchase != null) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val productId = unacknowledgedPurchase.products[0]
+                                val purchaseTime = unacknowledgedPurchase.purchaseTime
+                                val purchaseToken = unacknowledgedPurchase.purchaseToken
+                                val partnerUserId = GlobalBillingConfig.userUUID
+
+                                GlobalBillingConfig.apiKey.let { key ->
+                                    val handlePurchaseResponse = async {
+                                        productManagerUseCases.handlePurchase(
+                                            productId = productId,
+                                            purchaseTime = purchaseTime,
+                                            purchaseToken = purchaseToken,
+                                            partnerUserId = partnerUserId,
+                                            apiKey = key
+                                        )
+                                    }
+
+                                    val success = handlePurchaseResponse.await()
+                                    if (success) {
+                                        purchaseUpdateHandler.handlePurchaseUpdate()
+                                        deferred.complete(true)
+                                    } else {
+                                        deferred.complete(false)
+                                    }
+                                }
+                            }
+                        } else {
+                            deferred.complete(false)
+                        }
+                    }
+                    else -> {
+                        onError("Failed to query purchases: ${billingResult.debugMessage}")
+                        deferred.complete(false)
+                    }
+                }
+            }
+            deferred.await()
+        } catch (e: Exception) {
+            onError("Error handling unacknowledged purchases: ${e.message}")
+            false
         }
     }
 }

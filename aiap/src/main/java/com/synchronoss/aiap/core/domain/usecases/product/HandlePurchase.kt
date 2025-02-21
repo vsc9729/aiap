@@ -7,7 +7,19 @@ import javax.inject.Inject
 class HandlePurchase @Inject constructor(
     private val repository: ProductManager
 ) {
-    suspend operator fun invoke(request: HandlePurchaseRequest, apiKey: String): Boolean {
+    suspend operator fun invoke(
+        productId: String,
+        purchaseTime: Long,
+        purchaseToken: String,
+        partnerUserId: String,
+        apiKey: String
+    ): Boolean {
+        val request = HandlePurchaseRequest(
+            productId = productId,
+            purchaseTime = purchaseTime,
+            purchaseToken = purchaseToken,
+            partnerUserId = partnerUserId
+        )
         return repository.handlePurchase(request, apiKey)
     }
 } 
