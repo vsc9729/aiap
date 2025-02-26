@@ -9,13 +9,13 @@ import com.synchronoss.aiap.core.domain.models.ProductInfo
 import com.synchronoss.aiap.core.domain.usecases.activity.LibraryActivityManagerUseCases
 import com.synchronoss.aiap.core.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
+import com.synchronoss.aiap.presentation.viewmodels.SubscriptionsViewModel
 import com.synchronoss.aiap.ui.theme.ThemeLoader
 import com.synchronoss.aiap.utils.Resource
 import io.mockk.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.*

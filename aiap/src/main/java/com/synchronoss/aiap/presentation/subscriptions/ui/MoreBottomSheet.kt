@@ -1,9 +1,8 @@
-package com.synchronoss.aiap.presentation.subscriptions
+package com.synchronoss.aiap.presentation.subscriptions.ui
 
-import android.app.Activity
 import android.content.Intent
-import android.content.res.Configuration
 import android.net.Uri
+import androidx.activity.ComponentActivity
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -33,9 +32,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.synchronoss.aiap.R
-import com.synchronoss.aiap.presentation.SubscriptionsViewModel
+import com.synchronoss.aiap.core.di.DaggerAiapComponent
+import com.synchronoss.aiap.presentation.subscriptions.wrapper.MoreBottomSheetWrapper
 import com.synchronoss.aiap.utils.LogUtils
 import com.synchronoss.aiap.utils.getDimension
 import com.synchronoss.aiap.utils.getDimensionText
@@ -44,7 +43,8 @@ import com.synchronoss.aiap.utils.getDimensionText
 fun MoreBottomSheet(
     onDismiss: () -> Unit,
     onApplyCoupon: () -> Unit,
-    onGoToSubscriptions: () -> Unit
+    onGoToSubscriptions: () -> Unit,
+    activity: ComponentActivity
 ) {
     val TAG = "MoreBottomSheet"
     var showCouponDialog by remember { mutableStateOf(false) }
@@ -53,7 +53,18 @@ fun MoreBottomSheet(
     val context = LocalContext.current
     val screenHeight = configuration.screenHeightDp.dp
     val bottomSheetHeight = screenHeight * (0.147f)
-    val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
+    
+    val wrapper = remember {
+        val wrapper = MoreBottomSheetWrapper()
+        val application = activity.application
+        val aiapComponent = DaggerAiapComponent.factory().create(application)
+        aiapComponent.inject(wrapper)
+        wrapper
+    }
+    
+    val subscriptionsViewModel = remember {
+        wrapper.getViewModel(activity)
+    }
 
     LaunchedEffect(Unit) {
         isVisible = true

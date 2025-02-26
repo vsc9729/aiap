@@ -7,7 +7,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("kotlin-kapt")
-    id("com.google.dagger.hilt.android")
     id("maven-publish")
     id("com.google.devtools.ksp")
     id("org.jetbrains.kotlinx.kover")
@@ -27,7 +26,6 @@ kover {
                     "com.synchronoss.aiap.common.**",
                     "com.synchronoss.aiap.data.**",
                     "com.synchronoss.aiap.domain.**",
-
                 )
             }
             excludes {
@@ -37,9 +35,6 @@ kover {
                     "*_Factory\$*",
                     "*_MembersInjector*",
                     "*_Provide*Factory*",
-                    "*Hilt_*",
-                    "*_HiltModules*",
-                    "*.dagger.hilt.*",
                     "*Dagger*",
                     "*.BuildConfig",
                     "*.R",
@@ -157,22 +152,23 @@ publishing {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.material3.android)
-    implementation(libs.androidx.ui.tooling.preview.android)
+    implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.compose.ui.google.fonts)
 
     // Lifecycle & Data
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.datastore.preferences)
 
-    // Dependency Injection - Hilt
-    implementation(libs.hilt.android)
-    implementation(libs.androidx.hilt.navigation.compose)
-    kapt(libs.hilt.android.compiler)
+    // Dependency Injection - Dagger
+    implementation("com.google.dagger:dagger:2.51.1")
+    kapt("com.google.dagger:dagger-compiler:2.51.1")
+    implementation("com.google.dagger:dagger-android:2.51.1")
+    implementation("com.google.dagger:dagger-android-support:2.51.1")
+    kapt("com.google.dagger:dagger-android-processor:2.51.1")
 
     // Network & Serialization
     implementation(libs.retrofit)
@@ -189,12 +185,12 @@ dependencies {
     implementation(libs.android.billing.client)
 
     // Localytics - using a newer version from their repository
-    implementation("com.localytics.androidx:library:6.4.3")
+    implementation("com.google.android.gms:play-services-ads-identifier:18.2.0")
+    implementation("com.android.installreferrer:installreferrer:2.2")
 
-//    // BouncyCastle Dependencies
-//    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
-//    implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
-//    implementation("org.bouncycastle:bcutil-jdk15on:1.70")
+    // Segment Analytics
+    implementation("com.segment.analytics.kotlin.destinations:localytics:1.0.0")
+    implementation("com.segment.analytics.kotlin:android:1.19.1")
 
     // Testing
     testImplementation(libs.junit)
@@ -204,14 +200,16 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotlin.test)
-    androidTestImplementation (libs.mockk.android)
-    androidTestImplementation (libs.mockk.agent)
-    testImplementation(libs.google.hilt.android.testing)
-    kaptTest(libs.hilt.android.compiler)
-    androidTestImplementation(libs.google.hilt.android.testing)
+    androidTestImplementation(libs.mockk.android)
+    androidTestImplementation(libs.mockk.agent)
     androidTestImplementation(libs.androidx.runner)
     androidTestImplementation(libs.androidx.rules)
-    kaptAndroidTest(libs.hilt.android.compiler)
+    
+    // Testing with Dagger
+    testImplementation("com.google.dagger:dagger:2.51.1")
+    kaptTest("com.google.dagger:dagger-compiler:2.51.1")
+    androidTestImplementation("com.google.dagger:dagger:2.51.1")
+    kaptAndroidTest("com.google.dagger:dagger-compiler:2.51.1")
 }
 
 kapt {
@@ -257,9 +255,6 @@ sonar {
             "**/*_Factory\$*.*",
             "**/*_MembersInjector*.*",
             "**/*_Provide*Factory*.*",
-            "**/*Hilt_*.*",
-            "**/*_HiltModules*.*",
-            "**/dagger/hilt/**/*.*",
             "**/*Dagger*.*",
             "**/BuildConfig.*",
             "**/R.*",

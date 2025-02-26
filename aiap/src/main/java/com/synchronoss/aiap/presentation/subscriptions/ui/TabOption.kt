@@ -1,4 +1,4 @@
-package com.synchronoss.aiap.presentation.subscriptions
+package com.synchronoss.aiap.presentation.subscriptions.ui
 
 import com.android.billingclient.api.ProductDetails
 

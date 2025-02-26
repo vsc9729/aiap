@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStoreFile
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -14,7 +13,7 @@ import com.synchronoss.aiap.R
 
 @Singleton
 class CacheManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    private val context: Context
 ) {
     private val dataStore: DataStore<Preferences> = PreferenceDataStoreFactory.create(
         produceFile = { context.preferencesDataStoreFile("cache_store") }

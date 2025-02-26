@@ -27,11 +27,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.synchronoss.aiap.R
-import com.synchronoss.aiap.presentation.subscriptions.*
+import com.synchronoss.aiap.core.di.DaggerAiapComponent
+import com.synchronoss.aiap.presentation.subscriptions.ui.MoreBottomSheet
+import com.synchronoss.aiap.presentation.subscriptions.ui.ScrollablePlans
+import com.synchronoss.aiap.presentation.subscriptions.ui.TabOption
+import com.synchronoss.aiap.presentation.subscriptions.ui.TabSelector
+import com.synchronoss.aiap.presentation.wrappers.SubscriptionsViewWrapper
 import com.synchronoss.aiap.utils.Constants
 import com.synchronoss.aiap.utils.getDimension
 import com.synchronoss.aiap.utils.getDimensionText
@@ -40,7 +43,19 @@ import com.synchronoss.aiap.utils.LogUtils
 @Composable
 fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier, launchedViaIntent: Boolean) {
     val TAG: String = "SubscriptionsView"
-    val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
+
+    val wrapper = remember {
+        val wrapper = SubscriptionsViewWrapper()
+        val application = activity.application
+        val aiapComponent = DaggerAiapComponent.factory().create(application)
+        aiapComponent.inject(wrapper)
+        wrapper
+    }
+
+    val subscriptionsViewModel = remember {
+        wrapper.getViewModel(activity)
+    }
+
     var showDialog by remember { mutableStateOf(false) }
     val logoUrl = subscriptionsViewModel.finalLogoUrl
     val configuration = LocalConfiguration.current
@@ -162,12 +177,13 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                     subscriptionsViewModel.selectedTab = tab
                                     subscriptionsViewModel.onTabSelected(tab = tab)
                                 },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                activity = activity
                             )
                         }
 
                         Spacer(modifier = modifier.height(getDimension(R.dimen.spacing_small)))
-                        ScrollablePlans()
+                        ScrollablePlans(activity = activity)
                         Spacer(modifier = modifier.height(getDimension(R.dimen.spacing_small)))
                     }
 
@@ -393,7 +409,8 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
         MoreBottomSheet(
             onDismiss = { showDialog = false },
             onApplyCoupon = { LogUtils.d(TAG, "Apply coupon") },
-            onGoToSubscriptions = { LogUtils.d(TAG, "Go to subscriptions") }
+            onGoToSubscriptions = { LogUtils.d(TAG, "Go to subscriptions") },
+            activity = activity
         )
     }
 }

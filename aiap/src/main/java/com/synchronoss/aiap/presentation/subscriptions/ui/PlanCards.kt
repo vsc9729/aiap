@@ -1,5 +1,6 @@
-package com.synchronoss.aiap.presentation.subscriptions
+package com.synchronoss.aiap.presentation.subscriptions.ui
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -17,12 +19,11 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.R
-import com.synchronoss.aiap.presentation.SubscriptionsViewModel
+import com.synchronoss.aiap.core.di.DaggerAiapComponent
+import com.synchronoss.aiap.presentation.subscriptions.wrapper.PlanCardsWrapper
 import com.synchronoss.aiap.utils.LogUtils
 import com.synchronoss.aiap.utils.getDimension
 import com.synchronoss.aiap.utils.getDimensionText
@@ -120,10 +121,22 @@ fun ActualCurrentPlanCard(productDetails: ProductDetails) {
 fun OtherPlanCard(
     productDetails: ProductDetails,
     offerDetails: ProductDetails.SubscriptionOfferDetails,
-    productIndex: Int
+    productIndex: Int,
+    activity: ComponentActivity
 ) {
     val TAG = "OtherPlanCard"
-    val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
+    
+    val wrapper = remember {
+        val wrapper = PlanCardsWrapper()
+        val application = activity.application
+        val aiapComponent = DaggerAiapComponent.factory().create(application)
+        aiapComponent.inject(wrapper)
+        wrapper
+    }
+    
+    val subscriptionsViewModel = remember {
+        wrapper.getViewModel(activity)
+    }
 
     Box(
         modifier = Modifier

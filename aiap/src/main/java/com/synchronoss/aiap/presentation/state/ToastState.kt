@@ -1,4 +1,4 @@
-package com.synchronoss.aiap.presentation
+package com.synchronoss.aiap.presentation.state
 
 data class ToastState(
     val isVisible: Boolean = false,

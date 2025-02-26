@@ -1,6 +1,7 @@
-package com.synchronoss.aiap.presentation.subscriptions
+package com.synchronoss.aiap.presentation.subscriptions.ui
 
 import android.content.res.Configuration
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,26 +15,42 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.synchronoss.aiap.R
-import com.synchronoss.aiap.presentation.SubscriptionsViewModel
+import com.synchronoss.aiap.core.di.DaggerAiapComponent
+import com.synchronoss.aiap.presentation.subscriptions.wrapper.TabSelectorWrapper
 import com.synchronoss.aiap.utils.getDimension
 
 @Composable
 fun TabSelector(
     selectedTab: TabOption,
     onTabSelected: (TabOption) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    activity: ComponentActivity
 ) {
     val configuration = LocalConfiguration.current
-    val subscriptionsViewModel = hiltViewModel<SubscriptionsViewModel>()
-    val availableTabs = subscriptionsViewModel.productDetails?.let { TabOption.getAvailableTabs(it) } ?: emptyList()
+    
+    val wrapper = remember {
+        val wrapper = TabSelectorWrapper()
+        val application = activity.application
+        val aiapComponent = DaggerAiapComponent.factory().create(application)
+        aiapComponent.inject(wrapper)
+        wrapper
+    }
+    
+    val subscriptionsViewModel = remember {
+        wrapper.getViewModel(activity)
+    }
+    
+    val availableTabs = subscriptionsViewModel.productDetails?.let {
+        TabOption.getAvailableTabs(it)
+    } ?: emptyList()
 
     if (availableTabs.isNotEmpty()) {
         Surface(

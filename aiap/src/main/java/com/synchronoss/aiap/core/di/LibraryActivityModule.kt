@@ -7,17 +7,11 @@ import com.synchronoss.aiap.core.domain.repository.activity.LibraryActivityManag
 import com.synchronoss.aiap.core.domain.usecases.activity.Cleanup
 import com.synchronoss.aiap.core.domain.usecases.activity.LaunchLibrary
 import com.synchronoss.aiap.core.domain.usecases.activity.LibraryActivityManagerUseCases
-
-
 import dagger.Module
 import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-
 @Module
-@InstallIn(SingletonComponent::class)
 object LibraryActivityModule {
     @Provides
     @Singleton
@@ -26,6 +20,7 @@ object LibraryActivityModule {
             onSubscriptionCancelled = { /* Do nothing */ },
         )
     }
+    
     @Provides
     @Singleton
     fun provideLibraryActivityManager(
@@ -45,5 +40,4 @@ object LibraryActivityModule {
             cleanup = Cleanup(libraryActivityManager)
         )
     }
-
 }

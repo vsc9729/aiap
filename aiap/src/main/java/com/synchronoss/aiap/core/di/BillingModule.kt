@@ -9,16 +9,13 @@ import com.synchronoss.aiap.core.domain.usecases.billing.*
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import dagger.Module
 import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 /**
- * Dagger Hilt module for providing billing-related dependencies.
+ * Dagger module for providing billing-related dependencies.
  * Provides singleton instances of billing components for dependency injection.
  */
 @Module
-@InstallIn(SingletonComponent::class)
 object BillingModule {
     /**
      * Provides a singleton instance of PurchaseUpdateHandler.

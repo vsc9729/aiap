@@ -9,12 +9,11 @@ import com.synchronoss.aiap.core.domain.repository.theme.ThemeManager
 import com.synchronoss.aiap.core.data.remote.theme.ThemeDataDto
 import com.synchronoss.aiap.core.domain.models.theme.ThemeInfo
 import com.synchronoss.aiap.core.domain.models.theme.Theme
+import com.synchronoss.aiap.utils.LogUtils
 import com.synchronoss.aiap.utils.Resource
 import com.synchronoss.aiap.utils.Vendors
 import com.synchronoss.aiap.utils.vendorThemeMap
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
-import com.synchronoss.aiap.utils.LogUtils
 
 /**
  * Implementation of ThemeManager interface that handles theme-related operations.
@@ -24,7 +23,7 @@ import com.synchronoss.aiap.utils.LogUtils
  * @property currentVendor Current vendor for theme selection
  */
 class ThemeManagerImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
+    private val context: Context,
     private val currentVendor: Vendors = Vendors.Capsyl
 ) : ThemeManager {
 

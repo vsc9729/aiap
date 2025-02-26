@@ -8,6 +8,7 @@ import com.synchronoss.aiap.core.domain.models.ProductInfo
 import com.synchronoss.aiap.core.domain.usecases.activity.LibraryActivityManagerUseCases
 import com.synchronoss.aiap.core.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
+import com.synchronoss.aiap.presentation.viewmodels.SubscriptionsViewModel
 import com.synchronoss.aiap.ui.theme.ThemeLoader
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers

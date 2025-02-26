@@ -12,21 +12,17 @@ import com.synchronoss.aiap.core.domain.usecases.theme.ThemeManagerUseCases
 import com.synchronoss.aiap.utils.Constants
 import dagger.Module
 import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
-import dagger.hilt.android.qualifiers.ApplicationContext
 
 /**
- * Dagger Hilt module for providing theme-related dependencies.
+ * Dagger module for providing theme-related dependencies.
  * Provides singleton instances of theme management components.
  */
 @Module
-@InstallIn(SingletonComponent::class)
 object ThemeModule {
     /**
      * Provides a singleton instance of ThemeManager.
@@ -36,7 +32,7 @@ object ThemeModule {
     @Provides
     @Singleton
     fun provideThemeManager(
-        @ApplicationContext context: Context,
+        context: Context,
     ): ThemeManager {
         return ThemeManagerImpl(context)
     }

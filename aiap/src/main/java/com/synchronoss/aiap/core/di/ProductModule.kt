@@ -12,11 +12,8 @@ import com.synchronoss.aiap.core.domain.usecases.product.HandlePurchase
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.utils.CacheManager
 import com.synchronoss.aiap.utils.Constants.BASE_URL
-
 import dagger.Module
 import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -29,11 +26,10 @@ import java.security.SecureRandom
 import java.security.cert.X509Certificate
 
 /**
- * Dagger Hilt module for providing product-related dependencies.
+ * Dagger module for providing product-related dependencies.
  * Provides singleton instances of network and product management components.
  */
 @Module
-@InstallIn(SingletonComponent::class)
 object ProductModule {
 
     /**
