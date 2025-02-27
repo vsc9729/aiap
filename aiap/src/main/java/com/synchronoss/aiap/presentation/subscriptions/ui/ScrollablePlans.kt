@@ -39,6 +39,7 @@ fun ScrollablePlans(activity: ComponentActivity) {
     
     val filteredProductDetails = subscriptionsViewModel.filteredProductDetails
     val currentProductDetails = subscriptionsViewModel.currentProductDetails
+    val currentProductInfo = subscriptionsViewModel.currentProduct
     val selectedTab = subscriptionsViewModel.selectedTab
 
     if (filteredProductDetails.isNullOrEmpty()) {
@@ -67,7 +68,7 @@ fun ScrollablePlans(activity: ComponentActivity) {
     } else {
         Column {
             // Display current product if exists and matches the selected tab's billing period
-            if (currentProductDetails != null) {
+            if (currentProductDetails != null && currentProductInfo != null) {
                 val currentBillingPeriod = currentProductDetails.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod
                 val shouldShowCurrentPlan = when (selectedTab) {
                     TabOption.WEEKlY -> currentBillingPeriod?.endsWith("W") == true
@@ -77,7 +78,7 @@ fun ScrollablePlans(activity: ComponentActivity) {
                 }
                 
                 if (shouldShowCurrentPlan) {
-                    ActualCurrentPlanCard(productDetails = currentProductDetails)
+                    ActualCurrentPlanCard(productDetails = currentProductDetails, productInfo = currentProductInfo)
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
@@ -92,7 +93,7 @@ fun ScrollablePlans(activity: ComponentActivity) {
                             productDetails = product,
                             offerDetails = offerDetails,
                             productIndex = index,
-                            activity = activity
+                            activity = activity,
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                     }

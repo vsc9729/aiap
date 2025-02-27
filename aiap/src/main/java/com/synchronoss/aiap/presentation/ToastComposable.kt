@@ -27,15 +27,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.synchronoss.aiap.R
 
 @Composable
 fun ToastComposable(
      heading: String,
     subText: String,
+    isSuccess: Boolean,
+    formatArgs: Any?,
     headingResId: Int? = null,
     messageResId: Int? = null,
     onDismiss: () -> Unit,
@@ -43,7 +47,8 @@ fun ToastComposable(
     modifier: Modifier = Modifier
 ) {
     val finalHeading = headingResId?.let { stringResource(it) } ?: heading
-    val finalMessage = messageResId?.let { stringResource(it) } ?: subText
+    val finalMessage = messageResId?.let { if(formatArgs != null) stringResource(it, formatArgs) else  stringResource(it) } ?: subText
+    val context = LocalContext.current
     AnimatedVisibility(
         visible = isVisible,
         enter = slideInVertically(initialOffsetY = { it }),
@@ -56,7 +61,7 @@ fun ToastComposable(
                 .fillMaxWidth()
                 .height(80.dp)
                 .background(
-                    color = Color(0xFFFEF1F1),
+                    color = Color(context.getColor(if(isSuccess) R.color.success_green_background else R.color.error_red)),
                     shape = RoundedCornerShape(8.dp)
                 )
 
@@ -72,7 +77,7 @@ fun ToastComposable(
                         .width(6.dp)
                         .clip(RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp))
                         .background(
-                            color =Color.Red,
+                            color = if(isSuccess) Color(context.getColor(R.color.success_green_border)) else Color.Red,
                         )
                 )
 

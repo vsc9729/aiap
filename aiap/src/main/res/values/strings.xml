@@ -8,6 +8,8 @@
     <string name="error_products_message">Failed to load products. Please try again later.</string>
     <string name="purchase_failed_title">Something went wrong</string>
     <string name="purchase_failed_message">Any debited amount will be refunded.</string>
+    <string name="purchase_completed_title">Purchase Completed</string>
+    <string name="purchase_completed_message">You have successfully purchased the subscription.</string>
     <string name="subscription_cancelled_title">Subscription Cancelled</string>
     <string name="subscription_cancelled_message">Your subscription has been cancelled</string>
 
@@ -51,9 +53,11 @@
     <string name="current_subscription">Current Subscription</string>
     <string name="selected_plan_indicator">Selected Plan Indicator</string>
     <string name="unselected_plan_indicator">Unselected Plan Indicator</string>
-    <string name="plan_auto_renews">Plan auto-renews for %1$s every month until cancelled</string>
+    <string name="plan_auto_renews">%1$s every %2$s until cancelled</string>
     <string name="continue_text">Continue</string>
     <string name="more_button_text">More</string>
+    <string name="current_storage_banner_text">You currently have %1$s storage</string>
+
 
     <!-- Bottom Sheet strings -->
     <string name="bottom_sheet_apply_coupon">Apply Coupon</string>

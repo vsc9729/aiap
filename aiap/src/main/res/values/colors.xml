@@ -15,6 +15,12 @@
 
     <!-- Common -->
     <color name="more_button_border">#ffffff</color>
+    <color name="current_storage_banner_background">#E9F5FF</color>
+    <color name="error_red">#FEF1F1</color>
+    <color name="success_green_background">#EDFCF2</color>
+    <color name="success_green_border">#66B584</color>
+    <color name="current_subscription_text">#16A34A</color>
+    <color name="current_subscription_background">#DCFCE7</color>
 
     <!-- iOS Platform Warning Colors -->
     <color name="ios_warning_border">#FECDAA</color>

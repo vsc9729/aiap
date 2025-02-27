@@ -99,6 +99,7 @@ class SubscriptionsViewModel @Inject constructor(
     var currentProductId: String? by mutableStateOf(null)
     var currentProduct: ProductInfo? by mutableStateOf(null)
     var activeProduct: ProductInfo? by mutableStateOf(null)
+    var baseServiceLevel: String? by mutableStateOf(null)
     var currentProductDetails: ProductDetails? by mutableStateOf(null)
     
     /** Tracking information */
@@ -123,33 +124,27 @@ class SubscriptionsViewModel @Inject constructor(
     /**
      * Shows a toast with resource IDs for heading and message
      */
-    fun showToast(headingResId: Int, messageResId: Int) {
-        toastJob?.cancel()
-        toastState = ToastState(
-            isVisible = true,
-            headingResId = headingResId,
-            messageResId = messageResId
-        )
-        toastJob = viewModelScope.launch {
-            delay(3000)
-            hideToast()
-        }
-    }
 
     /**
      * Shows a toast with string heading and message
      */
-    fun showToast(heading: String, message: String) {
+    fun showToast(heading: String, message: String, isSuccess: Boolean = false, formatArgs: Any? = null) {
+
         toastJob?.cancel()
         toastState = ToastState(
             isVisible = true,
             heading = heading,
-            message = message
+            message = message,
+            isSuccess = isSuccess,
+            formatArgs = formatArgs
         )
-        toastJob = viewModelScope.launch {
-            delay(3000)
-            hideToast()
+        if(!isSuccess){
+            toastJob = viewModelScope.launch {
+                delay(3000)
+                hideToast()
+            }
         }
+
     }
 
     /**
@@ -177,6 +172,10 @@ class SubscriptionsViewModel @Inject constructor(
                 try {
                     // Initialize Segment Analytics
                     segmentAnalyticsUseCases.initialize()
+
+                    //load theme
+                    val loadTheme = async { loadTheme() }
+                    loadTheme.await()
                     
                     // First establish billing connection
                     val startConnectionDeferred = async { startConnection() }
@@ -207,6 +206,7 @@ class SubscriptionsViewModel @Inject constructor(
                         activeSubResult = activeSubResultDeferred.await()
                     }
 
+
                     if (activeSubResult is Resource.Success) {
                         val checkSubscriptionDeferred = async {
                             billingManagerUseCases.checkExistingSubscription(
@@ -220,6 +220,7 @@ class SubscriptionsViewModel @Inject constructor(
                         
                         // Set up subscription data
                         activeProduct = activeSubResult.data?.subscriptionResponseInfo?.product
+                        baseServiceLevel = activeSubResult.data?.baseServiceLevel!!
                         lastKnownProductTimestamp = activeSubResult.data?.productUpdateTimeStamp
                         lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
                         currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
@@ -228,17 +229,13 @@ class SubscriptionsViewModel @Inject constructor(
                         GlobalBillingConfig.userUUID = userUUID
                         isIosPlatform = activeSubResult.data!!.subscriptionResponseInfo?.platform?.equals("IOS", ignoreCase = true) ?: false
 
-                        // Load theme
-                        val loadTheme = async { loadTheme() }
-                        loadTheme.await()
-
                         // Initialize products
                         initProducts()
                     } else {
                         noInternetConnectionAndNoCache.value = true
                         showToast(
-                            headingResId = R.string.no_connection_title,
-                            messageResId = R.string.no_connection_message
+                            heading = context.getString(R.string.no_connection_title) ,
+                            message = context.getString(R.string.no_connection_message)
                         )
                     }
                 } catch (e: Exception) {
@@ -268,7 +265,7 @@ class SubscriptionsViewModel @Inject constructor(
                 if (initialCurrentProduct != currentProduct && currentProduct == null) {
                     showToast(
                         heading = context.getString(R.string.subscription_cancelled_title),
-                        message = context.getString(R.string.subscription_cancelled_message)
+                        message = context.getString(R.string.subscription_cancelled_message),
                     )
                 }
             }
@@ -287,6 +284,12 @@ class SubscriptionsViewModel @Inject constructor(
                 val init = async { initProducts(purchaseUpdate = true) }
                 init.await()
                 isCurrentProductBeingUpdated = false
+                showToast(
+                    heading = context.getString(R.string.purchase_completed_title),
+                    message = context.getString(R.string.purchase_completed_message),
+                    formatArgs = currentProductDetails?.name,
+                    isSuccess = true,
+                )
             }
         }
 
@@ -396,6 +399,8 @@ class SubscriptionsViewModel @Inject constructor(
                 val activeSubResult = activeSubResultDeferred.await()
                 if(activeSubResult is Resource.Success){
                     activeProduct = activeSubResult.data?.subscriptionResponseInfo?.product
+
+                    baseServiceLevel = activeSubResult.data?.baseServiceLevel!!
                     currentProduct = activeProduct
                     currentProductId = currentProduct?.productId
                     val checkSubscriptionDeferred = async {

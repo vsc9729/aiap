@@ -47,20 +47,20 @@
     <dimen name="box_shadow_radius">35dp</dimen>
     <dimen name="box_top_corner">16dp</dimen>
     <dimen name="box_portrait_padding">16dp</dimen>
-    <dimen name="box_plan_renew_size">10sp</dimen>
+    <dimen name="box_plan_renew_size">14sp</dimen>
 
     <!-- Bottom Button Sheet Landscape -->
     <dimen name="box_landscape_padding">16dp</dimen>
     <dimen name="box_landscape_spacer_height">4dp</dimen>
 
     <!-- Card Dimensions -->
-    <dimen name="current_plan_card_height">120dp</dimen>
+    <dimen name="current_plan_card_height">130dp</dimen>
     <dimen name="other_plan_card_height">95dp</dimen>
     <dimen name="card_corner_radius">12dp</dimen>
     <dimen name="card_border_width">0.5dp</dimen>
     <dimen name="card_border_width_selected">1.5dp</dimen>
     <dimen name="card_padding_horizontal">16dp</dimen>
-    <dimen name="card_padding_vertical">8dp</dimen>
+    <dimen name="card_padding_vertical">16dp</dimen>
     <dimen name="card_content_spacing">4dp</dimen>
 
     <!-- Text Sizes -->
@@ -68,7 +68,7 @@
     <dimen name="text_size_plan_price">16sp</dimen>
     <dimen name="text_size_plan_description">12sp</dimen>
     <dimen name="text_line_height">16sp</dimen>
-    <dimen name="text_size_plan_intro_price">10sp</dimen>
+    <dimen name="text_size_plan_intro_price">12sp</dimen>
 
 
     <!-- Icon Sizes -->
@@ -80,6 +80,10 @@
     <dimen name="tab_item_corner_radius">6dp</dimen>
     <dimen name="tab_height_landscape">40dp</dimen>
     <dimen name="tab_height_portrait">50dp</dimen>
+
+    <!-- Current Storage Banner -->
+    <dimen name="current_storage_banner_height">43dp</dimen>
+
 
     <!-- Dialog -->
     <dimen name="dialog_height">300dp</dimen>

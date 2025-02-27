@@ -1,7 +1,5 @@
 package com.synchronoss.aiap.data.mappers
 
-import com.synchronoss.aiap.core.data.mappers.toActiveSubscriptionInfo
-import com.synchronoss.aiap.core.data.mappers.toProductInfo
 import com.synchronoss.aiap.core.data.remote.product.ActiveSubscriptionResponse
 import com.synchronoss.aiap.core.data.remote.product.ProductDataDto
 import com.synchronoss.aiap.core.data.remote.product.SubscriptionResponseDTO
@@ -18,8 +16,7 @@ class ProductMappersTest {
             productId = "123", displayName = "Test Product", description = "Description",
             vendorName = "Vendor", appName = "App", price = 9.99, displayPrice = "$9.99",
             platform = "Android", serviceLevel = "Basic", isActive = true,
-            recurringPeriodCode = "MONTHLY", productType = "Subscription", entitlementId = "ent123",
-            id = "1"
+            recurringPeriodCode = "MONTHLY", productType = "Subscription", entitlementId = "ent123"
         )
 
         // Map to ProductInfo
@@ -49,8 +46,7 @@ class ProductMappersTest {
                 productId = "123", displayName = "Test Product", description = "Description",
                 vendorName = "Vendor", appName = "App", price = 9.99, displayPrice = "$9.99",
                 platform = "Android", serviceLevel = "Basic", isActive = true,
-                recurringPeriodCode = "MONTHLY", productType = "Subscription", entitlementId = "ent123",
-                id = "1"
+                recurringPeriodCode = "MONTHLY", productType = "Subscription", entitlementId = "ent123"
             ),
             vendorName = "Vendor", appName = "App", appPlatformID = "1", platform = "Android",
             partnerUserId = "user123", startDate = 123L, endDate = 124L, status = "Active", type = "Subscription"
@@ -58,8 +54,7 @@ class ProductMappersTest {
         val activeSubscriptionResponse = ActiveSubscriptionResponse(
             subscriptionResponseDTO = subscriptionResponseDTO,
             productUpdateTimeStamp = 123L,
-            themConfigTimeStamp = 123L,
-            userUUID =  "1"
+            themConfigTimeStamp = 123L
         )
 
         // Map to ActiveSubscriptionInfo

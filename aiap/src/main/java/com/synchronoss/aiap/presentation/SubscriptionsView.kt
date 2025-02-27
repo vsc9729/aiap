@@ -24,6 +24,8 @@ import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -96,102 +98,157 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                         .fillMaxSize()
                         .background(color = MaterialTheme.colorScheme.background)
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = getDimension(R.dimen.spacing_xlarge))
                     ) {
-                        if (subscriptionsViewModel.isIosPlatform) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = getDimension(R.dimen.spacing_xlarge))
+                        ) {
+                            if (subscriptionsViewModel.isIosPlatform) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = getDimension(R.dimen.ios_warning_vertical_padding))
+                                        .background(
+                                            color = Color(context.getColor(R.color.ios_warning_background)),
+                                            shape = MaterialTheme.shapes.medium
+                                        )
+                                        .padding(getDimension(R.dimen.ios_warning_internal_padding))
+                                ) {
+                                    Column {
+                                        Row(
+                                            horizontalArrangement = Arrangement.Start,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Image(
+                                                painter = rememberAsyncImagePainter(R.drawable.important),
+                                                contentDescription = "Important Icon",
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                            Spacer(Modifier.width(getDimension(R.dimen.ios_warning_internal_padding)/2))
+                                            Text("Important", color = Color(context.getColor(R.color.ios_warning_text_heading)), fontWeight = FontWeight.W600, fontSize = getDimensionText(R.dimen.ios_warning_text_size))
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = getDimension(R.dimen.ios_warning_internal_padding))
+                                        ) {
+                                            Text(
+                                                text = stringResource(R.string.ios_platform_warning),
+                                                color = Color(context.getColor(R.color.ios_warning_text)),
+                                                fontSize = getDimensionText(R.dimen.ios_warning_text_size),
+                                                fontWeight = FontWeight.W400,
+                                                textAlign = TextAlign.Left,
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        }
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(getDimension(R.dimen.ios_warning_spacing)))
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(logoUrl),
+                                    contentDescription = stringResource(R.string.image_url_description),
+                                    modifier = Modifier
+                                        .wrapContentSize()
+                                        .width(logoUrlWidth)
+                                        .height(logoUrlHeight)
+                                )
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = Constants.STORAGE_TAGLINE,
+                                    style = MaterialTheme.typography.headlineMedium.copy(
+                                        fontWeight = FontWeight.W700,
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        textAlign = TextAlign.Center
+                                    )
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(getDimension(R.dimen.spacing_small)))
+
+                            (subscriptionsViewModel.selectedTab ?: subscriptionsViewModel.productDetails?.let {
+                                TabOption.getAvailableTabs(it).first()
+                            })?.let {
+                                TabSelector(
+                                    selectedTab = it,
+                                    onTabSelected = { tab ->
+                                        subscriptionsViewModel.selectedTab = tab
+                                        subscriptionsViewModel.onTabSelected(tab = tab)
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    activity = activity
+                                )
+                            }
+
+                            Spacer(modifier = modifier.height(getDimension(R.dimen.spacing_medium)))
+                        }
+
+                        // Full-width banner box (outside the padding)
+                        if(subscriptionsViewModel.baseServiceLevel !=null &&  subscriptionsViewModel.currentProduct == null) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = getDimension(R.dimen.ios_warning_vertical_padding))
-                                    .background(
-                                        color = Color(context.getColor(R.color.ios_warning_background)),
-                                        shape = MaterialTheme.shapes.medium
-                                    )
-                                    .padding(getDimension(R.dimen.ios_warning_internal_padding))
+                                    .height(getDimension(R.dimen.current_storage_banner_height))
+                                    .background(color = Color(context.getColor(R.color.current_storage_banner_background)))
                             ) {
-                                Column {
-                                    Row(
-                                        horizontalArrangement = Arrangement.Start,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Image(
-                                            painter = rememberAsyncImagePainter(R.drawable.important),
-                                            contentDescription = "Important Icon",
-                                            modifier = Modifier.size(12.dp)
-                                        )
-                                        Spacer(Modifier.width(getDimension(R.dimen.ios_warning_internal_padding)/2))
-                                        Text("Important", color = Color(context.getColor(R.color.ios_warning_text_heading)), fontWeight = FontWeight.W600, fontSize = getDimensionText(R.dimen.ios_warning_text_size))
+                                Row(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    val formattedStorage: String =
+                                        extractSize(subscriptionsViewModel.baseServiceLevel!!)
+                                    val rawString = stringResource(
+                                        R.string.current_storage_banner_text,
+                                        formattedStorage
+                                    )
+
+                                    // Build an AnnotatedString for styled text
+                                    val formattedText = buildAnnotatedString {
+                                        val firstIndex = rawString.indexOf(formattedStorage)
+
+                                        append(rawString)
+
+                                        // Make the first %1$s (formattedPrice) bold
+                                        if (firstIndex >= 0) {
+                                            addStyle(
+                                                style = SpanStyle(
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color.Black
+                                                ),
+                                                start = firstIndex,
+                                                end = firstIndex + formattedStorage.length
+                                            )
+                                        }
                                     }
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = getDimension(R.dimen.ios_warning_internal_padding))
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.ios_platform_warning),
-                                            color = Color(context.getColor(R.color.ios_warning_text)),
-                                            fontSize = getDimensionText(R.dimen.ios_warning_text_size),
-                                            fontWeight = FontWeight.W400,
-                                            textAlign = TextAlign.Left,
-                                            modifier = Modifier.fillMaxWidth()
+
+                                    // Display styled text
+                                    Text(
+                                        text = formattedText,
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = FontWeight.W400, // Default weight (except for bold part)
+                                            color = MaterialTheme.colorScheme.onSecondary,
+                                            fontSize = getDimensionText(R.dimen.box_plan_renew_size),
+                                            textAlign = TextAlign.Center
                                         )
-                                    }
+                                    )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(getDimension(R.dimen.ios_warning_spacing)))
                         }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
+
+                        Column(
+                            modifier = Modifier.padding(horizontal = getDimension(R.dimen.spacing_xlarge))
                         ) {
-                            Image(
-                                painter = rememberAsyncImagePainter(logoUrl),
-                                contentDescription = stringResource(R.string.image_url_description),
-                                modifier = Modifier
-                                    .wrapContentSize()
-                                    .width(logoUrlWidth)
-                                    .height(logoUrlHeight)
-                            )
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = Constants.STORAGE_TAGLINE,
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    fontWeight = FontWeight.W700,
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    textAlign = TextAlign.Center
-                                )
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(getDimension(R.dimen.spacing_small)))
+                            Spacer(modifier = Modifier.height(getDimension(R.dimen.spacing_medium)))
 
-                        (subscriptionsViewModel.selectedTab ?: subscriptionsViewModel.productDetails?.let {
-                            TabOption.getAvailableTabs(it).first()
-                        })?.let {
-                            TabSelector(
-                                selectedTab = it,
-                                onTabSelected = { tab ->
-                                    subscriptionsViewModel.selectedTab = tab
-                                    subscriptionsViewModel.onTabSelected(tab = tab)
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                activity = activity
-                            )
-                        }
-
-                        Spacer(modifier = modifier.height(getDimension(R.dimen.spacing_small)))
-                        ScrollablePlans(activity = activity)
-                        Spacer(modifier = modifier.height(getDimension(R.dimen.spacing_small)))
-                    }
-
-                    // Bottom action box
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .let {
+                            ScrollablePlans(activity = activity)
+                            Spacer(modifier = modifier.let {
                                 if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                                     it.height(
                                         if (subscriptionsViewModel.selectedPlan != -1)
@@ -204,6 +261,26 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                         if (subscriptionsViewModel.selectedPlan != -1) getDimension(
                                             R.dimen.box_non_landscape_selected_height
                                         ) else getDimension(R.dimen.box_non_landscape_not_selected_height)
+                                    )
+                                }
+                            } )
+                        }
+                    }
+
+                    // Bottom action box
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .let {
+                                if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                                    it.height(
+                                        getDimension(
+                                            R.dimen.box_landscape_not_selected_height
+                                        )
+                                    )
+                                } else {
+                                    it.height(
+                                        getDimension(R.dimen.box_non_landscape_not_selected_height)
                                     )
                                 }
                             }
@@ -235,25 +312,6 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                                         verticalArrangement = Arrangement.Top,
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        if(subscriptionsViewModel.selectedPlan != -1){
-                                            val selectedProduct = filteredProductDetails?.get(subscriptionsViewModel.selectedPlan)
-                                            val offerDetails = selectedProduct?.subscriptionOfferDetails?.firstOrNull()
-                                            val pricingPhases = offerDetails?.pricingPhases?.pricingPhaseList
-
-                                            Text(
-                                                text = stringResource(
-                                                    R.string.plan_auto_renews,
-                                                    selectedProduct?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice ?: ""
-                                                ),
-                                                style = MaterialTheme.typography.bodyMedium.copy(
-                                                    fontWeight = FontWeight.W400,
-                                                    color = MaterialTheme.colorScheme.onSecondary,
-                                                    fontSize = getDimensionText(R.dimen.box_plan_renew_size),
-                                                    textAlign = TextAlign.Center
-                                                )
-                                            )
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                        }
                                         Button(
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -413,4 +471,9 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
             activity = activity
         )
     }
+}
+
+fun extractSize(input: String): String {
+    val regex = "\\d+G".toRegex()  // Matches a number followed by 'G'
+    return "${regex.find(input)?.value}B" // Returns the matched value or null if not found
 }

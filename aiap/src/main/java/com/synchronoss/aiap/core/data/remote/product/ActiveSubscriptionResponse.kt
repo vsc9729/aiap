@@ -23,5 +23,8 @@ data class ActiveSubscriptionResponse(
     val themConfigTimeStamp: Long?,
 
     @Json(name = "userUUID")
-    val userUUID: String
+    val userUUID: String,
+
+    @Json(name = "baseServiceLevel")
+    val baseServiceLevel: String,
 )

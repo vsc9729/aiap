@@ -32,7 +32,8 @@ fun ActiveSubscriptionResponse.toActiveSubscriptionInfo(): ActiveSubscriptionInf
         subscriptionResponseInfo = subscriptionResponseDTO?.toSubscriptionResponseInfo(),
         productUpdateTimeStamp = productUpdateTimeStamp,
         themConfigTimeStamp = themConfigTimeStamp,
-        userUUID = userUUID
+        userUUID = userUUID,
+        baseServiceLevel = baseServiceLevel
     )
 }
 

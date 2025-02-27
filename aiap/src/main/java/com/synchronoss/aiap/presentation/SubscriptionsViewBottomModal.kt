@@ -145,6 +145,8 @@ private fun FullScreenContent(
                 subText = viewModel.toastState.message,
                 onDismiss = { viewModel.hideToast() },
                 isVisible = viewModel.toastState.isVisible,
+                formatArgs = viewModel.toastState.formatArgs,
+                isSuccess = viewModel.toastState.isSuccess,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(
@@ -196,6 +198,8 @@ private fun ModalContent(
                 subText = viewModel.toastState.message,
                 onDismiss = { viewModel.hideToast() },
                 isVisible = viewModel.toastState.isVisible,
+                formatArgs = viewModel.toastState.formatArgs,
+                isSuccess = viewModel.toastState.isSuccess,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(
