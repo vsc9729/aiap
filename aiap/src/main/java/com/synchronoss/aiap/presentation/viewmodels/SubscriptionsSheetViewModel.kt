@@ -659,5 +659,29 @@ class SubscriptionsViewModel @Inject constructor(
         libraryActivityManagerUseCases.cleanup()
         super.onCleared()
     }
+
+    /**
+     * Clears the ViewModel state when bottom sheet is dismissed
+     */
+    fun clearState() {
+        isLoading.value = true
+        dialogState.value = false
+        noInternetConnectionAndNoCache.value = false
+        isInitialised = false
+        isConnectionStarted = false
+        selectedTab = null
+        selectedPlan = -1
+        isCurrentProductBeingUpdated = false
+        products = null
+        productDetails = null
+        filteredProductDetails = null
+        currentProductId = null
+        currentProduct = null
+        activeProduct = null
+        baseServiceLevel = null
+        currentProductDetails = null
+        lastKnownProductTimestamp = null
+        lastKnownThemeTimestamp = null
+    }
 }
 

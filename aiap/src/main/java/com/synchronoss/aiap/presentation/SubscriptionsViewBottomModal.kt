@@ -95,7 +95,10 @@ fun SubscriptionsViewBottomSheet(
                 visibilityThreshold = 0.001f
             ),
             label = "sheet_animation",
-            finishedListener = { if (!viewModel.dialogState.value) onDismissRequest() }
+            finishedListener = { if (!viewModel.dialogState.value) {
+                onDismissRequest()
+                viewModel.clearState()
+            } }
         )
 
         if (visible || animatedOffset < 1f) {
