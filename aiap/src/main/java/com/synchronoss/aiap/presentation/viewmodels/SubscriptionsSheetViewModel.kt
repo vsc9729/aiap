@@ -439,10 +439,6 @@ class SubscriptionsViewModel @Inject constructor(
 
                 // Fetch product details from Google Play Billing Library
                 productDetails = billingManagerUseCases.getProductDetails(productIds, onError = { error ->
-                    showToast(
-                        heading = context.getString(R.string.error_title),
-                        message = error
-                    )
                     LogUtils.d(TAG, "Failed to fetch product details: $error")
                 })
                 
