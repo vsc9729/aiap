@@ -39,6 +39,7 @@ fun ToastComposable(
      heading: String,
     subText: String,
     isSuccess: Boolean,
+    isPending: Boolean,
     formatArgs: Any?,
     headingResId: Int? = null,
     messageResId: Int? = null,
@@ -61,7 +62,11 @@ fun ToastComposable(
                 .fillMaxWidth()
                 .height(80.dp)
                 .background(
-                    color = Color(context.getColor(if(isSuccess) R.color.success_green_background else R.color.error_red)),
+                    color = when{
+                        isSuccess -> Color(context.getColor(R.color.current_subscription_background))
+                        isPending -> Color(context.getColor(R.color.pending_subscription_background))
+                        else -> Color(context.getColor(R.color.error_red))
+                    },
                     shape = RoundedCornerShape(8.dp)
                 )
 
@@ -77,7 +82,11 @@ fun ToastComposable(
                         .width(6.dp)
                         .clip(RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp))
                         .background(
-                            color = if(isSuccess) Color(context.getColor(R.color.success_green_border)) else Color.Red,
+                            color = when{
+                                isSuccess -> Color(context.getColor(R.color.current_subscription_text))
+                                isPending -> Color(context.getColor(R.color.pending_subscription_text))
+                                else -> Color.Red
+                            }
                         )
                 )
 

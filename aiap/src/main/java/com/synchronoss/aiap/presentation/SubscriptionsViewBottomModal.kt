@@ -147,6 +147,7 @@ private fun FullScreenContent(
                 isVisible = viewModel.toastState.isVisible,
                 formatArgs = viewModel.toastState.formatArgs,
                 isSuccess = viewModel.toastState.isSuccess,
+                isPending = viewModel.toastState.isPending,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(
@@ -200,6 +201,7 @@ private fun ModalContent(
                 isVisible = viewModel.toastState.isVisible,
                 formatArgs = viewModel.toastState.formatArgs,
                 isSuccess = viewModel.toastState.isSuccess,
+                isPending = viewModel.toastState.isPending,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(

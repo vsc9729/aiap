@@ -128,7 +128,7 @@ class SubscriptionsViewModel @Inject constructor(
     /**
      * Shows a toast with string heading and message
      */
-    fun showToast(heading: String, message: String, isSuccess: Boolean = false, formatArgs: Any? = null) {
+    fun showToast(heading: String, message: String, isSuccess: Boolean = false,isPending: Boolean = false, formatArgs: Any? = null) {
 
         toastJob?.cancel()
         toastState = ToastState(
@@ -136,9 +136,10 @@ class SubscriptionsViewModel @Inject constructor(
             heading = heading,
             message = message,
             isSuccess = isSuccess,
+            isPending = isPending,
             formatArgs = formatArgs
         )
-        if(!isSuccess){
+        if(!isSuccess && !isPending){
             toastJob = viewModelScope.launch {
                 delay(3000)
                 hideToast()
@@ -170,6 +171,10 @@ class SubscriptionsViewModel @Inject constructor(
 
             viewModelScope.launch {
                 try {
+                    // Initialize LogUtils first
+                    LogUtils.initialize(context)
+                    LogUtils.clearLogs()
+
                     // Initialize Segment Analytics
                     segmentAnalyticsUseCases.initialize()
 
@@ -301,8 +306,10 @@ class SubscriptionsViewModel @Inject constructor(
                 init.await()
                 isCurrentProductBeingUpdated = false
                 showToast(
-                    heading = context.getString(R.string.purchase_failed_title),
-                    message = context.getString(R.string.purchase_failed_message)
+                    heading = context.getString(R.string.purchase_pending_title),
+                    message = context.getString(R.string.purchase_pending_message),
+                    formatArgs = currentProductDetails?.name,
+                    isPending = true,
                 )
             }
         }

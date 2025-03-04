@@ -48,7 +48,7 @@ fun getTimePeriod(input: String): String{
 }
 
 @Composable
-fun ActualCurrentPlanCard(productDetails: ProductDetails, productInfo: ProductInfo) {
+fun ActualCurrentPlanCard(productDetails: ProductDetails, productInfo: ProductInfo, isPending: Boolean = false) {
     val context = LocalContext.current
     Box(
         modifier = Modifier
@@ -80,7 +80,10 @@ fun ActualCurrentPlanCard(productDetails: ProductDetails, productInfo: ProductIn
                         .height(35.dp)
                         //                    .weight(1f)
                         .background(
-                            color = Color(context.getColor(R.color.current_subscription_background)),
+                            color = when{
+                                isPending -> Color(context.getColor(R.color.pending_subscription_background))
+                                else -> Color(context.getColor(R.color.current_subscription_background))
+                            },
                             RoundedCornerShape(
                                 topStart = getDimension(R.dimen.card_corner_radius),
                                 topEnd = getDimension(R.dimen.card_corner_radius)
@@ -97,9 +100,17 @@ fun ActualCurrentPlanCard(productDetails: ProductDetails, productInfo: ProductIn
                     //                    ),
                 ) {
                     Text(
-                        text = stringResource(R.string.current_subscription),
+                        text = stringResource(
+                            when{
+                                isPending -> R.string.pending_subscription
+                                else -> R.string.current_subscription
+                            }
+                        ),
                         fontSize = getDimensionText(R.dimen.text_size_current_plan_header),
-                        color = Color(context.getColor(R.color.current_subscription_text)),
+                        color = when{
+                            isPending -> Color(context.getColor(R.color.pending_subscription_text))
+                            else -> Color(context.getColor(R.color.current_subscription_text))
+                        },
                         fontWeight = FontWeight.W600,
                     )
                 }
@@ -197,11 +208,13 @@ fun ActualCurrentPlanCard(productDetails: ProductDetails, productInfo: ProductIn
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ){
-                            Image(
-                                painter = rememberAsyncImagePainter(R.drawable.checkmark_circle),
-                                contentDescription = "Checkmark Icon",
-                                modifier = Modifier.size(25.dp)
-                            )
+                            if(!isPending) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(R.drawable.checkmark_circle),
+                                    contentDescription = "Checkmark Icon",
+                                    modifier = Modifier.size(25.dp)
+                                )
+                            }
                         }
                     }
 

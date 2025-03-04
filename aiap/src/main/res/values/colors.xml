@@ -21,6 +21,8 @@
     <color name="success_green_border">#66B584</color>
     <color name="current_subscription_text">#16A34A</color>
     <color name="current_subscription_background">#DCFCE7</color>
+    <color name="pending_subscription_text">#FDAD74</color>
+    <color name="pending_subscription_background">#FFF4EB</color>
 
     <!-- iOS Platform Warning Colors -->
     <color name="ios_warning_border">#FECDAA</color>
