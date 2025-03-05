@@ -22,9 +22,14 @@ import androidx.compose.ui.unit.sp
 import com.synchronoss.aiap.R
 import com.synchronoss.aiap.core.di.DaggerAiapComponent
 import com.synchronoss.aiap.presentation.subscriptions.wrapper.ScrollablePlansWrapper
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.isSystemInDarkTheme
 
 @Composable
-fun ScrollablePlans(activity: ComponentActivity) {
+fun ScrollablePlans(
+    activity: ComponentActivity,
+    enableDarkTheme: Boolean = isSystemInDarkTheme()
+) {
     val wrapper = remember {
         val wrapper = ScrollablePlansWrapper()
         val application = activity.application
@@ -78,7 +83,11 @@ fun ScrollablePlans(activity: ComponentActivity) {
                 }
                 
                 if (shouldShowCurrentPlan) {
-                    ActualCurrentPlanCard(productDetails = currentProductDetails, productInfo = currentProductInfo)
+                    ActualCurrentPlanCard(
+                        productDetails = currentProductDetails, 
+                        productInfo = currentProductInfo,
+                        enableDarkTheme = enableDarkTheme
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
@@ -94,6 +103,7 @@ fun ScrollablePlans(activity: ComponentActivity) {
                             offerDetails = offerDetails,
                             productIndex = index,
                             activity = activity,
+                            enableDarkTheme = enableDarkTheme
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                     }

@@ -49,7 +49,12 @@ fun getTimePeriod(input: String): String{
 }
 
 @Composable
-fun ActualCurrentPlanCard(productDetails: ProductDetails, productInfo: ProductInfo, isPending: Boolean = false) {
+fun ActualCurrentPlanCard(
+    productDetails: ProductDetails, 
+    productInfo: ProductInfo, 
+    isPending: Boolean = false,
+    enableDarkTheme: Boolean = isSystemInDarkTheme()
+) {
     val context = LocalContext.current
     Box(
         modifier = Modifier
@@ -83,7 +88,7 @@ fun ActualCurrentPlanCard(productDetails: ProductDetails, productInfo: ProductIn
                         .background(
                             color = when{
                                 isPending -> Color(context.getColor(R.color.pending_subscription_background))
-                                else -> if(isSystemInDarkTheme())Color(context.getColor(R.color.current_subscription_text)) else Color(context.getColor(R.color.current_subscription_background))
+                                else -> if(enableDarkTheme)Color(context.getColor(R.color.current_subscription_text)) else Color(context.getColor(R.color.current_subscription_background))
                             },
                             RoundedCornerShape(
                                 topStart = getDimension(R.dimen.card_corner_radius),
@@ -110,7 +115,7 @@ fun ActualCurrentPlanCard(productDetails: ProductDetails, productInfo: ProductIn
                         fontSize = getDimensionText(R.dimen.text_size_current_plan_header),
                         color = when{
                             isPending -> Color(context.getColor(R.color.pending_subscription_text))
-                            else -> if(isSystemInDarkTheme())Color(context.getColor(R.color.current_subscription_background)) else Color(context.getColor(R.color.current_subscription_text))
+                            else -> if(enableDarkTheme)Color(context.getColor(R.color.current_subscription_background)) else Color(context.getColor(R.color.current_subscription_text))
                         },
                         fontWeight = FontWeight.W600,
                     )
@@ -176,7 +181,7 @@ fun ActualCurrentPlanCard(productDetails: ProductDetails, productInfo: ProductIn
                                     addStyle(
                                         style = SpanStyle(
                                             fontWeight = FontWeight.Bold,
-                                            color = if(isSystemInDarkTheme())  Color.White else  Color.Black
+                                            color = if(enableDarkTheme)  Color.White else  Color.Black
                                         ),
                                         start = firstIndex,
                                         end = firstIndex + formattedPrice.length
@@ -231,7 +236,8 @@ fun OtherPlanCard(
     productDetails: ProductDetails,
     offerDetails: ProductDetails.SubscriptionOfferDetails,
     productIndex: Int,
-    activity: ComponentActivity
+    activity: ComponentActivity,
+    enableDarkTheme: Boolean = isSystemInDarkTheme()
 ) {
     val TAG = "OtherPlanCard"
     val context = LocalContext.current
@@ -405,7 +411,7 @@ fun OtherPlanCard(
                     // Make the first %1$s (formattedPrice) bold
                     if (firstIndex >= 0) {
                         addStyle(
-                            style = SpanStyle(fontWeight = FontWeight.Bold, color = if(isSystemInDarkTheme())  Color.White else  Color.Black),
+                            style = SpanStyle(fontWeight = FontWeight.Bold, color = if(enableDarkTheme)  Color.White else  Color.Black),
                             start = firstIndex,
                             end = firstIndex + formattedPrice.length
                         )

@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -48,15 +49,20 @@ import com.synchronoss.aiap.utils.LogUtils
 private const val TAG = "SubscriptionsView"
 
 /**
- * Main composable for the Subscriptions screen.
- * This screen displays available subscription plans and allows users to select and purchase them.
+ * Composable function that displays the subscriptions view.
  *
- * @param activity The parent ComponentActivity
- * @param modifier Modifier for customizing the layout
- * @param launchedViaIntent Boolean flag indicating if this view was launched via an intent (affects navigation)
+ * @param activity The activity context.
+ * @param modifier The modifier to be applied to the composable.
+ * @param launchedViaIntent Whether the view was launched via an intent.
+ * @param enableDarkTheme Whether to use dark theme or not.
  */
 @Composable
-fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier, launchedViaIntent: Boolean) {
+fun SubscriptionsView(
+    activity: ComponentActivity, 
+    modifier: Modifier = Modifier, 
+    launchedViaIntent: Boolean,
+    enableDarkTheme: Boolean = isSystemInDarkTheme()
+) {
     // Initialize the ViewModel using the custom remember function
     val viewModel = rememberSubscriptionsViewModel(activity)
     // State for controlling the visibility of the "More" dialog
@@ -89,11 +95,12 @@ fun SubscriptionsView(activity: ComponentActivity, modifier: Modifier = Modifier
                     viewModel = viewModel,
                     activity = activity,
                     onShowMoreDialog = { showDialog = true },
-                    modifier = modifier
+                    modifier = modifier,
+                    enableDarkTheme = enableDarkTheme
                 )
             } else {
                 // Show loading view while data is being fetched
-                LoadingView()
+                LoadingView(enableDarkTheme = enableDarkTheme)
             }
         }
     }
@@ -184,7 +191,7 @@ private fun NoConnectionView() {
  * Displays a loading indicator while data is being fetched.
  */
 @Composable
-private fun LoadingView() {
+private fun LoadingView(enableDarkTheme: Boolean = isSystemInDarkTheme()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -194,7 +201,7 @@ private fun LoadingView() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Display a skeleton loader animation
-        SkeletonLoader()
+        SkeletonLoader(enableDarkTheme = enableDarkTheme)
     }
 }
 
@@ -211,7 +218,8 @@ private fun MainContent(
     viewModel: SubscriptionsViewModel,
     activity: ComponentActivity,
     onShowMoreDialog: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enableDarkTheme: Boolean = isSystemInDarkTheme()
 ) {
     val configuration = LocalConfiguration.current
     val context = LocalContext.current
@@ -254,7 +262,10 @@ private fun MainContent(
             ) {
                 Spacer(modifier = Modifier.height(getDimension(R.dimen.spacing_medium)))
                 // Display scrollable subscription plans
-                ScrollablePlans(activity = activity)
+                ScrollablePlans(
+                    activity = activity,
+                    enableDarkTheme = enableDarkTheme
+                )
                 
                 // Add bottom spacing that adjusts based on orientation and selection state
                 Spacer(modifier = calculateBottomSpacing(

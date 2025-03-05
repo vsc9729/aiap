@@ -19,7 +19,7 @@ import com.synchronoss.aiap.utils.getDimension
 // hello sonarqube
 
 @Composable
-fun SkeletonLoader() {
+fun SkeletonLoader(enableDarkTheme: Boolean = isSystemInDarkTheme()) {
     val transition = rememberInfiniteTransition(label = "shimmer")
     val translateAnim by transition.animateFloat(
         initialValue = 0f,
@@ -45,7 +45,7 @@ fun SkeletonLoader() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = if(isSystemInDarkTheme()) Color.Black else Color.White)
+                .background(color = if(enableDarkTheme) Color.Black else Color.White)
                 .padding(horizontal = getDimension(R.dimen.skeleton_padding_horizontal)),
             verticalArrangement = Arrangement.SpaceBetween
         ) {

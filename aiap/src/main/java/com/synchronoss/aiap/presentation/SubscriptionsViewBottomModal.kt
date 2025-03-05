@@ -42,7 +42,8 @@ fun SubscriptionsViewBottomSheet(
     partnerUserId: String,
     activity: ComponentActivity,
     isLaunchedViaIntent: Boolean = false,
-    apiKey: String
+    apiKey: String,
+    enableDarkTheme: Boolean = isSystemInDarkTheme()
 ) {
     val wrapper = remember {
         val wrapper = SubscriptionsViewBottomModalWrapper()
@@ -66,13 +67,14 @@ fun SubscriptionsViewBottomSheet(
 
     if(isLaunchedViaIntent) {
         AiAPTheme(
-            darkTheme = isSystemInDarkTheme(),
+            darkTheme = enableDarkTheme,
             activity = activity,
             content = {
                 FullScreenContent(
                     viewModel = viewModel,
                     activity = activity,
-                    isLaunchedViaIntent = isLaunchedViaIntent
+                    isLaunchedViaIntent = isLaunchedViaIntent,
+                    enableDarkTheme = enableDarkTheme
                 )
             }
         )
@@ -103,7 +105,7 @@ fun SubscriptionsViewBottomSheet(
 
         if (visible || animatedOffset < 1f) {
             AiAPTheme(
-                darkTheme = isSystemInDarkTheme(),
+                darkTheme = enableDarkTheme,
                 activity = activity,
                 content = {
                     ModalContent(
@@ -112,7 +114,8 @@ fun SubscriptionsViewBottomSheet(
                         isLaunchedViaIntent = isLaunchedViaIntent,
                         animatedAlpha = animatedAlpha,
                         animatedOffset = animatedOffset,
-                        sheetHeight = sheetHeight
+                        sheetHeight = sheetHeight,
+                        enableDarkTheme = enableDarkTheme
                     )
                 }
             )
@@ -124,7 +127,8 @@ fun SubscriptionsViewBottomSheet(
 private fun FullScreenContent(
     viewModel: SubscriptionsViewModel,
     activity: ComponentActivity,
-    isLaunchedViaIntent: Boolean
+    isLaunchedViaIntent: Boolean,
+    enableDarkTheme: Boolean
 ) {
     Box(
         modifier = Modifier
@@ -139,10 +143,14 @@ private fun FullScreenContent(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .background(if (isSystemInDarkTheme()) Color(0xFF0D0D0D) else Color.White)
+                .background(if (enableDarkTheme) Color(0xFF0D0D0D) else Color.White)
                 .clickable(enabled = false) {}
         ) {
-            SubscriptionsView(activity = activity, launchedViaIntent = isLaunchedViaIntent)
+            SubscriptionsView(
+                activity = activity, 
+                launchedViaIntent = isLaunchedViaIntent,
+                enableDarkTheme = enableDarkTheme
+            )
             ToastComposable(
                 heading = viewModel.toastState.heading,
                 subText = viewModel.toastState.message,
@@ -170,7 +178,8 @@ private fun ModalContent(
     isLaunchedViaIntent: Boolean,
     animatedAlpha: Float,
     animatedOffset: Float,
-    sheetHeight: androidx.compose.ui.unit.Dp
+    sheetHeight: androidx.compose.ui.unit.Dp,
+    enableDarkTheme: Boolean
 ) {
     Box(
         modifier = Modifier
@@ -193,10 +202,14 @@ private fun ModalContent(
                         topEnd = getDimension(R.dimen.bottom_sheet_corner_radius)
                     )
                 )
-                .background(if (isSystemInDarkTheme()) Color(0xFF0D0D0D) else Color.White)
+                .background(if (enableDarkTheme) Color(0xFF0D0D0D) else Color.White)
                 .clickable(enabled = false) {}
         ) {
-            SubscriptionsView(activity = activity, launchedViaIntent = isLaunchedViaIntent)
+            SubscriptionsView(
+                activity = activity, 
+                launchedViaIntent = isLaunchedViaIntent,
+                enableDarkTheme = enableDarkTheme
+            )
             ToastComposable(
                 heading = viewModel.toastState.heading,
                 subText = viewModel.toastState.message,
