@@ -21,21 +21,11 @@ Add the dependency to your app's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation(/* Link to public repository */)
+    implementation("com.github.vsc9729:aiap:16.2.0")
 }
 ```
 
-### **3. Configure App Key**
-
-Add your app key to your project's `gradle.properties` file:
-
-```properties
-aiapAppKey="your-app-key-here"
-```
-
-This app key is required for authentication and will be automatically read by the AIAP SDK.
-
-### **4. Import AIAP**
+### **3. Import AIAP**
 
 You should now be able to import AIAP. 
 ```kotlin
@@ -43,6 +33,7 @@ import com.geekyants.synchronoss.aiap.SubscriptionsViewBottomSheet
 ```
 
 The package name would be changed later
+
 ### **4. Required Permissions**
 
 Add these permissions to your `AndroidManifest.xml`:
@@ -100,18 +91,17 @@ implementation("io.coil-kt:coil-compose:2.4.0")
 ```
 Used for efficient image loading and caching in Compose UI.
 
-7. ********Data Storage********
+7. ********Lifecycle Components********
 ```kotlin
-implementation("androidx.datastore:datastore-preferences:1.0.0")
 implementation("androidx.lifecycle:lifecycle-process:2.7.0")
 ```
-Required for persistent data storage and lifecycle management.
+Required for lifecycle management.
 
 ## **Basic Implementation**
 
 1. Initialize the subscription view in your activity:
 
-```kotlin:readme.md
+```kotlin
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -121,7 +111,8 @@ class MainActivity : ComponentActivity() {
                     onDismissRequest = { showSubscriptionView = false },
                     visible = showSubscriptionView,
                     activity = this,
-                    partnerUserId = "your-user-id"
+                    partnerUserId = "your-user-id",
+                    apiKey = "your-app-key-here"
                 )
             }
         }
