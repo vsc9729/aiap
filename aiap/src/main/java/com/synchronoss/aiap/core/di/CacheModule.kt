@@ -15,6 +15,8 @@ object CacheModule {
     
     /**
      * Provides a singleton instance of CacheManager.
+     * Uses the device's cache directory for storing cached data.
+     * 
      * @param context The application context
      * @return A new instance of CacheManager initialized with the application context
      */

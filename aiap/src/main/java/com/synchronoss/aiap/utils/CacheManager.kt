@@ -1,23 +1,23 @@
 package com.synchronoss.aiap.utils
 
 import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.*
-import androidx.datastore.preferences.preferencesDataStoreFile
-import kotlinx.coroutines.flow.first
-import javax.inject.Inject
-import javax.inject.Singleton
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import com.synchronoss.aiap.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import javax.inject.Inject
+import javax.inject.Singleton
+import org.json.JSONObject
 
 @Singleton
 class CacheManager @Inject constructor(
     private val context: Context
 ) {
-    private val dataStore: DataStore<Preferences> = PreferenceDataStoreFactory.create(
-        produceFile = { context.preferencesDataStoreFile("cache_store") }
-    )
+    private val cacheDir: File = context.cacheDir
     
     suspend fun <T> getCachedDataWithTimestamp(
         key: String,
@@ -28,18 +28,14 @@ class CacheManager @Inject constructor(
     ): Resource<T> {
         try {
             // Check cache
-            val preferences = dataStore.data.first()
-            val dataKey = stringPreferencesKey(key)
-            val timestampKey = longPreferencesKey("${key}_timestamp")
+            val cachedData = getCachedFileData(key)
+            val cachedTimestamp = getCachedTimestamp(key)
             
-            val cachedValue: String? = preferences[dataKey]
-            val cachedTimestamp: Long? = preferences[timestampKey]
-
             // If we have cached data and the timestamps match, return cached data
-            if (cachedValue != null && cachedTimestamp != null && 
+            if (cachedData != null && cachedTimestamp != null && 
                 currentTimestamp != null && cachedTimestamp == currentTimestamp) {
                 return try {
-                    Resource.Success(deserialize(cachedValue))
+                    Resource.Success(deserialize(cachedData))
                 } catch (e: Exception) {
                     Resource.Error(
                         context.getString(
@@ -54,20 +50,18 @@ class CacheManager @Inject constructor(
             val networkResult = fetchFromNetwork()
             
             if (networkResult is Resource.Success && networkResult.data != null) {
-                    // Update cache with new data and timestamp
-                    try {
-                        dataStore.edit { mutablePreferences ->
-                            mutablePreferences[dataKey] = serialize(networkResult.data)
-                            mutablePreferences[timestampKey] = currentTimestamp ?: System.currentTimeMillis()
-                        }
-                    } catch (e: Exception) {
-                        return Resource.Error(
-                            context.getString(
-                                R.string.cache_save_failed,
-                                e.message
-                            )
+                // Update cache with new data and timestamp
+                try {
+                    saveCacheData(key, serialize(networkResult.data))
+                    saveTimestamp(key, currentTimestamp ?: System.currentTimeMillis())
+                } catch (e: Exception) {
+                    return Resource.Error(
+                        context.getString(
+                            R.string.cache_save_failed,
+                            e.message
                         )
-                    }
+                    )
+                }
             }
             
             return networkResult
@@ -97,7 +91,7 @@ class CacheManager @Inject constructor(
                 when (val result = fetchFromNetwork()) {
                     is Resource.Success -> {
                         result.data?.let { data ->
-                            saveData(key, serialize(data))
+                            saveCacheData(key, serialize(data))
                         }
                         result
                     }
@@ -122,11 +116,10 @@ class CacheManager @Inject constructor(
         deserialize: (String) -> T
     ): Resource<T>? {
         return try {
-            val preferences = dataStore.data.first()
-            val cachedValue = preferences[stringPreferencesKey(key)]
-            if (cachedValue != null) {
+            val cachedData = getCachedFileData(key)
+            if (cachedData != null) {
                 try {
-                    Resource.Success(deserialize(cachedValue))
+                    Resource.Success(deserialize(cachedData))
                 } catch (e: Exception) {
                     null
                 }
@@ -138,13 +131,61 @@ class CacheManager @Inject constructor(
         }
     }
 
-    private suspend fun saveData(key: String, value: String) {
-        dataStore.edit { preferences ->
-            preferences[stringPreferencesKey(key)] = value
+    private suspend fun saveCacheData(key: String, value: String) = withContext(Dispatchers.IO) {
+        val file = File(cacheDir, getDataFileName(key))
+        FileOutputStream(file).use { 
+            it.write(value.toByteArray())
         }
     }
+    
+    private suspend fun saveTimestamp(key: String, timestamp: Long) = withContext(Dispatchers.IO) {
+        val file = File(cacheDir, getTimestampFileName(key))
+        FileOutputStream(file).use { 
+            it.write(timestamp.toString().toByteArray())
+        }
+    }
+    
+    private suspend fun getCachedFileData(key: String): String? = withContext(Dispatchers.IO) {
+        val file = File(cacheDir, getDataFileName(key))
+        if (file.exists()) {
+            try {
+                FileInputStream(file).use { fis ->
+                    val bytes = ByteArray(file.length().toInt())
+                    fis.read(bytes)
+                    String(bytes)
+                }
+            } catch (e: Exception) {
+                null
+            }
+        } else {
+            null
+        }
+    }
+    
+    private suspend fun getCachedTimestamp(key: String): Long? = withContext(Dispatchers.IO) {
+        val file = File(cacheDir, getTimestampFileName(key))
+        if (file.exists()) {
+            try {
+                FileInputStream(file).use { fis ->
+                    val bytes = ByteArray(file.length().toInt())
+                    fis.read(bytes)
+                    String(bytes).toLongOrNull()
+                }
+            } catch (e: Exception) {
+                null
+            }
+        } else {
+            null
+        }
+    }
+    
+    private fun getDataFileName(key: String): String = "${key}_data"
+    
+    private fun getTimestampFileName(key: String): String = "${key}_timestamp"
 
-    suspend fun clearCache() {
-        dataStore.edit { it.clear() }
+    suspend fun clearCache() = withContext(Dispatchers.IO) {
+        cacheDir.listFiles()?.forEach { file ->
+            file.delete()
+        }
     }
 }
