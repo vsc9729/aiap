@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -82,7 +83,7 @@ fun ActualCurrentPlanCard(productDetails: ProductDetails, productInfo: ProductIn
                         .background(
                             color = when{
                                 isPending -> Color(context.getColor(R.color.pending_subscription_background))
-                                else -> Color(context.getColor(R.color.current_subscription_background))
+                                else -> if(isSystemInDarkTheme())Color(context.getColor(R.color.current_subscription_text)) else Color(context.getColor(R.color.current_subscription_background))
                             },
                             RoundedCornerShape(
                                 topStart = getDimension(R.dimen.card_corner_radius),
@@ -109,7 +110,7 @@ fun ActualCurrentPlanCard(productDetails: ProductDetails, productInfo: ProductIn
                         fontSize = getDimensionText(R.dimen.text_size_current_plan_header),
                         color = when{
                             isPending -> Color(context.getColor(R.color.pending_subscription_text))
-                            else -> Color(context.getColor(R.color.current_subscription_text))
+                            else -> if(isSystemInDarkTheme())Color(context.getColor(R.color.current_subscription_background)) else Color(context.getColor(R.color.current_subscription_text))
                         },
                         fontWeight = FontWeight.W600,
                     )
@@ -175,7 +176,7 @@ fun ActualCurrentPlanCard(productDetails: ProductDetails, productInfo: ProductIn
                                     addStyle(
                                         style = SpanStyle(
                                             fontWeight = FontWeight.Bold,
-                                            color = Color.Black
+                                            color = if(isSystemInDarkTheme())  Color.White else  Color.Black
                                         ),
                                         start = firstIndex,
                                         end = firstIndex + formattedPrice.length
@@ -404,7 +405,7 @@ fun OtherPlanCard(
                     // Make the first %1$s (formattedPrice) bold
                     if (firstIndex >= 0) {
                         addStyle(
-                            style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.Black),
+                            style = SpanStyle(fontWeight = FontWeight.Bold, color = if(isSystemInDarkTheme())  Color.White else  Color.Black),
                             start = firstIndex,
                             end = firstIndex + formattedPrice.length
                         )

@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
+import com.synchronoss.aiap.BuildConfig
 import com.synchronoss.aiap.R
 import com.synchronoss.aiap.utils.getDimension
 import com.synchronoss.aiap.presentation.viewmodels.SubscriptionsViewModel
@@ -42,7 +43,7 @@ fun SubscriptionsViewBottomSheet(
     partnerUserId: String,
     activity: ComponentActivity,
     isLaunchedViaIntent: Boolean = false,
-    apiKey: String
+//    apiKey: String
 ) {
     val wrapper = remember {
         val wrapper = SubscriptionsViewBottomModalWrapper()
@@ -57,7 +58,7 @@ fun SubscriptionsViewBottomSheet(
     }
 
     LaunchedEffect(partnerUserId) {
-        viewModel.initialize(id = partnerUserId, intentLaunch = isLaunchedViaIntent, apiKey = apiKey)
+        viewModel.initialize(id = partnerUserId, intentLaunch = isLaunchedViaIntent, apiKey = BuildConfig.AIAP_API_KEY ) //get from gradle.properties
     }
 
     val configuration = LocalConfiguration.current
