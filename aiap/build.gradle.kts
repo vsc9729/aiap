@@ -161,7 +161,6 @@ dependencies {
 
     // Lifecycle & Data
     implementation(libs.androidx.lifecycle.process)
-    implementation(libs.androidx.datastore.preferences)
 
     // Dependency Injection - Dagger
     implementation("com.google.dagger:dagger:2.51.1")
