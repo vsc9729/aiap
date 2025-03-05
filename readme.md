@@ -21,7 +21,7 @@ Add the dependency to your app's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.github.vsc9729:aiap:16.2.0")
+    implementation("com.github.vsc9729:aiap:<latest-version>")
 }
 ```
 
