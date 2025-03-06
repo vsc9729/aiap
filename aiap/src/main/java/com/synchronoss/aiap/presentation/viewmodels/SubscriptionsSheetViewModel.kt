@@ -28,6 +28,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 // Application imports
 import com.synchronoss.aiap.R
@@ -44,7 +46,9 @@ import com.synchronoss.aiap.presentation.subscriptions.ui.TabOption
 import com.synchronoss.aiap.ui.theme.ThemeColors
 import com.synchronoss.aiap.ui.theme.ThemeLoader
 import com.synchronoss.aiap.utils.LogUtils
+import com.synchronoss.aiap.utils.NetworkConnectionListener
 import com.synchronoss.aiap.utils.Resource
+import com.synchronoss.aiap.utils.ToastService
 
 /**
  * ViewModel responsible for managing subscription-related UI state and business logic.
@@ -65,6 +69,11 @@ class SubscriptionsViewModel @Inject constructor(
         private const val TAG = "SubscriptionsSheetVM"
     }
 
+    // Create the ToastService and NetworkConnectionListener
+    private val coroutineScope = viewModelScope
+    private val toastService = ToastService(context, coroutineScope)
+    private val networkConnectionListener = NetworkConnectionListener(context, toastService)
+
     //region UI State Properties
     /** Loading and dialog states */
     val isLoading = mutableStateOf(true)
@@ -79,10 +88,8 @@ class SubscriptionsViewModel @Inject constructor(
     var selectedPlan: Int by mutableIntStateOf(-1)
     var isCurrentProductBeingUpdated: Boolean by mutableStateOf(false)
     
-    /** Toast handling */
-    private var toastJob: Job? = null
-    var toastState by mutableStateOf(ToastState())
-        private set
+    /** Toast state reference from ToastService */
+    val toastState get() = toastService.toastState
     //endregion
 
     //region User and Product Data Properties
@@ -122,38 +129,25 @@ class SubscriptionsViewModel @Inject constructor(
 
     //region Toast Management
     /**
-     * Shows a toast with resource IDs for heading and message
+     * Shows a toast with string heading and message.
+     * Delegates to the ToastService.
      */
-
-    /**
-     * Shows a toast with string heading and message
-     */
-    fun showToast(heading: String, message: String, isSuccess: Boolean = false,isPending: Boolean = false, formatArgs: Any? = null) {
-
-        toastJob?.cancel()
-        toastState = ToastState(
-            isVisible = true,
-            heading = heading,
-            message = message,
-            isSuccess = isSuccess,
-            isPending = isPending,
-            formatArgs = formatArgs
-        )
-        if(!isSuccess && !isPending){
-            toastJob = viewModelScope.launch {
-                delay(3000)
-                hideToast()
-            }
-        }
-
+    fun showToast(
+        heading: String,
+        message: String,
+        isSuccess: Boolean = false,
+        isPending: Boolean = false,
+        formatArgs: Any? = null
+    ) {
+        toastService.showToast(heading, message, isSuccess, isPending, formatArgs)
     }
 
     /**
-     * Hides the currently displayed toast
+     * Hides the currently displayed toast.
+     * Delegates to the ToastService.
      */
     fun hideToast() {
-        toastJob?.cancel()
-        toastState = toastState.copy(isVisible = false)
+        toastService.hideToast()
     }
     //endregion
 
@@ -174,6 +168,9 @@ class SubscriptionsViewModel @Inject constructor(
                     // Initialize LogUtils first
                     LogUtils.initialize(context)
                     LogUtils.clearLogs()
+                    
+                    // Initialize network connection listener first
+                    initNetworkListener()
 
                     // Initialize Segment Analytics
                     segmentAnalyticsUseCases.initialize()
@@ -253,6 +250,28 @@ class SubscriptionsViewModel @Inject constructor(
             setupEventHandlers()
             
             libraryActivityManagerUseCases.launchLibrary()
+        }
+    }
+    
+    /**
+     * Initializes the network connection listener
+     */
+    private suspend fun initNetworkListener() {
+        try {
+            // Register the network connection listener
+            val isConnected = networkConnectionListener.register()
+            
+            LogUtils.d(TAG, "Network listener initialized, connected: $isConnected")
+            
+            // If not connected, show a toast
+            if (!isConnected) {
+                showToast(
+                    heading = context.getString(R.string.no_connection_title),
+                    message = context.getString(R.string.no_connection_message)
+                )
+            }
+        } catch (e: Exception) {
+            LogUtils.e(TAG, "Failed to initialize network listener", e)
         }
     }
 
@@ -656,6 +675,9 @@ class SubscriptionsViewModel @Inject constructor(
      * Cleans up resources when ViewModel is cleared
      */
     override fun onCleared() {
+        // Unregister network listener
+        networkConnectionListener.unregister()
+        
         libraryActivityManagerUseCases.cleanup()
         super.onCleared()
     }
@@ -664,6 +686,9 @@ class SubscriptionsViewModel @Inject constructor(
      * Clears the ViewModel state when bottom sheet is dismissed
      */
     fun clearState() {
+        // Unregister network listener
+        networkConnectionListener.unregister()
+        
         isLoading.value = true
         dialogState.value = false
         noInternetConnectionAndNoCache.value = false

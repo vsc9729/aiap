@@ -22,7 +22,8 @@ import javax.inject.Singleton
         CacheModule::class,
         AnalyticsModule::class,
         LibraryActivityModule::class,
-        ViewModelModule::class
+        ViewModelModule::class,
+        NetworkModule::class
     ]
 )
 interface AiapComponent {

@@ -4,6 +4,8 @@
     <string name="no_connection_title">No Connection</string>
     <string name="no_connection_message">Please check your internet connection</string>
     <string name="no_connection_text">No Internet Connection</string>
+    <string name="connection_restored_title">Connection Restored</string>
+    <string name="connection_restored_message">Your internet connection has been restored</string>
     <string name="error_title">Error</string>
     <string name="error_products_message">Failed to load products. Please try again later.</string>
     <string name="purchase_failed_title">Something went wrong</string>
