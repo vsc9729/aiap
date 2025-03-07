@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -709,7 +710,10 @@ private fun ContinueButton(
     Button(
         modifier = modifier
             .fillMaxWidth()
-            .height(buttonHeight),
+            .height(buttonHeight)
+            .testTag("continue_button_${if (viewModel.selectedPlan != -1 &&
+                !viewModel.isCurrentProductBeingUpdated &&
+                !viewModel.isIosPlatform) "enabled" else "disabled"}"),
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = Color.White,

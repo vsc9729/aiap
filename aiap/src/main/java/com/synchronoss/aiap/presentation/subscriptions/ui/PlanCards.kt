@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -71,6 +72,8 @@ fun ActualCurrentPlanCard(
                 ),
                 shape = RoundedCornerShape(getDimension(R.dimen.card_corner_radius))
             )
+            .testTag("current_plan_card")
+
     ) {
         Row (
             modifier = Modifier.fillMaxSize()
@@ -263,6 +266,7 @@ fun OtherPlanCard(
                 color = MaterialTheme.colorScheme.background,
                 shape = RoundedCornerShape(getDimension(R.dimen.card_corner_radius))
             )
+
             .then(
                 if (subscriptionsViewModel.selectedPlan == productIndex) {
                     LogUtils.d(TAG, "Current Plan: ${subscriptionsViewModel.selectedPlan}")
@@ -300,6 +304,7 @@ fun OtherPlanCard(
                 horizontal = getDimension(R.dimen.card_padding_horizontal),
                 vertical = getDimension(R.dimen.card_padding_vertical)
             )
+            .testTag(if (subscriptionsViewModel.selectedPlan == productIndex) "selected_plan_card" else "unselected_plan_card")
     ) {
 
         Column(

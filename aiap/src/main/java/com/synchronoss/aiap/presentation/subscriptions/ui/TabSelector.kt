@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import com.synchronoss.aiap.R
 import com.synchronoss.aiap.core.di.DaggerAiapComponent
@@ -80,7 +81,8 @@ fun TabSelector(
                                 if (tab == selectedTab) MaterialTheme.colorScheme.primary
                                 else Color.Transparent
                             )
-                            .clickable { onTabSelected(tab) },
+                            .clickable { onTabSelected(tab) }
+                            .testTag(if (tab == selectedTab) "selected_tab" else "unselected_tab") ,
                         contentAlignment = Alignment.Center
                     ) {
                         Text(

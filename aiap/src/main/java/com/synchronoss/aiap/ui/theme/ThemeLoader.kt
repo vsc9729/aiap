@@ -37,7 +37,7 @@ class DarkThemeColors(
     surface = Color(0xFF166534),
     onSurface = Color(0xFFE4FFF4),
     outline = Color(0xFF262627),
-    outlineVariant = Color(0xFF404040),
+    outlineVariant = Color(0xFF0096D5),
     tertiary = Color(0xFF212121),
     onTertiary = Color(0xFFFEFEFF)
 )
