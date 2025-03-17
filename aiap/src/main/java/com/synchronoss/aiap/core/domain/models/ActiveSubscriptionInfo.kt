@@ -5,6 +5,6 @@ data class ActiveSubscriptionInfo(
     val productUpdateTimeStamp: Long?,
     val themConfigTimeStamp: Long?,
     val userUUID: String?,
-    val baseServiceLevel:String?
-
+    val baseServiceLevel: String?,
+    val pendingPurchase: Boolean = false
 ) 

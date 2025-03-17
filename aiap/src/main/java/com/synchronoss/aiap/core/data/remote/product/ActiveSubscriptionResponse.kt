@@ -10,6 +10,8 @@ import com.squareup.moshi.JsonClass
  * @property productUpdateTimeStamp Timestamp of the last product update
  * @property themConfigTimeStamp Timestamp of the last theme configuration update
  * @property userUUID Unique identifier of the user
+ * @property baseServiceLevel Base service level for the subscription
+ * @property pendingPurchase Flag indicating if there's a pending purchase
  */
 @JsonClass(generateAdapter = true)
 data class ActiveSubscriptionResponse(
@@ -27,4 +29,7 @@ data class ActiveSubscriptionResponse(
 
     @Json(name = "baseServiceLevel")
     val baseServiceLevel: String,
+
+    @Json(name = "pendingPurchase")
+    val pendingPurchase: Boolean = false,
 )

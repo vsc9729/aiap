@@ -51,8 +51,7 @@ fun getTimePeriod(input: String): String{
 
 @Composable
 fun ActualCurrentPlanCard(
-    productDetails: ProductDetails, 
-    productInfo: ProductInfo, 
+    productDetails: ProductDetails,
     isPending: Boolean = false,
     enableDarkTheme: Boolean = isSystemInDarkTheme()
 ) {
@@ -86,11 +85,11 @@ fun ActualCurrentPlanCard(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(35.dp)
+                        .height(getDimension(R.dimen.plan_card_header_height))
                         //                    .weight(1f)
                         .background(
                             color = when{
-                                isPending -> Color(context.getColor(R.color.pending_subscription_background))
+                                isPending -> if(enableDarkTheme)Color(context.getColor(R.color.pending_subscription_text)) else Color(context.getColor(R.color.pending_subscription_background))
                                 else -> if(enableDarkTheme)Color(context.getColor(R.color.current_subscription_text)) else Color(context.getColor(R.color.current_subscription_background))
                             },
                             RoundedCornerShape(
@@ -117,7 +116,7 @@ fun ActualCurrentPlanCard(
                         ),
                         fontSize = getDimensionText(R.dimen.text_size_current_plan_header),
                         color = when{
-                            isPending -> Color(context.getColor(R.color.pending_subscription_text))
+                            isPending -> if(enableDarkTheme)Color(context.getColor(R.color.pending_subscription_background)) else Color(context.getColor(R.color.pending_subscription_text))
                             else -> if(enableDarkTheme)Color(context.getColor(R.color.current_subscription_background)) else Color(context.getColor(R.color.current_subscription_text))
                         },
                         fontWeight = FontWeight.W600,
@@ -205,27 +204,6 @@ fun ActualCurrentPlanCard(
 
                         }
                     }
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(getDimension(R.dimen.other_plan_card_height))
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(getDimension(R.dimen.other_plan_card_height)),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ){
-                            if(!isPending) {
-                                Image(
-                                    painter = rememberAsyncImagePainter(R.drawable.checkmark_circle),
-                                    contentDescription = "Checkmark Icon",
-                                    modifier = Modifier.size(25.dp)
-                                )
-                            }
-                        }
-                    }
 
                 }
             }
@@ -272,7 +250,7 @@ fun OtherPlanCard(
                     LogUtils.d(TAG, "Current Plan: ${subscriptionsViewModel.selectedPlan}")
                     Modifier
                         .shadow(
-                            elevation = 1.dp,
+                            elevation = getDimension(R.dimen.plan_card_elevation),
                             shape = RoundedCornerShape(getDimension(R.dimen.card_corner_radius)),
                         )
                         .background(
@@ -345,21 +323,21 @@ fun OtherPlanCard(
                             ""
                         }
 
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(getDimension(R.dimen.plan_card_spacer_height)))
                         if (savingsText.isNotEmpty()) {
                             Box(
                                 modifier = Modifier
                                     .background(
                                         color = MaterialTheme.colorScheme.surface,
-                                        shape = RoundedCornerShape(5.dp)
+                                        shape = RoundedCornerShape(getDimension(R.dimen.plan_card_savings_corner))
                                     )
-                                    .clip(RoundedCornerShape(5.dp))
+                                    .clip(RoundedCornerShape(getDimension(R.dimen.plan_card_savings_corner)))
                                     .border(
                                         color = MaterialTheme.colorScheme.onSurface.copy(
                                             alpha = 0.5F
-                                        ), width = 1.dp, shape = RoundedCornerShape(5.dp)
+                                        ), width = getDimension(R.dimen.plan_card_savings_border), shape = RoundedCornerShape(getDimension(R.dimen.plan_card_savings_corner))
                                     )
-                                    .padding(horizontal = 6.dp, vertical = 4.dp)
+                                    .padding(horizontal = getDimension(R.dimen.plan_card_savings_padding_horizontal), vertical = getDimension(R.dimen.plan_card_savings_padding_vertical))
                             ){
                                 Row (
                                     verticalAlignment = Alignment.CenterVertically
@@ -367,9 +345,9 @@ fun OtherPlanCard(
                                     Image(
                                         painter = rememberAsyncImagePainter(R.drawable.discount),
                                         contentDescription = "Discount Icon",
-                                        modifier = Modifier.size(14.dp)
+                                        modifier = Modifier.size(getDimension(R.dimen.plan_card_savings_icon_size))
                                     )
-                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Spacer(modifier = Modifier.width(getDimension(R.dimen.plan_card_savings_spacer)))
                                     Text(
                                         text = savingsText,
                                         fontSize = getDimensionText(R.dimen.text_size_plan_intro_price),

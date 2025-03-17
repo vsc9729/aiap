@@ -16,13 +16,29 @@
     <!-- Common -->
     <color name="more_button_border">#ffffff</color>
     <color name="current_storage_banner_background">#E9F5FF</color>
-    <color name="error_red">#FEF1F1</color>
-    <color name="success_green_background">#EDFCF2</color>
-    <color name="success_green_border">#66B584</color>
+
+    <!-- Toast Colors-->
+    <color name="error_red_background_light">#FEF1F1</color>
+    <color name="error_red_border_light">#F87171</color>
+    <color name="error_red_background_dark">#F98181</color>
+    <color name="error_red_border_dark">#B25151</color>
+    <color name="success_green_background_light">#EDFCF2</color>
+    <color name="success_green_border_light">#66B584</color>
+    <color name="success_green_background_dark">#16A34A</color>
+    <color name="success_green_border_dark">#6DC28D</color>
+    <color name="pending_background_light">#FFF4EB</color>
+    <color name="pending_border_light">#FDAD74</color>
+    <color name="pending_background_dark">#D76C1F</color>
+    <color name="pending_border_dark">#FDAD74</color>
+
+    #6DC28D
+    <!-- Subscription Banner-->
     <color name="current_subscription_text">#16A34A</color>
     <color name="current_subscription_background">#DCFCE7</color>
-    <color name="pending_subscription_text">#FDAD74</color>
-    <color name="pending_subscription_background">#FFF4EB</color>
+    <color name="pending_subscription_text">#D76C1F</color>
+    <color name="pending_subscription_background">#FFE7D5</color>
+
+
 
     <!-- iOS Platform Warning Colors -->
     <color name="ios_warning_border">#FECDAA</color>

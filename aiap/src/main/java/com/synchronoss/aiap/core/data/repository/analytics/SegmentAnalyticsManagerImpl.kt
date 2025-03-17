@@ -8,7 +8,6 @@ import com.segment.analytics.kotlin.destinations.localytics.LocalyticsDestinatio
 import com.segment.analytics.kotlin.destinations.localytics.LocalyticsSettings
 import com.synchronoss.aiap.R
 import com.synchronoss.aiap.core.domain.repository.analytics.SegmentAnalyticsManager
-import com.synchronoss.aiap.utils.LogUtils
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -44,12 +43,12 @@ class SegmentAnalyticsManagerImpl @Inject constructor(
                         analytics.add(plugin = LocalyticsDestination())
                         
                         isInitialized = true
-                        LogUtils.d(TAG, "Segment Analytics initialized successfully with Localytics destination")
+            
                         
                         // Send a test event to verify connection
                         track("SegmentInitialized", mapOf("timestamp" to System.currentTimeMillis()))
                     } catch (e: Exception) {
-                        LogUtils.e(TAG, "Failed to initialize Segment Analytics", e)
+                    
                         throw e // Re-throw to prevent incomplete initialization
                     }
                 }
@@ -65,11 +64,11 @@ class SegmentAnalyticsManagerImpl @Inject constructor(
     override fun track(eventName: String, properties: Map<String, Any>) {
         ensureInitialized {
             try {
-                LogUtils.d(TAG, "Tracking event: $eventName with properties: $properties")
+                
                 analytics.track(eventName, properties)
-                LogUtils.d(TAG, "Event tracked: $eventName")
+                
             } catch (e: Exception) {
-                LogUtils.e(TAG, "Failed to track event: $eventName", e)
+                
             }
         }
     }
@@ -83,8 +82,6 @@ class SegmentAnalyticsManagerImpl @Inject constructor(
         }
         if (isInitialized) {
             operation()
-        } else {
-            LogUtils.e(TAG, "Segment Analytics operation skipped - not initialized")
-        }
+        } 
     }
 } 

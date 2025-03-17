@@ -1,13 +1,17 @@
 package com.synchronoss.aiap.ui.theme
 
+import android.content.Context
+import android.graphics.Color
 import android.util.Log
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color as ComposeColor
+import com.synchronoss.aiap.R
 import com.synchronoss.aiap.core.domain.models.theme.Theme
 import com.synchronoss.aiap.core.domain.models.theme.ThemeInfo
-import com.synchronoss.aiap.core.domain.usecases.theme.GetThemeApi
+import com.synchronoss.aiap.core.domain.usecases.theme.GetThemeFile
 import com.synchronoss.aiap.core.domain.usecases.theme.ThemeManagerUseCases
-import com.synchronoss.aiap.utils.CacheManager
+import com.synchronoss.aiap.core.domain.usecases.theme.TransformThemeData
 import com.synchronoss.aiap.utils.Resource
+import com.synchronoss.aiap.utils.LogUtils
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -18,31 +22,53 @@ import kotlin.test.assertNotNull
 class ThemeLoaderTest {
     private lateinit var themeLoader: ThemeLoader
     private lateinit var themeManagerUseCases: ThemeManagerUseCases
-    private lateinit var cacheManager: CacheManager
-    private lateinit var getThemeApi: GetThemeApi
+    private lateinit var context: Context
+    private lateinit var getThemeFile: GetThemeFile
+    private lateinit var transformThemeData: TransformThemeData
+
+    companion object {
+        private const val DEFAULT_LIGHT_PRIMARY = 0xFF0096D5
+        private const val DEFAULT_LIGHT_SECONDARY = 0xFFE7F8FF
+        private const val DEFAULT_DARK_PRIMARY = 0xFF0096D5
+        private const val DEFAULT_DARK_SECONDARY = 0xFF262627
+        private const val TAG = "AIAP:ThemeLoader"
+    }
 
     @Before
     fun setUp() {
         mockkStatic(Log::class)
+        mockkStatic(Color::class)
         every { Log.d(any(), any()) } returns 0
         every { Log.e(any(), any()) } returns 0
         every { Log.e(any(), any(), any()) } returns 0
 
-        getThemeApi = mockk()
-        themeManagerUseCases = ThemeManagerUseCases(getThemeApi)
-        cacheManager = mockk()
+        // Mock Color.parseColor
+        every { Color.parseColor("#0096D5") } returns DEFAULT_LIGHT_PRIMARY.toInt()
+        every { Color.parseColor("#E7F8FF") } returns DEFAULT_LIGHT_SECONDARY.toInt()
+        every { Color.parseColor("#262627") } returns DEFAULT_DARK_SECONDARY.toInt()
 
-        themeLoader = ThemeLoader(themeManagerUseCases)
+        context = mockk(relaxed = true)
+        getThemeFile = mockk()
+        transformThemeData = mockk()
+        themeManagerUseCases = ThemeManagerUseCases(getThemeFile, transformThemeData)
+
+        // Mock string resources
+        every { context.getString(R.string.theme_error_parse_json) } returns "Failed to parse theme JSON"
+        every { context.getString(R.string.theme_error_load_json) } returns "Failed to load theme from JSON"
+        every { context.getString(R.string.theme_error_load_json, any()) } returns "Failed to load theme from JSON: {error}"
+        
+        // Mock color resources
+        every { context.getColor(R.string.theme_default_light_primary) } returns DEFAULT_LIGHT_PRIMARY.toInt()
+        every { context.getColor(R.string.theme_default_light_secondary) } returns DEFAULT_LIGHT_SECONDARY.toInt()
+        every { context.getColor(R.string.theme_default_dark_primary) } returns DEFAULT_DARK_PRIMARY.toInt()
+        every { context.getColor(R.string.theme_default_dark_secondary) } returns DEFAULT_DARK_SECONDARY.toInt()
+
+        themeLoader = ThemeLoader(themeManagerUseCases, context)
     }
 
     @Test
-    fun `loadTheme successfully loads theme from cache`() = runTest {
+    fun `loadTheme successfully loads theme from network`() = runTest {
         // Given
-        mockkStatic(android.graphics.Color::class)
-        every { android.graphics.Color.parseColor("#0096D5") } returns 0xFF0096D5.toInt()
-        every { android.graphics.Color.parseColor("#E7F8FF") } returns 0xFFE7F8FF.toInt()
-        every { android.graphics.Color.parseColor("#262627") } returns 0xFF262627.toInt()
-
         val mockThemeInfo = ThemeInfo(
             light = Theme(
                 logoUrl = "light_logo_url",
@@ -56,15 +82,7 @@ class ThemeLoaderTest {
             )
         )
 
-        coEvery {
-            cacheManager.getCachedDataWithTimestamp<ThemeInfo>(
-                key = "theme_cache",
-                currentTimestamp = any(),
-                fetchFromNetwork = any(),
-                serialize = any(),
-                deserialize = any()
-            )
-        } returns Resource.Success(mockThemeInfo)
+        coEvery { themeManagerUseCases.getThemeFile() } returns Resource.Success(mockThemeInfo)
 
         // When
         themeLoader.loadTheme()
@@ -75,24 +93,19 @@ class ThemeLoaderTest {
 
         assertEquals("light_logo_url", lightTheme.logoUrl)
         assertEquals("dark_logo_url", darkTheme.logoUrl)
-        assertEquals(Color(0xFF0096D5), lightTheme.themeColors.primary)
-        assertEquals(Color(0xFFE7F8FF), lightTheme.themeColors.secondary)
-        assertEquals(Color(0xFF0096D5), darkTheme.themeColors.primary)
-        assertEquals(Color(0xFF262627), darkTheme.themeColors.secondary)
+        assertEquals(ComposeColor(DEFAULT_LIGHT_PRIMARY), lightTheme.themeColors.primary)
+        assertEquals(ComposeColor(DEFAULT_LIGHT_SECONDARY), lightTheme.themeColors.secondary)
+        assertEquals(ComposeColor(DEFAULT_DARK_PRIMARY), darkTheme.themeColors.primary)
+        assertEquals(ComposeColor(DEFAULT_DARK_SECONDARY), darkTheme.themeColors.secondary)
+        
+        verify { Log.d(TAG, "Theme loaded successfully") }
     }
 
     @Test
     fun `loadTheme handles error response`() = runTest {
         // Given
-        coEvery {
-            cacheManager.getCachedDataWithTimestamp<ThemeInfo>(
-                key = "theme_cache",
-                currentTimestamp = any(),
-                fetchFromNetwork = any(),
-                serialize = any(),
-                deserialize = any()
-            )
-        } returns Resource.Error("Failed to load theme")
+        val errorMessage = "Failed to load theme"
+        coEvery { themeManagerUseCases.getThemeFile() } returns Resource.Error(errorMessage)
 
         // When
         themeLoader.loadTheme()
@@ -102,30 +115,39 @@ class ThemeLoaderTest {
         val darkTheme = themeLoader.getDarkThemeColors()
 
         // Verify default values are used
-        assertEquals(Color(0xFF0096D5), lightTheme.themeColors.primary)
-        assertEquals(Color(0xFFE7F8FF), lightTheme.themeColors.secondary)
-        assertEquals(Color(0xFF0096D5), darkTheme.themeColors.primary)
-        assertEquals(Color(0xFF262627), darkTheme.themeColors.secondary)
+        assertEquals(ComposeColor(DEFAULT_LIGHT_PRIMARY), lightTheme.themeColors.primary)
+        assertEquals(ComposeColor(DEFAULT_LIGHT_SECONDARY), lightTheme.themeColors.secondary)
+        assertEquals(ComposeColor(DEFAULT_DARK_PRIMARY), darkTheme.themeColors.primary)
+        assertEquals(ComposeColor(DEFAULT_DARK_SECONDARY), darkTheme.themeColors.secondary)
+        assertEquals(ComposeColor.White, lightTheme.themeColors.background)
+        assertEquals(ComposeColor(0xFF0D0D0D), darkTheme.themeColors.background)
+        assertEquals(null, lightTheme.logoUrl)
+        assertEquals(null, darkTheme.logoUrl)
+        
+        verify { Log.e(TAG, "Failed to parse theme JSON") }
     }
 
     @Test
     fun `loadTheme handles exception`() = runTest {
         // Given
-        coEvery {
-            cacheManager.getCachedDataWithTimestamp<ThemeInfo>(
-                key = any(),
-                currentTimestamp = any(),
-                fetchFromNetwork = any(),
-                serialize = any(),
-                deserialize = any()
-            )
-        } throws Exception("Network error")
+        val exception = Exception("Network error")
+        coEvery { themeManagerUseCases.getThemeFile() } throws exception
 
         // When
         themeLoader.loadTheme()
 
         // Then
-        verify { Log.e("ThemeLoader", "Error loading theme", any()) }
+        verify { Log.e(TAG, "Failed to load theme from JSON", exception) }
+        
+        // Verify default values are used
+        val lightTheme = themeLoader.getThemeColors()
+        val darkTheme = themeLoader.getDarkThemeColors()
+        assertEquals(ComposeColor(DEFAULT_LIGHT_PRIMARY), lightTheme.themeColors.primary)
+        assertEquals(ComposeColor(DEFAULT_LIGHT_SECONDARY), lightTheme.themeColors.secondary)
+        assertEquals(ComposeColor(DEFAULT_DARK_PRIMARY), darkTheme.themeColors.primary)
+        assertEquals(ComposeColor(DEFAULT_DARK_SECONDARY), darkTheme.themeColors.secondary)
+        assertEquals(null, lightTheme.logoUrl)
+        assertEquals(null, darkTheme.logoUrl)
     }
 
     @Test
@@ -135,9 +157,10 @@ class ThemeLoaderTest {
 
         // Then
         assertNotNull(themeWithLogo.themeColors)
-        assertEquals(Color(0xFF0096D5), themeWithLogo.themeColors.primary)
-        assertEquals(Color(0xFFE7F8FF), themeWithLogo.themeColors.secondary)
-        assertEquals(Color.White, themeWithLogo.themeColors.background)
+        assertEquals(ComposeColor(DEFAULT_LIGHT_PRIMARY), themeWithLogo.themeColors.primary)
+        assertEquals(ComposeColor(DEFAULT_LIGHT_SECONDARY), themeWithLogo.themeColors.secondary)
+        assertEquals(ComposeColor.White, themeWithLogo.themeColors.background)
+        assertEquals(null, themeWithLogo.logoUrl)
     }
 
     @Test
@@ -147,46 +170,21 @@ class ThemeLoaderTest {
 
         // Then
         assertNotNull(darkThemeWithLogo.themeColors)
-        assertEquals(Color(0xFF0096D5), darkThemeWithLogo.themeColors.primary)
-        assertEquals(Color(0xFF262627), darkThemeWithLogo.themeColors.secondary)
-        assertEquals(Color(0xFF0D0D0D), darkThemeWithLogo.themeColors.background)
+        assertEquals(ComposeColor(DEFAULT_DARK_PRIMARY), darkThemeWithLogo.themeColors.primary)
+        assertEquals(ComposeColor(DEFAULT_DARK_SECONDARY), darkThemeWithLogo.themeColors.secondary)
+        assertEquals(ComposeColor(0xFF0D0D0D), darkThemeWithLogo.themeColors.background)
+        assertEquals(null, darkThemeWithLogo.logoUrl)
     }
 
     @Test
-    fun `loadTheme successfully fetches from network when cache is empty`() = runTest {
+    fun `loadTheme handles null theme info`() = runTest {
         // Given
-        mockkStatic(android.graphics.Color::class)
-        every { android.graphics.Color.parseColor("#0096D5") } returns 0xFF0096D5.toInt()
-        every { android.graphics.Color.parseColor("#E7F8FF") } returns 0xFFE7F8FF.toInt()
-        every { android.graphics.Color.parseColor("#262627") } returns 0xFF262627.toInt()
-
-        val mockThemeInfo = ThemeInfo(
-            light = Theme(
-                logoUrl = "light_logo_url",
-                primary = "#0096D5",
-                secondary = "#E7F8FF"
-            ),
-            dark = Theme(
-                logoUrl = "dark_logo_url",
-                primary = "#0096D5",
-                secondary = "#262627"
-            )
+        val emptyTheme = ThemeInfo(
+            light = Theme(logoUrl = null, primary = null, secondary = null),
+            dark = Theme(logoUrl = null, primary = null, secondary = null)
         )
-
-        coEvery { themeManagerUseCases.getThemeApi() } returns Resource.Success(mockThemeInfo)
-
-        coEvery {
-            cacheManager.getCachedDataWithTimestamp<ThemeInfo>(
-                key = "theme_cache",
-                currentTimestamp = any(),
-                fetchFromNetwork = any(),
-                serialize = any(),
-                deserialize = any()
-            )
-        } coAnswers {
-            val fetch = thirdArg<(suspend () -> Resource<ThemeInfo>)>()
-            fetch()
-        }
+        coEvery { themeManagerUseCases.getThemeFile() } returns Resource.Success(emptyTheme)
+        coEvery { themeManagerUseCases.getThemeFile() } returns Resource.Success(emptyTheme)
 
         // When
         themeLoader.loadTheme()
@@ -195,17 +193,12 @@ class ThemeLoaderTest {
         val lightTheme = themeLoader.getThemeColors()
         val darkTheme = themeLoader.getDarkThemeColors()
 
-        // Verify logo URLs are set
-        assertEquals("light_logo_url", lightTheme.logoUrl)
-        assertEquals("dark_logo_url", darkTheme.logoUrl)
-
-        // Verify network fetch was called
-        coVerify { themeManagerUseCases.getThemeApi() }
-
-        // Verify colors are set correctly
-        assertEquals(Color(0xFF0096D5), lightTheme.themeColors.primary)
-        assertEquals(Color(0xFFE7F8FF), lightTheme.themeColors.secondary)
-        assertEquals(Color(0xFF0096D5), darkTheme.themeColors.primary)
-        assertEquals(Color(0xFF262627), darkTheme.themeColors.secondary)
+        // Verify default values are used
+        assertEquals(ComposeColor(DEFAULT_LIGHT_PRIMARY), lightTheme.themeColors.primary)
+        assertEquals(ComposeColor(DEFAULT_LIGHT_SECONDARY), lightTheme.themeColors.secondary)
+        assertEquals(ComposeColor(DEFAULT_DARK_PRIMARY), darkTheme.themeColors.primary)
+        assertEquals(ComposeColor(DEFAULT_DARK_SECONDARY), darkTheme.themeColors.secondary)
+        assertEquals(null, lightTheme.logoUrl)
+        assertEquals(null, darkTheme.logoUrl)
     }
-} 
+}

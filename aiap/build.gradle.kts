@@ -19,13 +19,14 @@ kover {
             includes {
                 // Include only specific classes we want to cover
                 classes(
-                    "com.synchronoss.aiap.presentation.SubscriptionsViewModel",
+                    "com.synchronoss.aiap.presentation.viewmodels.SubscriptionsViewModel",
+                    "com.synchronoss.aiap.presentation.SubscriptionsView",
                     "com.synchronoss.aiap.ui.theme.ThemeLoader",
                     "com.synchronoss.aiap.utils.Resource",
                     "com.synchronoss.aiap.utils.CacheManager",
-                    "com.synchronoss.aiap.common.**",
-                    "com.synchronoss.aiap.data.**",
-                    "com.synchronoss.aiap.domain.**",
+//                    "com.synchronoss.aiap.common.**",
+                    "com.synchronoss.aiap.core.data.**",
+                    "com.synchronoss.aiap.core.domain.**",
                 )
             }
             excludes {
@@ -46,9 +47,14 @@ kover {
                     "*Module*",
                     "*JsonAdapter*",
                     "*JsonAdapter\$*",
-                    "com.synchronoss.aiap.data.remote.**.*JsonAdapter",
-                    "com.synchronoss.aiap.data.repository.activity.**",
-                    "com.synchronoss.aiap.domain.usecases.activity.**"
+                    "com.synchronoss.aiap.core.data.remote.**.*JsonAdapter",
+                    "com.synchronoss.aiap.core.data.repository.activity.**",
+                    "com.synchronoss.aiap.core.domain.usecases.activity.**",
+                    "com.synchronoss.aiap.core.domain.repository.activity.**",
+                    "com.synchronoss.aiap.core.data.repository.analytics.**",
+                    "com.synchronoss.aiap.core.domain.usecases.analytics.**",
+                    "com.synchronoss.aiap.core.domain.repository.analytics.**",
+
                 )
                 
                 annotatedBy(
@@ -209,6 +215,7 @@ dependencies {
     kaptTest("com.google.dagger:dagger-compiler:2.51.1")
     androidTestImplementation("com.google.dagger:dagger:2.51.1")
     kaptAndroidTest("com.google.dagger:dagger-compiler:2.51.1")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
 }
 
 kapt {

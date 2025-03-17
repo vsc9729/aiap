@@ -45,6 +45,7 @@ fun ToastComposable(
     messageResId: Int? = null,
     onDismiss: () -> Unit,
     isVisible: Boolean,
+    isDarkMode: Boolean,
     modifier: Modifier = Modifier
 ) {
     val finalHeading = headingResId?.let { stringResource(it) } ?: heading
@@ -63,9 +64,9 @@ fun ToastComposable(
                 .height(80.dp)
                 .background(
                     color = when{
-                        isSuccess -> Color(context.getColor(R.color.current_subscription_background))
-                        isPending -> Color(context.getColor(R.color.pending_subscription_background))
-                        else -> Color(context.getColor(R.color.error_red))
+                        isSuccess -> Color(context.getColor(if(!isDarkMode) R.color.success_green_background_light else R.color.success_green_background_dark))
+                        isPending -> Color(context.getColor(if(!isDarkMode) R.color.pending_background_light else R.color.pending_background_dark))
+                        else -> Color(context.getColor(if(!isDarkMode) R.color.error_red_background_light else R.color.error_red_background_dark))
                     },
                     shape = RoundedCornerShape(8.dp)
                 )
@@ -83,9 +84,9 @@ fun ToastComposable(
                         .clip(RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp))
                         .background(
                             color = when{
-                                isSuccess -> Color(context.getColor(R.color.current_subscription_text))
-                                isPending -> Color(context.getColor(R.color.pending_subscription_text))
-                                else -> Color.Red
+                                isSuccess -> Color(context.getColor(if(!isDarkMode) R.color.success_green_border_light else R.color.success_green_border_dark))
+                                isPending -> Color(context.getColor(if(!isDarkMode) R.color.pending_border_light else R.color.pending_border_dark))
+                                else -> Color(context.getColor(if(!isDarkMode) R.color.error_red_border_light else R.color.error_red_border_dark))
                             }
                         )
                 )
@@ -102,7 +103,7 @@ fun ToastComposable(
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
-                            color = Color.Black
+                            color = if(!isDarkMode) Color.Black else Color.White
                         )
                     )
                     Spacer(
@@ -113,7 +114,7 @@ fun ToastComposable(
                         text = finalMessage,
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 14.sp,
-                            color = Color(0xFF525252)
+                            color = if(!isDarkMode) Color(0xFF525252) else Color.White.copy(alpha = 0.7f)
                         )
                     )
                 }
@@ -131,7 +132,7 @@ fun ToastComposable(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = "Close",
                                     modifier = Modifier.size(24.dp),
-                                    tint = Color.Black
+                                    tint = if(!isDarkMode) Color.Black else Color.White
                                 )
                             }
                 }

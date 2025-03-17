@@ -1,7 +1,9 @@
 package com.synchronoss.aiap.ui.theme
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.ui.graphics.Color
+import com.synchronoss.aiap.R
 import com.synchronoss.aiap.core.domain.models.theme.ThemeInfo
 import com.synchronoss.aiap.core.domain.usecases.theme.ThemeManagerUseCases
 import com.synchronoss.aiap.utils.Resource
@@ -43,42 +45,37 @@ class DarkThemeColors(
 )
 
 class ThemeLoader @Inject constructor(
-    private var themeManagerUseCases: ThemeManagerUseCases
+    private var themeManagerUseCases: ThemeManagerUseCases,
+    private val context: Context
 ) {
     private var themeConfig: ThemeInfo? = null
+    private val TAG = "ThemeLoader"
     var logoUrlLight: String? = null
     var logoUrlDark: String? = null
 
-    private companion object {
-        val DEFAULT_LIGHT_PRIMARY = Color(0xFF0096D5)
-        val DEFAULT_LIGHT_SECONDARY = Color(0xFFE7F8FF)
-        val DEFAULT_DARK_PRIMARY = Color(0xFF0096D5)
-        val DEFAULT_DARK_SECONDARY = Color(0xFF262627)
-        private const val TAG = "ThemeLoader"
-    }
-
     suspend fun loadTheme() {
         try {
-            when (val result = themeManagerUseCases.getThemeApi()) {
+            when (val result = themeManagerUseCases.getThemeFile()) {
                 is Resource.Success -> {
                     result.data?.let { theme ->
                         themeConfig = theme
                         logoUrlLight = theme.light.logoUrl
                         logoUrlDark = theme.dark.logoUrl
+                        LogUtils.d(TAG, "Theme loaded successfully")
                     }
                 }
                 is Resource.Error -> {
-                    LogUtils.e(TAG, "Failed to fetch theme: ${result.message}")
+                    LogUtils.e(TAG, context.getString(R.string.theme_error_parse_json))
                 }
             }
         } catch (e: Exception) {
-            LogUtils.e(TAG, "Error loading theme", e)
+            LogUtils.e(TAG, context.getString(R.string.theme_error_load_json), e)
         }
     }
 
     fun getThemeColors(): ThemeWithLogo {
-        val primary = themeConfig!!.light.primary?.toColor() ?: DEFAULT_LIGHT_PRIMARY
-        val secondary = themeConfig!!.light.secondary?.toColor() ?: DEFAULT_LIGHT_SECONDARY
+        val primary = themeConfig?.light?.primary?.toColor() ?: Color(0xff0096D5)
+        val secondary = themeConfig?.light?.secondary?.toColor() ?: Color(0xffE7F8FF)
 
         return ThemeWithLogo(
             themeColors = ThemeColors(primary = primary, secondary = secondary),
@@ -87,8 +84,8 @@ class ThemeLoader @Inject constructor(
     }
 
     fun getDarkThemeColors(): ThemeWithLogo {
-        val primary = themeConfig!!.dark.primary?.toColor() ?: DEFAULT_DARK_PRIMARY
-        val secondary = themeConfig!!.dark.secondary?.toColor() ?: DEFAULT_DARK_SECONDARY
+        val primary = themeConfig?.dark?.primary?.toColor() ?: Color(0xff0096D5)
+        val secondary = themeConfig?.dark?.secondary?.toColor() ?: Color(0xff262627)
 
         return ThemeWithLogo(
             themeColors = DarkThemeColors(primary = primary, secondary = secondary),

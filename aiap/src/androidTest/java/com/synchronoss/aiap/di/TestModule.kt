@@ -89,10 +89,11 @@ object TestModule {
     @Provides
     @Singleton
     fun provideMockPurchaseUpdateHandler(): PurchaseUpdateHandler {
-        return PurchaseUpdateHandler(
+        return DefaultPurchaseUpdateHandler(
             onPurchaseUpdated = { /* Do nothing */ },
             onPurchaseStarted = { /* Do nothing */ },
-            onPurchaseFailed = { /* Do nothing */ }
+            onPurchaseFailed = { /* Do nothing */ },
+            onPurchaseStopped = { /* Do nothing */ }
         )
     }
 

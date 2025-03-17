@@ -24,6 +24,8 @@ import com.synchronoss.aiap.core.di.DaggerAiapComponent
 import com.synchronoss.aiap.presentation.subscriptions.wrapper.ScrollablePlansWrapper
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.isSystemInDarkTheme
+import com.android.billingclient.api.ProductDetails
+import com.synchronoss.aiap.utils.getDimension
 
 @Composable
 fun ScrollablePlans(
@@ -46,7 +48,7 @@ fun ScrollablePlans(
     val currentProductDetails = subscriptionsViewModel.currentProductDetails
     val currentProductInfo = subscriptionsViewModel.currentProduct
     val selectedTab = subscriptionsViewModel.selectedTab
-
+    val unacknowledgedProductDetails = subscriptionsViewModel.unacknowledgedProductDetails
     if (filteredProductDetails.isNullOrEmpty()) {
         Box(
             modifier = Modifier
@@ -73,20 +75,22 @@ fun ScrollablePlans(
     } else {
         Column {
             // Display current product if exists and matches the selected tab's billing period
-            if (currentProductDetails != null && currentProductInfo != null) {
-                val currentBillingPeriod = currentProductDetails.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod
+            if (currentProductDetails != null || unacknowledgedProductDetails != null) {
+                val highlightedProductDetails: ProductDetails = currentProductDetails
+                    ?: unacknowledgedProductDetails!!
+                val highlightedProductBillingPeriod = highlightedProductDetails.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod
                 val shouldShowCurrentPlan = when (selectedTab) {
-                    TabOption.WEEKlY -> currentBillingPeriod?.endsWith("W") == true
-                    TabOption.MONTHLY -> currentBillingPeriod?.endsWith("M") == true
-                    TabOption.YEARLY -> currentBillingPeriod?.endsWith("Y") == true
+                    TabOption.WEEKlY -> highlightedProductBillingPeriod?.endsWith("W") == true
+                    TabOption.MONTHLY -> highlightedProductBillingPeriod?.endsWith("M") == true
+                    TabOption.YEARLY -> highlightedProductBillingPeriod?.endsWith("Y") == true
                     else -> false
                 }
                 
                 if (shouldShowCurrentPlan) {
                     ActualCurrentPlanCard(
-                        productDetails = currentProductDetails, 
-                        productInfo = currentProductInfo,
-                        enableDarkTheme = enableDarkTheme
+                        productDetails = highlightedProductDetails,
+                        enableDarkTheme = enableDarkTheme,
+                        isPending = currentProductDetails == null
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -95,7 +99,7 @@ fun ScrollablePlans(
             // Display other product options
             filteredProductDetails.forEachIndexed { index, product ->
                 // Skip current product since it's already displayed if it matches the tab
-                if (product.productId != currentProductDetails?.productId) {
+                if ((product.productId != currentProductDetails?.productId) && (product.productId != unacknowledgedProductDetails?.productId)) {
                     val offerDetails = product.subscriptionOfferDetails?.firstOrNull()
                     if (offerDetails != null) {
                         OtherPlanCard(
@@ -109,6 +113,9 @@ fun ScrollablePlans(
                     }
                 }
             }
+
+            // Add some empty space at the bottom for better UX
+            Spacer(modifier = Modifier.height(getDimension(R.dimen.scrollable_plans_empty_space)))
         }
     }
 } 

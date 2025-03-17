@@ -17,7 +17,7 @@ object LibraryActivityModule {
     @Singleton
     fun provideSubscriptionCancelledHandler(): SubscriptionCancelledHandler {
         return SubscriptionCancelledHandler(
-            onSubscriptionCancelled = { /* Do nothing */ },
+            onSubscriptionCancelled = {},
         )
     }
     

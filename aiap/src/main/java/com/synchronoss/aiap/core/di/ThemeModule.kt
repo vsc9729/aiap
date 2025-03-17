@@ -7,8 +7,9 @@ import com.synchronoss.aiap.utils.CacheManager
 import android.content.Context
 import com.synchronoss.aiap.core.data.repository.theme.ThemeManagerImpl
 import com.synchronoss.aiap.core.domain.repository.theme.ThemeManager
-import com.synchronoss.aiap.core.domain.usecases.theme.GetThemeApi
+import com.synchronoss.aiap.core.domain.usecases.theme.GetThemeFile
 import com.synchronoss.aiap.core.domain.usecases.theme.ThemeManagerUseCases
+import com.synchronoss.aiap.core.domain.usecases.theme.TransformThemeData
 import com.synchronoss.aiap.utils.Constants
 import dagger.Module
 import dagger.Provides
@@ -27,39 +28,48 @@ object ThemeModule {
     /**
      * Provides a singleton instance of ThemeManager.
      * @param context The application context
+     * @param transformThemeData The TransformThemeData use case
      * @return A new instance of ThemeManagerImpl
      */
     @Provides
     @Singleton
     fun provideThemeManager(
         context: Context,
+        transformThemeData: TransformThemeData
     ): ThemeManager {
-        return ThemeManagerImpl(context)
+        return ThemeManagerImpl(context, transformThemeData = transformThemeData)
     }
 
     /**
      * Provides a singleton instance of ThemeManagerUseCases.
      * @param themeManager The ThemeManager instance
+     * @param transformThemeData The TransformThemeData use case
      * @return A new instance of ThemeManagerUseCases with all required use cases
      */
     @Provides
     @Singleton
-    fun provideThemeManagerUseCases(themeManager: ThemeManager): ThemeManagerUseCases {
+    fun provideThemeManagerUseCases(
+        themeManager: ThemeManager,
+        transformThemeData: TransformThemeData
+    ): ThemeManagerUseCases {
         return ThemeManagerUseCases(
-            getThemeApi = GetThemeApi(themeManager)
+            getThemeFile = GetThemeFile(themeManager),
+            transformThemeData = transformThemeData
         )
     }
 
     /**
      * Provides a singleton instance of ThemeLoader.
      * @param themeManagerUseCases The ThemeManagerUseCases instance
+     * @param context The application context
      * @return A new instance of ThemeLoader
      */
     @Provides
     @Singleton
     fun provideThemeLoader(
         themeManagerUseCases: ThemeManagerUseCases,
+        context: Context
     ): ThemeLoader {
-        return ThemeLoader(themeManagerUseCases)
+        return ThemeLoader(themeManagerUseCases, context)
     }
 }

@@ -29,6 +29,7 @@
     <string name="apply_coupon">Apply Coupon</string>
 
     <!-- ThemeLoader strings -->
+    <string name="theme_manager_tag">ThemeManager</string>
     <string name="theme_loader_tag">ThemeLoader</string>
     <string name="theme_loader_loaded">Loaded theme: %1$s</string>
     <string name="theme_loader_fetch_failed">Failed to fetch theme: %1$s</string>
@@ -81,4 +82,19 @@
     <string name="free_trial_offer">Start with a %1$s free trial</string>
     <string name="introductory_offer">Special offer: %1$s for first %2$s</string>
     <string name="introductory_price_info">Special intro price: %1$s for first %2$s</string>
+
+    <!-- ThemeLoader default colors -->
+    <string name="theme_default_light_primary">#0096D5</string>
+    <string name="theme_default_light_secondary">#E7F8FF</string>
+    <string name="theme_default_dark_primary">#0096D5</string>
+    <string name="theme_default_dark_secondary">#262627</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_error_no_theme_file">No theme file found for vendor %1$s</string>
+    <string name="theme_error_parse_json">Failed to parse theme JSON</string>
+    <string name="theme_error_load_json">Failed to load theme from JSON</string>
+
+    <!-- Subscription error messages -->
+    <string name="subscription_handler_not_initialized">Subscription handler not initialized</string>
+    <string name="subscription_refresh_failed">Failed to refresh subscription status</string>
 </resources> 

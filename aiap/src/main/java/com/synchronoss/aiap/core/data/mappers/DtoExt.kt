@@ -33,7 +33,8 @@ fun ActiveSubscriptionResponse.toActiveSubscriptionInfo(): ActiveSubscriptionInf
         productUpdateTimeStamp = productUpdateTimeStamp,
         themConfigTimeStamp = themConfigTimeStamp,
         userUUID = userUUID,
-        baseServiceLevel = baseServiceLevel
+        baseServiceLevel = baseServiceLevel,
+        pendingPurchase = pendingPurchase
     )
 }
 

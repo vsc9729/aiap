@@ -58,7 +58,7 @@ fun SubscriptionsViewBottomSheet(
     }
 
     LaunchedEffect(partnerUserId) {
-        viewModel.initialize(id = partnerUserId, intentLaunch = isLaunchedViaIntent, apiKey = apiKey)
+        viewModel.initialize(id = partnerUserId, intentLaunch = isLaunchedViaIntent, apiKey = apiKey, activity = activity)
     }
 
     val configuration = LocalConfiguration.current
@@ -159,6 +159,7 @@ private fun FullScreenContent(
                 formatArgs = viewModel.toastState.formatArgs,
                 isSuccess = viewModel.toastState.isSuccess,
                 isPending = viewModel.toastState.isPending,
+                isDarkMode =  enableDarkTheme,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(
@@ -218,6 +219,7 @@ private fun ModalContent(
                 formatArgs = viewModel.toastState.formatArgs,
                 isSuccess = viewModel.toastState.isSuccess,
                 isPending = viewModel.toastState.isPending,
+                isDarkMode = enableDarkTheme,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(
