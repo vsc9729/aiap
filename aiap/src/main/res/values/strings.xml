@@ -12,7 +12,7 @@
     <string name="purchase_failed_message">Any debited amount will be refunded.</string>
     <string name="purchase_completed_title">Purchase Completed</string>
     <string name="purchase_completed_message">You have successfully purchased the subscription.</string>
-    <string name="purchase_pending_title">Purchase Processing</string>
+    <string name="purchase_pending_title">Purchase Pending</string>
     <string name="purchase_pending_message">Please wait until further notification.</string>
     <string name="subscription_cancelled_title">Subscription Cancelled</string>
     <string name="subscription_cancelled_message">Your subscription has been cancelled</string>
@@ -56,7 +56,7 @@
     <string name="restore_purchase">Restore purchase</string>
     <string name="no_products_available">No products available</string>
     <string name="current_subscription">Current Subscription</string>
-    <string name="pending_subscription">Processing</string>
+    <string name="pending_subscription">Purchase Pending</string>
     <string name="selected_plan_indicator">Selected Plan Indicator</string>
     <string name="unselected_plan_indicator">Unselected Plan Indicator</string>
     <string name="plan_auto_renews">%1$s every %2$s until cancelled</string>
@@ -76,7 +76,7 @@
     <string name="bottom_sheet_subscriptions_icon">Subscriptions Icon</string>
 
     <!-- New string for iOS platform warning -->
-    <string name="ios_platform_warning">You are currently subscribed to a plan from an iOS device</string>
+    <string name="ios_platform_warning">You are subscribed via iOS. Android purchases are unavailable until your current subscription expires.</string>
 
     <!-- New string for free trial offer -->
     <string name="free_trial_offer">Start with a %1$s free trial</string>

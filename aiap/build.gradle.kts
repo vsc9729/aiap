@@ -227,13 +227,12 @@ tasks.withType<KotlinCompile>().configureEach {
         jvmTarget.set(JvmTarget.JVM_17)
     }
 }
-
 sonar {
     val sonarToken: String by project
     properties {
         property("sonar.host.url", "https://sonarqube.blr0.geekydev.com")
-        property("sonar.projectKey", "android-sample-app")
-        property("sonar.projectName", "android-sample-app")
+        property("sonar.projectKey", "android-sdk")
+        property("sonar.projectName", "android-sdk")
         property("sonar.token", sonarToken)
         property("sonar.sources", "src/main/java")
         property("sonar.tests", listOf(

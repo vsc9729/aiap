@@ -31,13 +31,13 @@ class NetworkConnectionListener @Inject constructor(
             isConnected = true
             
             // Only show reconnected toast if we were previously disconnected
-            if (!wasConnected) {
-                toastService.showToast(
-                    isSuccess = true,
-                    heading = context.getString(R.string.connection_restored_title),
-                    message = context.getString(R.string.connection_restored_message)
-                )
-            }
+//            if (!wasConnected) {
+//                toastService.showToast(
+//                    isSuccess = true,
+//                    heading = context.getString(R.string.connection_restored_title),
+//                    message = context.getString(R.string.connection_restored_message)
+//                )
+//            }
         }
 
         override fun onLost(network: Network) {

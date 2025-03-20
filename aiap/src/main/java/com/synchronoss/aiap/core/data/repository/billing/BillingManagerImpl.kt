@@ -123,10 +123,8 @@ class BillingManagerImpl(
      * @return List of product details parameters
      */
     private fun createProductDetailsParams(product: ProductDetails): List<BillingFlowParams.ProductDetailsParams> {
-        val offerToken: String = when {
-            product.subscriptionOfferDetails!!.size > 1 ->  product.subscriptionOfferDetails!![product.subscriptionOfferDetails!!.size-2].offerToken
-            else -> product.subscriptionOfferDetails!!.first().offerToken
-        }
+        val offerToken: String = product.subscriptionOfferDetails!!.first().offerToken
+        
         return listOf(
             BillingFlowParams.ProductDetailsParams.newBuilder()
                 .setProductDetails(product)

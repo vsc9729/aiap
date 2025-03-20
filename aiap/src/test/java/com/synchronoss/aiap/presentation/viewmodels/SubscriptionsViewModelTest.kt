@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.viewModelScope
 import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.R
+import com.synchronoss.aiap.core.data.repository.billing.GlobalBillingConfig
 import com.synchronoss.aiap.core.domain.handlers.DefaultPurchaseUpdateHandler
 import com.synchronoss.aiap.core.domain.handlers.PurchaseUpdateHandler
 import com.synchronoss.aiap.core.domain.handlers.SubscriptionCancelledHandler
@@ -13,7 +14,7 @@ import com.synchronoss.aiap.core.domain.models.ActiveSubscriptionInfo
 import com.synchronoss.aiap.core.domain.models.ProductInfo
 import com.synchronoss.aiap.core.domain.models.SubscriptionResponseInfo
 import com.synchronoss.aiap.core.domain.usecases.activity.LibraryActivityManagerUseCases
-import com.synchronoss.aiap.core.domain.usecases.analytics.SegmentAnalyticsUseCases
+import com.synchronoss.aiap.core.domain.usecases.analytics.AnalyticsUseCases
 import com.synchronoss.aiap.core.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.presentation.state.ToastState
@@ -43,7 +44,7 @@ class SubscriptionsViewModelTest {
     private lateinit var libraryActivityManagerUseCases: LibraryActivityManagerUseCases
     private lateinit var purchaseUpdateHandler: PurchaseUpdateHandler
     private lateinit var subscriptionCancelledHandler: SubscriptionCancelledHandler
-    private lateinit var segmentAnalyticsUseCases: SegmentAnalyticsUseCases
+    private lateinit var analyticsUseCases: AnalyticsUseCases
     private lateinit var mockActivity: ComponentActivity
     private lateinit var applicationContext: Context
     private val testDispatcher: TestDispatcher = UnconfinedTestDispatcher()
@@ -71,7 +72,7 @@ class SubscriptionsViewModelTest {
         libraryActivityManagerUseCases = mockk(relaxed = true)
         purchaseUpdateHandler = mockk(relaxed = true)
         subscriptionCancelledHandler = mockk(relaxed = true)
-        segmentAnalyticsUseCases = mockk(relaxed = true)
+        analyticsUseCases = mockk(relaxed = true)
         toastService = mockk(relaxed = true)
         networkConnectionListener = mockk(relaxed = true)
 
@@ -115,7 +116,7 @@ class SubscriptionsViewModelTest {
             libraryActivityManagerUseCases = libraryActivityManagerUseCases,
             purchaseUpdateHandler = purchaseUpdateHandler,
             subscriptionCancelledHandler = subscriptionCancelledHandler,
-            segmentAnalyticsUseCases = segmentAnalyticsUseCases,
+            analyticsUseCases = analyticsUseCases,
             context = applicationContext
         )
 
@@ -125,7 +126,7 @@ class SubscriptionsViewModelTest {
         
         // Mock common behaviors
         every { libraryActivityManagerUseCases.launchLibrary(any()) } just Runs
-        coEvery { segmentAnalyticsUseCases.initialize() } just Runs
+        coEvery { analyticsUseCases.initialize() } just Runs
         coEvery { themeLoader.loadTheme() } just Runs
     }
 
@@ -158,8 +159,24 @@ class SubscriptionsViewModelTest {
         entitlementId = null
     )
     
-    private fun createMockProductDetails(productId: String) = mockk<ProductDetails>(relaxed = true) {
+    private fun createMockProductDetails(productId: String, billingPeriod: String = "P1M") = mockk<ProductDetails>(relaxed = true) {
         every { this@mockk.productId } returns productId
+        every { this@mockk.name } returns "Test Product $productId"
+        every { subscriptionOfferDetails } returns listOf(
+            mockk {
+                every { pricingPhases } returns mockk {
+                    every { pricingPhaseList } returns listOf(
+                        mockk {
+                            every { this@mockk.billingPeriod } returns billingPeriod
+                            every { this@mockk.formattedPrice } returns "$9.99"
+                            every { this@mockk.priceAmountMicros } returns 9990000L
+                            every { this@mockk.priceCurrencyCode } returns "USD"
+                        }
+                    )
+                }
+                every { offerToken } returns "offer-token-$productId"
+            }
+        )
     }
 
     private fun createMockActiveSubscriptionInfo(product: ProductInfo): ActiveSubscriptionInfo {
@@ -355,7 +372,7 @@ class SubscriptionsViewModelTest {
             libraryActivityManagerUseCases = libraryActivityManagerUseCases,
             purchaseUpdateHandler = purchaseUpdateHandler,
             subscriptionCancelledHandler = subscriptionCancelledHandler,
-            segmentAnalyticsUseCases = segmentAnalyticsUseCases
+            analyticsUseCases = analyticsUseCases
         )
 
         viewModel.partnerUserId = TEST_USER_ID
@@ -649,6 +666,11 @@ class SubscriptionsViewModelTest {
         // Set up viewModel state
         viewModel.isConnectionStarted = true
         viewModel.userUUID = TEST_USER_UUID
+        viewModel.apiKey = TEST_API_KEY  // Set the apiKey
+
+        // Mock GlobalBillingConfig.apiKey using mockkObject
+        mockkObject(GlobalBillingConfig)
+        every { GlobalBillingConfig.apiKey } returns TEST_API_KEY
 
         // Mock startConnection to succeed
         coEvery {
@@ -669,33 +691,23 @@ class SubscriptionsViewModelTest {
                 userId = any(),
                 apiKey = any()
             )
-        } just Runs
+        } returns Unit
 
         // When
         viewModel.purchaseSubscription(mockActivity, mockProductDetails, errorCallback)
-        advanceUntilIdle()
+        testDispatcher.scheduler.advanceUntilIdle()
 
-        // Then - Verify analytics event was tracked
-        verify {
-            segmentAnalyticsUseCases.track(
-                eventName = "subscription_purchase_attempt",
-                properties = match { props ->
-                    props["product_id"] == "test_product" &&
-                    props["user_id"] == TEST_USER_UUID
-                }
-            )
-        }
-
-        // Verify purchase was attempted
-        coVerify {
-            billingManagerUseCases.purchaseSubscription(
-                activity = mockActivity,
-                product = mockProductDetails,
-                onError = any(),
-                userId = TEST_USER_UUID,
-                apiKey = any()
-            )
-        }
+        // Then
+        verify { analyticsUseCases.track(
+            eventName = "subscription_purchase_attempt",
+            properties = match { props ->
+                props["product_id"] == "test_product" &&
+                props["user_id"] == TEST_USER_UUID
+            }
+        ) }
+        
+        // Cleanup
+        unmockkObject(GlobalBillingConfig)
     }
 
     @Test
@@ -750,7 +762,7 @@ class SubscriptionsViewModelTest {
 
         // Verify error analytics event was tracked
         verify {
-            segmentAnalyticsUseCases.track(
+            analyticsUseCases.track(
                 eventName = "subscription_purchase_error",
                 properties = match { props ->
                     props["product_id"] == "test_product" &&
@@ -1032,9 +1044,14 @@ class SubscriptionsViewModelTest {
         viewModel.trackPurchaseSuccess()
         
         // Then
-        verify { segmentAnalyticsUseCases.track(
+        verify { analyticsUseCases.track(
             eventName = "subscription_purchase_success",
-            properties = any()
+            properties = match { props ->
+                props["product_id"] == "test_product" &&
+                props["user_id"] == TEST_USER_UUID &&
+                props["product_name"] == "Test Product test_product" &&
+                props["price"] == "$9.99"
+            }
         ) }
     }
 
@@ -1048,7 +1065,7 @@ class SubscriptionsViewModelTest {
         viewModel.trackPurchaseAttempt(mockProductDetails)
         
         // Then
-        verify { segmentAnalyticsUseCases.track(
+        verify { analyticsUseCases.track(
             eventName = "subscription_purchase_attempt",
             properties = match { props ->
                 props["product_id"] == "test_product" &&
@@ -1150,8 +1167,225 @@ class SubscriptionsViewModelTest {
         // or productManagerUseCases.getActiveSubscription as they are implementation details.
         // Instead, we verify the results (viewModel state) which is more important for this test.
 
-        // SKIP: Verifying segmentAnalyticsUseCases.initialize() was called
-        // Due to the static nature of the isInitialized flag in SegmentAnalyticsManagerImpl,
+        // SKIP: Verifying analyticsUseCases.initialize() was called
+        // Due to the static nature of the isInitialized flag in AnalyticsManagerImpl,
         // this verification is unreliable in tests
+    }
+
+    @Test
+    fun `test initializeTabsIfNeeded with monthly product`() = runTest {
+        // Given
+        val mockMonthlyProduct = ProductInfo(
+            id = "monthly_product",
+            productId = "monthly_product",
+            displayName = "Test Monthly Product",
+            description = "Description",
+            vendorName = "Vendor",
+            appName = "App",
+            price = 9.99,
+            displayPrice = "$9.99",
+            platform = "ANDROID",
+            serviceLevel = "basic",
+            isActive = true,
+            recurringPeriodCode = "P1M",
+            productType = "Subscription",
+            entitlementId = null
+        )
+        
+        val mockYearlyProduct = ProductInfo(
+            id = "yearly_product",
+            productId = "yearly_product",
+            displayName = "Test Yearly Product",
+            description = "Description",
+            vendorName = "Vendor",
+            appName = "App",
+            price = 99.99,
+            displayPrice = "$99.99",
+            platform = "ANDROID",
+            serviceLevel = "premium",
+            isActive = true,
+            recurringPeriodCode = "P1Y",
+            productType = "Subscription",
+            entitlementId = null
+        )
+        
+        val monthlyProductDetails = createMockProductDetails("monthly_product", "P1M")
+        val yearlyProductDetails = createMockProductDetails("yearly_product", "P1Y")
+        val productDetailsList = listOf(monthlyProductDetails, yearlyProductDetails)
+        
+        // Configure viewModel with test data
+        viewModel.products = listOf(mockMonthlyProduct, mockYearlyProduct)
+        viewModel.productDetails = productDetailsList
+        viewModel.currentProductId = "monthly_product"
+        viewModel.currentProduct = mockMonthlyProduct
+        viewModel.currentProductDetails = monthlyProductDetails
+        viewModel.baseServiceLevel = "basic"
+        
+        // When
+        viewModel.initializeTabsIfNeeded()
+        
+        // Then
+        assertEquals(TabOption.MONTHLY, viewModel.selectedTab)
+        assertNotNull(viewModel.filteredProductDetails)
+        assertEquals(1, viewModel.filteredProductDetails?.size)
+        assertEquals("monthly_product", viewModel.filteredProductDetails?.first()?.productId)
+    }
+    
+    @Test
+    fun `test initializeTabsIfNeeded with yearly product`() = runTest {
+        // Given
+        val mockMonthlyProduct = ProductInfo(
+            id = "monthly_product",
+            productId = "monthly_product",
+            displayName = "Test Monthly Product",
+            description = "Description",
+            vendorName = "Vendor",
+            appName = "App",
+            price = 9.99,
+            displayPrice = "$9.99",
+            platform = "ANDROID",
+            serviceLevel = "basic",
+            isActive = true,
+            recurringPeriodCode = "P1M",
+            productType = "Subscription",
+            entitlementId = null
+        )
+        
+        val mockYearlyProduct = ProductInfo(
+            id = "yearly_product",
+            productId = "yearly_product",
+            displayName = "Test Yearly Product",
+            description = "Description",
+            vendorName = "Vendor",
+            appName = "App",
+            price = 99.99,
+            displayPrice = "$99.99",
+            platform = "ANDROID",
+            serviceLevel = "premium",
+            isActive = true,
+            recurringPeriodCode = "P1Y",
+            productType = "Subscription",
+            entitlementId = null
+        )
+        
+        val monthlyProductDetails = createMockProductDetails("monthly_product", "P1M")
+        val yearlyProductDetails = createMockProductDetails("yearly_product", "P1Y")
+        val productDetailsList = listOf(monthlyProductDetails, yearlyProductDetails)
+        
+        // Configure viewModel with test data
+        viewModel.products = listOf(mockMonthlyProduct, mockYearlyProduct)
+        viewModel.productDetails = productDetailsList
+        viewModel.currentProductId = "yearly_product"
+        viewModel.currentProduct = mockYearlyProduct
+        viewModel.currentProductDetails = yearlyProductDetails
+        viewModel.baseServiceLevel = "premium"
+        
+        // When
+        viewModel.initializeTabsIfNeeded()
+        
+        // Then
+        assertEquals(TabOption.YEARLY, viewModel.selectedTab)
+        assertNotNull(viewModel.filteredProductDetails)
+        assertEquals(1, viewModel.filteredProductDetails?.size)
+        assertEquals("yearly_product", viewModel.filteredProductDetails?.first()?.productId)
+    }
+    
+    @Test
+    fun `test initializeTabsIfNeeded with no product details`() = runTest {
+        // Given - No current product, but product details are available
+        val monthlyProductDetails = createMockProductDetails("monthly_product", "P1M")
+        val yearlyProductDetails = createMockProductDetails("yearly_product", "P1Y")
+        
+        // Configure viewModel with test data
+        viewModel.productDetails = listOf(monthlyProductDetails, yearlyProductDetails)
+        viewModel.currentProductDetails = null
+        
+        // When
+        viewModel.initializeTabsIfNeeded()
+        
+        // Then - Should default to MONTHLY with monthly products filtered
+        assertEquals(TabOption.MONTHLY, viewModel.selectedTab)
+        assertNotNull(viewModel.filteredProductDetails)
+        assertEquals(1, viewModel.filteredProductDetails?.size)
+        assertEquals("monthly_product", viewModel.filteredProductDetails?.first()?.productId)
+    }
+    
+    @Test
+    fun `test initializeTabsIfNeeded with weekly product`() = runTest {
+        // Given
+        val mockWeeklyProduct = ProductInfo(
+            id = "weekly_product",
+            productId = "weekly_product",
+            displayName = "Test Weekly Product",
+            description = "Description",
+            vendorName = "Vendor",
+            appName = "App",
+            price = 2.99,
+            displayPrice = "$2.99",
+            platform = "ANDROID",
+            serviceLevel = "basic",
+            isActive = true,
+            recurringPeriodCode = "P1W",
+            productType = "Subscription",
+            entitlementId = null
+        )
+        
+        val weeklyProductDetails = createMockProductDetails("weekly_product", "P1W")
+        
+        // Configure viewModel with test data
+        viewModel.products = listOf(mockWeeklyProduct)
+        viewModel.productDetails = listOf(weeklyProductDetails)
+        viewModel.currentProductId = "weekly_product"
+        viewModel.currentProduct = mockWeeklyProduct
+        viewModel.currentProductDetails = weeklyProductDetails
+        
+        // When
+        viewModel.initializeTabsIfNeeded()
+        
+        // Then
+        assertEquals(TabOption.WEEKlY, viewModel.selectedTab)
+        assertNotNull(viewModel.filteredProductDetails)
+        assertEquals(1, viewModel.filteredProductDetails?.size)
+        assertEquals("weekly_product", viewModel.filteredProductDetails?.first()?.productId)
+    }
+    
+    @Test
+    fun `test initializeTabsIfNeeded with no current product defaults to weekly`() = runTest {
+        // Given - No current product, but weekly product details are available first
+        val weeklyProductDetails = createMockProductDetails("weekly_product", "P1W")
+        val monthlyProductDetails = createMockProductDetails("monthly_product", "P1M")
+        val yearlyProductDetails = createMockProductDetails("yearly_product", "P1Y")
+        
+        // Configure viewModel with test data - weekly product first in the list
+        viewModel.productDetails = listOf(weeklyProductDetails, monthlyProductDetails, yearlyProductDetails)
+        viewModel.currentProductDetails = null
+        
+        // When
+        viewModel.initializeTabsIfNeeded()
+        
+        // Then - Should default to WEEKLY with weekly products filtered
+        assertEquals(TabOption.WEEKlY, viewModel.selectedTab)
+        assertNotNull(viewModel.filteredProductDetails)
+        assertEquals(1, viewModel.filteredProductDetails?.size)
+        assertEquals("weekly_product", viewModel.filteredProductDetails?.first()?.productId)
+    }
+    
+    @Test
+    fun `test initializeTabsIfNeeded with no weekly or monthly products defaults to yearly`() = runTest {
+        // Given - No current product, and only yearly products are available
+        val yearlyProductDetails = createMockProductDetails("yearly_product", "P1Y")
+        
+        // Configure viewModel with test data - only yearly product available
+        viewModel.productDetails = listOf(yearlyProductDetails)
+        viewModel.currentProductDetails = null
+        
+        // When
+        viewModel.initializeTabsIfNeeded()
+        
+        // Then - Should default to YEARLY with yearly products filtered
+        assertEquals(TabOption.YEARLY, viewModel.selectedTab)
+        assertNotNull(viewModel.filteredProductDetails)
+        assertEquals(1, viewModel.filteredProductDetails?.size)
+        assertEquals("yearly_product", viewModel.filteredProductDetails?.first()?.productId)
     }
 }

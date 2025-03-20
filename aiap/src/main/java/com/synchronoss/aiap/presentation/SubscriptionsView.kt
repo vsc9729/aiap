@@ -272,7 +272,8 @@ private fun MainContent(
                 Spacer(modifier = calculateBottomSpacing(
                     configuration = configuration,
                     selectedPlan = viewModel.selectedPlan,
-                    modifier = modifier
+                    modifier = modifier,
+//                    isPendingPurchase = viewModel.isPurchasePending
                 ))
             }
         }
@@ -485,8 +486,11 @@ private fun CurrentStorageBanner(baseServiceLevel: String) {
 private fun calculateBottomSpacing(
     configuration: Configuration,
     selectedPlan: Int,
-    modifier: Modifier
+    modifier: Modifier,
+
 ): Modifier {
+    // When a purchase is pending, we don't need bottom spacing for the action box
+    
     return modifier.let {
         if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             // Landscape mode spacing
@@ -527,6 +531,7 @@ private fun BottomActionBox(
     modifier: Modifier,
     onShowMoreDialog: () -> Unit
 ) {
+    
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -568,6 +573,15 @@ private fun BottomActionBox(
             }
             Configuration.ORIENTATION_LANDSCAPE -> {
                 LandscapeActionButtons(
+                    viewModel = viewModel,
+                    filteredProductDetails = filteredProductDetails,
+                    activity = activity,
+                    onShowMoreDialog = onShowMoreDialog
+                )
+            }
+            else -> {
+                // For square or undefined orientation, use portrait layout as default
+                PortraitActionButtons(
                     viewModel = viewModel,
                     filteredProductDetails = filteredProductDetails,
                     activity = activity,
@@ -713,7 +727,7 @@ private fun ContinueButton(
             .height(buttonHeight)
             .testTag("continue_button_${if (viewModel.selectedPlan != -1 &&
                 !viewModel.isCurrentProductBeingUpdated &&
-                !viewModel.isIosPlatform) "enabled" else "disabled"}"),
+                !viewModel.isIosPlatform && !viewModel.isPurchasePending ) "enabled" else "disabled"}"),
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = Color.White,
@@ -735,7 +749,7 @@ private fun ContinueButton(
         // Button is enabled only if a plan is selected, not currently updating, and not on iOS
         enabled = viewModel.selectedPlan != -1 && 
                 !viewModel.isCurrentProductBeingUpdated && 
-                !viewModel.isIosPlatform
+                !viewModel.isIosPlatform && !viewModel.isPurchasePending
     ) {
         Row {
             Text(
@@ -786,7 +800,7 @@ private fun MoreButton(
     }
     
     // Button is enabled only if not currently updating and not on iOS
-    val isEnabled = !viewModel.isCurrentProductBeingUpdated && !viewModel.isIosPlatform
+    val isEnabled = !viewModel.isCurrentProductBeingUpdated && !viewModel.isIosPlatform && !viewModel.isPurchasePending
     
     Button(
         onClick = onShowMoreDialog,

@@ -1,11 +1,11 @@
 package com.synchronoss.aiap.core.domain.repository.analytics
 
 /**
- * Interface for managing Segment analytics operations.
+ * Interface for managing analytics operations.
  */
-interface SegmentAnalyticsManager {
+interface AnalyticsManager {
     /**
-     * Initializes the Segment analytics service.
+     * Initializes the analytics service.
      */
     fun initialize()
 

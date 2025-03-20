@@ -38,7 +38,7 @@ import com.synchronoss.aiap.core.domain.handlers.PurchaseUpdateHandler
 import com.synchronoss.aiap.core.domain.handlers.SubscriptionCancelledHandler
 import com.synchronoss.aiap.core.domain.models.ProductInfo
 import com.synchronoss.aiap.core.domain.usecases.activity.LibraryActivityManagerUseCases
-import com.synchronoss.aiap.core.domain.usecases.analytics.SegmentAnalyticsUseCases
+import com.synchronoss.aiap.core.domain.usecases.analytics.AnalyticsUseCases
 import com.synchronoss.aiap.core.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.presentation.subscriptions.ui.TabOption
@@ -60,7 +60,7 @@ class SubscriptionsViewModel @Inject constructor(
     private val libraryActivityManagerUseCases: LibraryActivityManagerUseCases,
     val purchaseUpdateHandler: PurchaseUpdateHandler,
     private val subscriptionCancelledHandler: SubscriptionCancelledHandler,
-    private val segmentAnalyticsUseCases: SegmentAnalyticsUseCases,
+    private val analyticsUseCases: AnalyticsUseCases,
     private val context: Context
 ) : ViewModel() {
 
@@ -81,6 +81,7 @@ class SubscriptionsViewModel @Inject constructor(
     var isLaunchedViaIntent: Boolean = false
     var isInitialised: Boolean by mutableStateOf(false)
     var isConnectionStarted: Boolean by mutableStateOf(false)
+    var isPurchasePending: Boolean by mutableStateOf(false)
     
     /** Tab and selection state */
     var selectedTab: TabOption? by mutableStateOf(null)
@@ -172,8 +173,8 @@ class SubscriptionsViewModel @Inject constructor(
                     // Initialize network connection listener first
                     initNetworkListener()
 
-                    // Initialize Segment Analytics
-                    segmentAnalyticsUseCases.initialize()
+                    // Initialize Analytics
+                    analyticsUseCases.initialize()
 
                     //load theme
                     val loadTheme = async { loadTheme() }
@@ -308,6 +309,7 @@ class SubscriptionsViewModel @Inject constructor(
                 val init = async { initProducts(purchaseUpdate = true) }
                 init.await()
                 isCurrentProductBeingUpdated = false
+                isPurchasePending = false
                 showToast(
                     heading = context.getString(R.string.purchase_completed_title),
                     message = context.getString(R.string.purchase_completed_message),
@@ -324,6 +326,7 @@ class SubscriptionsViewModel @Inject constructor(
                 val init = async { initProducts(purchaseUpdate = true) }
                 init.await()
                 isCurrentProductBeingUpdated = false
+                isPurchasePending = true
                 showToast(
                     heading = context.getString(R.string.purchase_pending_title),
                     message = context.getString(R.string.purchase_pending_message),
@@ -578,7 +581,7 @@ class SubscriptionsViewModel @Inject constructor(
      */
     public fun trackPurchaseSuccess() {
         currentProductDetails?.let { details ->
-            segmentAnalyticsUseCases.track(
+            analyticsUseCases.track(
                 eventName = "subscription_purchase_success",
                 properties = mapOf(
                     "product_id" to details.productId,
@@ -645,7 +648,8 @@ class SubscriptionsViewModel @Inject constructor(
      * Tracks purchase attempt in analytics
      */
     public fun trackPurchaseAttempt(productDetails: ProductDetails) {
-        segmentAnalyticsUseCases.track(
+        try{
+        analyticsUseCases.track(
             eventName = "subscription_purchase_attempt",
             properties = mapOf(
                 "product_id" to productDetails.productId,
@@ -654,13 +658,16 @@ class SubscriptionsViewModel @Inject constructor(
                 "price" to (productDetails.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice ?: "")
             )
         )
+        }catch (e: Exception){
+            LogUtils.e(TAG, "Failed to track purchase attempt", e)
+        }
     }
 
     /**
      * Tracks purchase error in analytics
      */
     public fun trackPurchaseError(productDetails: ProductDetails, error: String) {
-        segmentAnalyticsUseCases.track(
+        analyticsUseCases.track(
             eventName = "subscription_purchase_error",
             properties = mapOf(
                 "product_id" to productDetails.productId,
@@ -697,6 +704,7 @@ class SubscriptionsViewModel @Inject constructor(
         selectedTab = null
         selectedPlan = -1
         isCurrentProductBeingUpdated = false
+        isPurchasePending = false
         products = null
         productDetails = null
         filteredProductDetails = null

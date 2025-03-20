@@ -90,7 +90,14 @@ deploy_internal:
 sonarqube-check:
   stage: sonar
   script:
-    - ./gradlew :aiap:koverXmlReportDebug sonar
+    - ./gradlew :aiap:koverXmlReportDebug :aiap:lintDebug sonar \
+      -Dsonar.host.url=https://sonarqube.blr0.geekydev.com \
+      -Dsonar.token=sqp_0770e244babb76c50e442cac11297dcd26afab27 \
+      -Dsonar.projectKey=android-sdk \
+      -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/kover/reportDebug.xml \
+      -Dsonar.projectName='android-sdk' \
+      -Dsonar.gradle.skipCompile=true \
+      -Dsonar.androidLint.reportPaths=aiap/build/reports/lint-results-debug.xml
   only:
     - branches
     - merge_requests

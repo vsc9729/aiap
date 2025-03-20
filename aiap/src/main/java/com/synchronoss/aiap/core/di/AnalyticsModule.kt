@@ -1,43 +1,43 @@
 package com.synchronoss.aiap.core.di
 
 import android.app.Application
-import com.synchronoss.aiap.core.data.repository.analytics.SegmentAnalyticsManagerImpl
-import com.synchronoss.aiap.core.domain.repository.analytics.SegmentAnalyticsManager
-import com.synchronoss.aiap.core.domain.usecases.analytics.SegmentAnalyticsUseCases
+import com.synchronoss.aiap.core.data.repository.analytics.LocalyticsAnalyticsManagerImpl
+import com.synchronoss.aiap.core.domain.repository.analytics.AnalyticsManager
+import com.synchronoss.aiap.core.domain.usecases.analytics.AnalyticsUseCases
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
 
 /**
  * Dagger module for providing analytics-related dependencies.
- * Provides singleton instances of Segment analytics components for dependency injection.
+ * Provides singleton instances of analytics components for dependency injection.
  */
 @Module
 object AnalyticsModule {
 
     /**
-     * Provides a singleton instance of SegmentAnalyticsManager.
+     * Provides a singleton instance of AnalyticsManager.
      * @param application The Android Application instance
-     * @return A new instance of SegmentAnalyticsManagerImpl
+     * @return A new instance of LocalyticsAnalyticsManagerImpl
      */
     @Provides
     @Singleton
-    fun provideSegmentAnalyticsManager(
+    fun provideAnalyticsManager(
         application: Application
-    ): SegmentAnalyticsManager {
-        return SegmentAnalyticsManagerImpl(application)
+    ): AnalyticsManager {
+        return LocalyticsAnalyticsManagerImpl(application)
     }
 
     /**
-     * Provides a singleton instance of SegmentAnalyticsUseCases.
-     * @param segmentAnalyticsManager The SegmentAnalyticsManager instance
-     * @return A new instance of SegmentAnalyticsUseCases
+     * Provides a singleton instance of AnalyticsUseCases.
+     * @param analyticsManager The AnalyticsManager instance
+     * @return A new instance of AnalyticsUseCases
      */
     @Provides
     @Singleton
-    fun provideSegmentAnalyticsUseCases(
-        segmentAnalyticsManager: SegmentAnalyticsManager
-    ): SegmentAnalyticsUseCases {
-        return SegmentAnalyticsUseCases(segmentAnalyticsManager)
+    fun provideAnalyticsUseCases(
+        analyticsManager: AnalyticsManager
+    ): AnalyticsUseCases {
+        return AnalyticsUseCases(analyticsManager)
     }
 } 

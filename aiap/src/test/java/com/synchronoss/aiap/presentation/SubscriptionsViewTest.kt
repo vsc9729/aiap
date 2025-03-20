@@ -9,7 +9,7 @@ import com.synchronoss.aiap.core.domain.handlers.PurchaseUpdateHandler
 import com.synchronoss.aiap.core.domain.handlers.SubscriptionCancelledHandler
 import com.synchronoss.aiap.core.domain.models.ProductInfo
 import com.synchronoss.aiap.core.domain.usecases.activity.LibraryActivityManagerUseCases
-import com.synchronoss.aiap.core.domain.usecases.analytics.SegmentAnalyticsUseCases
+import com.synchronoss.aiap.core.domain.usecases.analytics.AnalyticsUseCases
 import com.synchronoss.aiap.core.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.presentation.subscriptions.ui.TabOption
@@ -39,7 +39,7 @@ class SubscriptionsViewTest {
     private lateinit var libraryActivityManagerUseCases: LibraryActivityManagerUseCases
     private lateinit var purchaseUpdateHandler: PurchaseUpdateHandler
     private lateinit var subscriptionCancelledHandler: SubscriptionCancelledHandler
-    private lateinit var segmentAnalyticsUseCases: SegmentAnalyticsUseCases
+    private lateinit var analyticsUseCases: AnalyticsUseCases
     private lateinit var applicationContext: Context
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var toastService: ToastService
@@ -65,7 +65,7 @@ class SubscriptionsViewTest {
         libraryActivityManagerUseCases = mockk(relaxed = true)
         purchaseUpdateHandler = mockk(relaxed = true)
         subscriptionCancelledHandler = mockk(relaxed = true)
-        segmentAnalyticsUseCases = mockk(relaxed = true)
+        analyticsUseCases = mockk(relaxed = true)
         toastService = mockk(relaxed = true)
 
         // Mock ConnectivityManager for NetworkConnectionListener
@@ -86,7 +86,7 @@ class SubscriptionsViewTest {
             libraryActivityManagerUseCases = libraryActivityManagerUseCases,
             purchaseUpdateHandler = purchaseUpdateHandler,
             subscriptionCancelledHandler = subscriptionCancelledHandler,
-            segmentAnalyticsUseCases = segmentAnalyticsUseCases
+            analyticsUseCases = analyticsUseCases
         )
     }
 

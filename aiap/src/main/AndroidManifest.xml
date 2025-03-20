@@ -5,4 +5,22 @@
     <uses-permission android:name="com.android.vending.BILLING" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <application>
+        <!-- Localytics receivers with explicit android:exported attribute and correct AndroidX package names -->
+        <receiver 
+            android:name="com.localytics.androidx.BootReceiver" 
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+        <receiver 
+            android:name="com.localytics.androidx.ReferralReceiver" 
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.android.vending.INSTALL_REFERRER" />
+            </intent-filter>
+        </receiver>
+    </application>
 </manifest>

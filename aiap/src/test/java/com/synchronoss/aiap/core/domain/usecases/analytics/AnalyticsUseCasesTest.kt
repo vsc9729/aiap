@@ -1,35 +1,35 @@
 package com.synchronoss.aiap.core.domain.usecases.analytics
 
-import com.synchronoss.aiap.core.domain.repository.analytics.SegmentAnalyticsManager
+import com.synchronoss.aiap.core.domain.repository.analytics.AnalyticsManager
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Before
 import org.junit.Test
 
-class SegmentAnalyticsUseCasesTest {
+class AnalyticsUseCasesTest {
 
     // Mock dependencies
-    private val segmentAnalyticsManager: SegmentAnalyticsManager = mockk()
+    private val analyticsManager: AnalyticsManager = mockk()
     
     // Class under test
-    private lateinit var segmentAnalyticsUseCases: SegmentAnalyticsUseCases
+    private lateinit var analyticsUseCases: AnalyticsUseCases
     
     @Before
     fun setup() {
-        justRun { segmentAnalyticsManager.initialize() }
-        justRun { segmentAnalyticsManager.track(any(), any()) }
+        justRun { analyticsManager.initialize() }
+        justRun { analyticsManager.track(any(), any()) }
         
-        segmentAnalyticsUseCases = SegmentAnalyticsUseCases(segmentAnalyticsManager)
+        analyticsUseCases = AnalyticsUseCases(analyticsManager)
     }
     
     @Test
     fun `initialize should call initialize on the analytics manager`() {
         // When
-        segmentAnalyticsUseCases.initialize()
+        analyticsUseCases.initialize()
         
         // Then
-        verify { segmentAnalyticsManager.initialize() }
+        verify { analyticsManager.initialize() }
     }
     
     @Test
@@ -39,10 +39,10 @@ class SegmentAnalyticsUseCasesTest {
         val properties = mapOf("key" to "value")
         
         // When
-        segmentAnalyticsUseCases.track(eventName, properties)
+        analyticsUseCases.track(eventName, properties)
         
         // Then
-        verify { segmentAnalyticsManager.track(eventName, properties) }
+        verify { analyticsManager.track(eventName, properties) }
     }
     
     @Test
@@ -51,9 +51,9 @@ class SegmentAnalyticsUseCasesTest {
         val eventName = "test_event"
         
         // When
-        segmentAnalyticsUseCases.track(eventName)
+        analyticsUseCases.track(eventName)
         
         // Then
-        verify { segmentAnalyticsManager.track(eventName, emptyMap()) }
+        verify { analyticsManager.track(eventName, emptyMap()) }
     }
 }

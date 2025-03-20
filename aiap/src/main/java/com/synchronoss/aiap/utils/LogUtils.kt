@@ -57,7 +57,7 @@ object LogUtils {
 
     fun d(className: String, message: String) {
         val tag = createTag(className)
-            Log.d(tag, message)
+        Log.d(tag, message)
         writeToFile("DEBUG", tag, message)
     }
 

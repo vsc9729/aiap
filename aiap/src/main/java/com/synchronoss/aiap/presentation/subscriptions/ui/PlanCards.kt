@@ -37,6 +37,7 @@ import com.synchronoss.aiap.presentation.subscriptions.wrapper.PlanCardsWrapper
 import com.synchronoss.aiap.utils.LogUtils
 import com.synchronoss.aiap.utils.getDimension
 import com.synchronoss.aiap.utils.getDimensionText
+import java.util.*
 
 
 fun getTimePeriod(input: String): String{
@@ -318,7 +319,7 @@ fun OtherPlanCard(
                         val currencySymbol = lastPhase.formattedPrice.first()
 
                         val savingsText = if (priceDifference > 0) {
-                            "${currencySymbol}${String.format("%.2f", priceDifference)} OFF"
+                            "${currencySymbol}${String.format(Locale.US, "%.2f", priceDifference)} OFF"
                         } else {
                             ""
                         }

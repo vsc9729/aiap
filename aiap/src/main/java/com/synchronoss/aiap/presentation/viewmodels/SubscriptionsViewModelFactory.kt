@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.synchronoss.aiap.core.domain.handlers.PurchaseUpdateHandler
 import com.synchronoss.aiap.core.domain.handlers.SubscriptionCancelledHandler
 import com.synchronoss.aiap.core.domain.usecases.activity.LibraryActivityManagerUseCases
-import com.synchronoss.aiap.core.domain.usecases.analytics.SegmentAnalyticsUseCases
+import com.synchronoss.aiap.core.domain.usecases.analytics.AnalyticsUseCases
 import com.synchronoss.aiap.core.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.ui.theme.ThemeLoader
@@ -19,7 +19,7 @@ class SubscriptionsViewModelFactory @Inject constructor(
     private val libraryActivityManagerUseCases: LibraryActivityManagerUseCases,
     private val purchaseUpdateHandler: PurchaseUpdateHandler,
     private val subscriptionCancelledHandler: SubscriptionCancelledHandler,
-    private val segmentAnalyticsUseCases: SegmentAnalyticsUseCases,
+    private val analyticsUseCases: AnalyticsUseCases,
     private val context: Context
 ) : ViewModelProvider.Factory {
     
@@ -33,7 +33,7 @@ class SubscriptionsViewModelFactory @Inject constructor(
                 libraryActivityManagerUseCases,
                 purchaseUpdateHandler,
                 subscriptionCancelledHandler,
-                segmentAnalyticsUseCases,
+                analyticsUseCases,
                 context
             ) as T
         }

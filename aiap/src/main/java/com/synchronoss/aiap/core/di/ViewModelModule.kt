@@ -5,7 +5,7 @@ import android.content.Context
 import com.synchronoss.aiap.core.domain.handlers.PurchaseUpdateHandler
 import com.synchronoss.aiap.core.domain.handlers.SubscriptionCancelledHandler
 import com.synchronoss.aiap.core.domain.usecases.activity.LibraryActivityManagerUseCases
-import com.synchronoss.aiap.core.domain.usecases.analytics.SegmentAnalyticsUseCases
+import com.synchronoss.aiap.core.domain.usecases.analytics.AnalyticsUseCases
 import com.synchronoss.aiap.core.domain.usecases.billing.BillingManagerUseCases
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.presentation.viewmodels.SubscriptionsViewModelFactory
@@ -30,7 +30,7 @@ object ViewModelModule {
         libraryActivityManagerUseCases: LibraryActivityManagerUseCases,
         purchaseUpdateHandler: PurchaseUpdateHandler,
         subscriptionCancelledHandler: SubscriptionCancelledHandler,
-        segmentAnalyticsUseCases: SegmentAnalyticsUseCases,
+        analyticsUseCases: AnalyticsUseCases,
         context: Context
     ): SubscriptionsViewModelFactory {
         return SubscriptionsViewModelFactory(
@@ -40,7 +40,7 @@ object ViewModelModule {
             libraryActivityManagerUseCases,
             purchaseUpdateHandler,
             subscriptionCancelledHandler,
-            segmentAnalyticsUseCases,
+            analyticsUseCases,
             context
         )
     }
