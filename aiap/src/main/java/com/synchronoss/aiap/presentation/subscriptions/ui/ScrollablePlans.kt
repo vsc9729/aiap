@@ -48,6 +48,7 @@ fun ScrollablePlans(
     val currentProductDetails = subscriptionsViewModel.currentProductDetails
     val currentProductInfo = subscriptionsViewModel.currentProduct
     val selectedTab = subscriptionsViewModel.selectedTab
+    val isProductInIos = subscriptionsViewModel.isIosPlatform
     val unacknowledgedProductDetails = subscriptionsViewModel.unacknowledgedProductDetails
     if (filteredProductDetails.isNullOrEmpty()) {
         Box(
@@ -75,7 +76,7 @@ fun ScrollablePlans(
     } else {
         Column {
             // Display current product if exists and matches the selected tab's billing period
-            if (currentProductDetails != null || unacknowledgedProductDetails != null) {
+            if ((currentProductDetails != null || unacknowledgedProductDetails != null) && !isProductInIos) {
                 val highlightedProductDetails: ProductDetails = currentProductDetails
                     ?: unacknowledgedProductDetails!!
                 val highlightedProductBillingPeriod = highlightedProductDetails.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod
