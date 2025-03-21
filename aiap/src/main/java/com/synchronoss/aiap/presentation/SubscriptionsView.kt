@@ -254,7 +254,7 @@ private fun MainContent(
 
             // Show current storage banner if user has base service level but no current product
             if(viewModel.baseServiceLevel != null && viewModel.currentProduct == null) {
-                CurrentStorageBanner(baseServiceLevel = viewModel.baseServiceLevel!!)
+                CurrentStorageBanner(baseServiceLevel = viewModel.baseServiceLevel!!, enableDarkTheme = enableDarkTheme)
             }
 
             // Plans section with horizontal padding
@@ -421,14 +421,14 @@ private fun TabSelectorSection(viewModel: SubscriptionsViewModel, activity: Comp
  * @param baseServiceLevel String representing the user's base service level
  */
 @Composable
-private fun CurrentStorageBanner(baseServiceLevel: String) {
+private fun CurrentStorageBanner(baseServiceLevel: String, enableDarkTheme : Boolean = isSystemInDarkTheme()) {
     val context = LocalContext.current
     
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(getDimension(R.dimen.current_storage_banner_height))
-            .background(color = Color(context.getColor(R.color.current_storage_banner_background)))
+            .background(color = Color(context.getColor(if(enableDarkTheme) R.color.current_storage_banner_background_dark else R.color.current_storage_banner_background_light)))
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -452,7 +452,7 @@ private fun CurrentStorageBanner(baseServiceLevel: String) {
                     addStyle(
                         style = SpanStyle(
                             fontWeight = FontWeight.Bold,
-                            color = Color.Black
+                            color = if(enableDarkTheme) Color(0xfffefeff) else Color.Black
                         ),
                         start = firstIndex,
                         end = firstIndex + formattedStorage.length
@@ -465,7 +465,7 @@ private fun CurrentStorageBanner(baseServiceLevel: String) {
                 text = formattedText,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.W400,
-                    color = MaterialTheme.colorScheme.onSecondary,
+                    color = if(enableDarkTheme) Color(0xfffefeff) else  MaterialTheme.colorScheme.onSecondary,
                     fontSize = getDimensionText(R.dimen.box_plan_renew_size),
                     textAlign = TextAlign.Center
                 )

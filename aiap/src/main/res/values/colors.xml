@@ -15,7 +15,8 @@
 
     <!-- Common -->
     <color name="more_button_border">#ffffff</color>
-    <color name="current_storage_banner_background">#E9F5FF</color>
+    <color name="current_storage_banner_background_light">#E9F5FF</color>
+    <color name="current_storage_banner_background_dark">#262626</color>
 
     <!-- Toast Colors-->
     <color name="error_red_background_light">#FEF1F1</color>
