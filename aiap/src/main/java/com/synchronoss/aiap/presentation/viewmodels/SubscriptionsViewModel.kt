@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.ScrollState
 
 // Lifecycle imports
 import androidx.lifecycle.ViewModel
@@ -126,6 +127,11 @@ class SubscriptionsViewModel @Inject constructor(
     /** Theme color schemes */
     var lightThemeColorScheme: ColorScheme? by mutableStateOf(null)
     var darkThemeColorScheme: ColorScheme? by mutableStateOf(null)
+    //endregion
+
+    //region Scroll state references for programmatic scrolling
+    var mainContentScrollState: ScrollState? = null
+    var plansScrollState: ScrollState? = null
     //endregion
 
     //region Toast Management
@@ -306,16 +312,27 @@ class SubscriptionsViewModel @Inject constructor(
                 selectedPlan = -1
                 // Track successful purchase
                 trackPurchaseSuccess()
+                
+                // First update the content
                 val init = async { initProducts(purchaseUpdate = true) }
                 init.await()
+                
+                // Update UI state
                 isCurrentProductBeingUpdated = false
                 isPurchasePending = false
+                
+                // Show toast notification
                 showToast(
                     heading = context.getString(R.string.purchase_completed_title),
                     message = context.getString(R.string.purchase_completed_message),
                     formatArgs = currentProductDetails?.name,
                     isSuccess = true,
                 )
+                
+                // Scroll to top after everything is updated
+                // Add a delay to ensure content is fully updated
+                delay(150)
+                scrollToTop()
             }
         }
 
@@ -323,16 +340,26 @@ class SubscriptionsViewModel @Inject constructor(
         
         purchaseUpdateHandler.onPurchaseFailed = {
             viewModelScope.launch {
+                // First update the content
                 val init = async { initProducts(purchaseUpdate = true) }
                 init.await()
+                
+                // Update UI state
                 isCurrentProductBeingUpdated = false
                 isPurchasePending = true
+                
+                // Show toast notification
                 showToast(
                     heading = context.getString(R.string.purchase_pending_title),
                     message = context.getString(R.string.purchase_pending_message),
                     formatArgs = currentProductDetails?.name,
                     isPending = true,
                 )
+                
+                // Scroll to top after everything is updated
+                // Add a delay to ensure content is fully updated
+                delay(150)
+                scrollToTop()
             }
         }
 
@@ -715,6 +742,29 @@ class SubscriptionsViewModel @Inject constructor(
         currentProductDetails = null
         lastKnownProductTimestamp = null
         lastKnownThemeTimestamp = null
+    }
+
+    // Function to scroll to the top of the appropriate scroll area
+    private fun scrollToTop() {
+        viewModelScope.launch {
+            // Add a short delay to ensure content is fully rendered before scrolling
+            delay(100)
+            
+            try {
+                // Force scroll to absolute top position
+                mainContentScrollState?.scrollTo(0)
+                plansScrollState?.scrollTo(0)
+                
+                // Add a small delay and then animate to ensure we're at the top
+                delay(50)
+                mainContentScrollState?.animateScrollTo(0)
+                plansScrollState?.animateScrollTo(0)
+                
+                LogUtils.d(TAG, "Scrolled to top: main=${mainContentScrollState?.value}, plans=${plansScrollState?.value}")
+            } catch (e: Exception) {
+                LogUtils.e(TAG, "Error scrolling to top", e)
+            }
+        }
     }
 }
 
