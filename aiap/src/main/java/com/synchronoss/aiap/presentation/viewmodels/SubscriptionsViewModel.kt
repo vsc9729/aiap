@@ -511,7 +511,7 @@ class SubscriptionsViewModel @Inject constructor(
     /**
      * Handles iOS platform product mapping to Android products
      */
-    private fun handleIosPlatformProducts() {
+    public fun handleIosPlatformProducts() {
         if (isIosPlatform) {
             // Get the recurring period and service level from iOS subscription
             val iosRecurringPeriod = activeProduct?.recurringPeriodCode
@@ -537,47 +537,32 @@ class SubscriptionsViewModel @Inject constructor(
      * Initializes tab selection based on current product or available periods
      */
     public fun initializeTabsIfNeeded() {
-        if(selectedTab == null){
-            if(currentProductDetails != null){
-                selectedTab = when {
-                    currentProductDetails?.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("W") == true -> TabOption.WEEKlY
-                    currentProductDetails?.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("M") == true -> TabOption.MONTHLY
-                    else -> TabOption.YEARLY
-                }
+        if (selectedTab != null) return
 
-                // Filter based on the current product's billing period
-                val currentBillingPeriod = currentProductDetails?.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod
-                if (currentBillingPeriod != null) {
-                    filteredProductDetails = productDetails?.filter { details ->
-                        details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.last() == currentBillingPeriod.last()
-                    }
-                }
-            } else {
-                // If no current product, check available periods in productDetails
-                if (productDetails?.any { details -> 
-                    details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("W") == true 
-                } == true) {
-                    selectedTab = TabOption.WEEKlY
-                    filteredProductDetails = productDetails?.filter { details ->
-                        details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("W") == true
-                    }
-                } else if (productDetails?.any { details ->
-                    details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("M") == true
-                } == true) {
-                    selectedTab = TabOption.MONTHLY
-                    filteredProductDetails = productDetails?.filter { details ->
-                        details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("M") == true
-                    }
-                } else {
-                    selectedTab = TabOption.YEARLY
-                    filteredProductDetails = productDetails?.filter { details ->
-                        details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("Y") == true
-                    }
-                }
-            }
-            selectedTab?.let { onTabSelected(it) }
+        // Helper function to extract the billing suffix from a product's details.
+        fun getBillingSuffix(details: ProductDetails?): Char? =
+            details?.subscriptionOfferDetails?.lastOrNull()
+                ?.pricingPhases?.pricingPhaseList?.firstOrNull()
+                ?.billingPeriod?.lastOrNull()
+
+        // Try to get billing suffix from the current product, or else find one in the product list that has a 'W' or 'M'
+        val suffix = getBillingSuffix(currentProductDetails)
+            ?: productDetails?.firstOrNull { getBillingSuffix(it) in listOf('W', 'M') }?.let { getBillingSuffix(it) }
+            ?: 'Y'
+
+        // Set the selected tab based on the billing suffix.
+        selectedTab = when (suffix) {
+            'W' -> TabOption.WEEKlY
+            'M' -> TabOption.MONTHLY
+            else -> TabOption.YEARLY
         }
+
+        // Filter the product details to those matching the determined billing period suffix.
+        filteredProductDetails = productDetails?.filter { getBillingSuffix(it) == suffix }
+
+        selectedTab?.let { onTabSelected(it) }
     }
+
 
     /**
      * Handles tab selection and filters products accordingly
@@ -585,6 +570,11 @@ class SubscriptionsViewModel @Inject constructor(
     fun onTabSelected(tab: TabOption?) {
         selectedPlan = -1
         selectedTab = tab
+
+        if (tab == null) {
+            filteredProductDetails = null
+            return
+        }
 
         // Determine the required billing period suffix based on the selected tab.
         val billingSuffix = when (selectedTab) {

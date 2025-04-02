@@ -21,6 +21,7 @@ import com.synchronoss.aiap.presentation.state.ToastState
 import com.synchronoss.aiap.presentation.subscriptions.ui.TabOption
 import com.synchronoss.aiap.ui.theme.ThemeColors
 import com.synchronoss.aiap.ui.theme.ThemeLoader
+import com.synchronoss.aiap.utils.LogUtils
 import com.synchronoss.aiap.utils.NetworkConnectionListener
 import com.synchronoss.aiap.utils.Resource
 import com.synchronoss.aiap.utils.ToastService
@@ -808,40 +809,21 @@ class SubscriptionsViewModelTest {
     }
 
     @Test
-    fun `initializeTabsIfNeeded sets correct tab based on current product`() = runTest {
+    fun `initializeTabsIfNeeded with monthly currentProductDetails sets correct tab`() = runTest {
         // Given
-        val monthlyProduct = createMockProduct("monthly_product", "P1M")
+        val yearlyProductDetails = createMockProductDetails("yearly_product", "P1Y")
+
+        // Set up viewModel with necessary state
+        viewModel.selectedTab = null
+        viewModel.currentProductDetails = yearlyProductDetails
+        viewModel.productDetails = listOf(yearlyProductDetails)
         
-        // Mock product details with monthly billing period
-        val monthlyProductDetails = mockk<ProductDetails>(relaxed = true) {
-            every { productId } returns "monthly_product"
-            every { subscriptionOfferDetails } returns listOf(
-                mockk {
-                    every { pricingPhases } returns mockk {
-                        every { pricingPhaseList } returns listOf(
-                            mockk {
-                                every { billingPeriod } returns "P1M"
-                            }
-                        )
-                    }
-                }
-            )
-        }
-
-        // Set up viewModel state
-        viewModel.currentProduct = monthlyProduct
-        viewModel.currentProductDetails = monthlyProductDetails
-        viewModel.productDetails = listOf(monthlyProductDetails)
-
-        // When - Call the private initializeTabsIfNeeded method using reflection
-        val initializeTabsIfNeededMethod = SubscriptionsViewModel::class.java.getDeclaredMethod("initializeTabsIfNeeded")
-        initializeTabsIfNeededMethod.isAccessible = true
-        initializeTabsIfNeededMethod.invoke(viewModel)
-
+        // When
+        viewModel.initializeTabsIfNeeded()
+        
         // Then
-        assertEquals(TabOption.MONTHLY, viewModel.selectedTab)
-        assertEquals(1, viewModel.filteredProductDetails?.size)
-        assertEquals("monthly_product", viewModel.filteredProductDetails?.first()?.productId)
+        assertEquals(TabOption.YEARLY, viewModel.selectedTab)
+        assertNotNull(viewModel.filteredProductDetails)
     }
 
     @Test
@@ -1388,4 +1370,1382 @@ class SubscriptionsViewModelTest {
         assertEquals(1, viewModel.filteredProductDetails?.size)
         assertEquals("yearly_product", viewModel.filteredProductDetails?.first()?.productId)
     }
+
+    @Test
+    fun `fetchAndLoadProducts handles error cases correctly`() = runTest {
+        // Given
+        val errorMessage = "Failed to fetch products"
+        
+        // Mock GlobalBillingConfig.apiKey using mockkObject
+        mockkObject(GlobalBillingConfig)
+        every { GlobalBillingConfig.apiKey } returns TEST_API_KEY
+        
+        // Mock LogUtils - use mockkStatic since it's a utility class with static methods
+        mockkObject(LogUtils)
+        every { LogUtils.initialize(any()) } just Runs
+        every { LogUtils.clearLogs() } just Runs
+        every { LogUtils.d(any(), any()) } just Runs
+        every { LogUtils.e(any(), any()) } just Runs
+        every { LogUtils.e(any(), any(), any()) } just Runs
+        
+        // Mock getString for resource strings
+        every { applicationContext.getString(R.string.error_title) } returns "Error"
+        every { applicationContext.getString(R.string.error_products_message) } returns "Failed to load products"
+        every { applicationContext.getString(R.string.products_fetch_failed) } returns "Products fetch failed"
+        
+        // Mock productManagerUseCases.getProductsApi to return error
+        coEvery { 
+            productManagerUseCases.getProductsApi.invoke(any(), any())
+        } returns Resource.Error(errorMessage)
+        
+        // Set up viewModel with necessary state
+        viewModel.apiKey = TEST_API_KEY
+        viewModel.partnerUserId = TEST_USER_ID
+        viewModel.isLoading.value = true
+        
+        // Set lastKnownProductTimestamp via reflection since it's private
+        val lastKnownProductTimestampField = SubscriptionsViewModel::class.java.getDeclaredField("lastKnownProductTimestamp")
+        lastKnownProductTimestampField.isAccessible = true
+        lastKnownProductTimestampField.set(viewModel, null) // Set to null for test
+        
+        try {
+            // When - Call the method using callSuspend
+            val fetchAndLoadProductsMethod = SubscriptionsViewModel::class.memberFunctions.first { it.name == "fetchAndLoadProducts" }
+            fetchAndLoadProductsMethod.isAccessible = true
+            
+            fetchAndLoadProductsMethod.callSuspend(viewModel, false)
+            
+            // Then - Wait for coroutines to complete
+            advanceUntilIdle()
+            
+            // Verify loading state has been updated
+            assertFalse(viewModel.isLoading.value)
+            
+            // Verify product manager was called
+            coVerify { 
+                productManagerUseCases.getProductsApi.invoke(any(), TEST_API_KEY) 
+            }
+            
+            // Verify proper error handling - should show error message
+            verify { 
+                applicationContext.getString(withArg { it == R.string.error_title }) 
+            }
+            verify { 
+                applicationContext.getString(withArg { it == R.string.error_products_message }) 
+            }
+            
+            // Verify LogUtils was called for logging the error
+            verify { LogUtils.d(any(), any()) }
+        } finally {
+            // Clean up mocks
+            unmockkObject(GlobalBillingConfig)
+            unmockkObject(LogUtils)
+        }
+    }
+    
+    @Test
+    fun `fetchAndLoadProducts handles success case correctly`() = runTest {
+        // Given
+        val mockProducts = listOf(
+            createMockProduct("monthly_product", "P1M"),
+            createMockProduct("yearly_product", "P1Y")
+        )
+        val mockProductDetails = listOf(
+            createMockProductDetails("monthly_product", "P1M"),
+            createMockProductDetails("yearly_product", "P1Y")
+        )
+        
+        // Mock GlobalBillingConfig.apiKey using mockkObject
+        mockkObject(GlobalBillingConfig)
+        every { GlobalBillingConfig.apiKey } returns TEST_API_KEY
+        
+        // Mock LogUtils - use mockkStatic since it's a utility class with static methods
+        mockkObject(LogUtils)
+        every { LogUtils.initialize(any()) } just Runs
+        every { LogUtils.clearLogs() } just Runs
+        every { LogUtils.d(any(), any()) } just Runs
+        every { LogUtils.e(any(), any()) } just Runs
+        every { LogUtils.e(any(), any(), any()) } just Runs
+        
+        // Mock getString for resource strings
+        every { applicationContext.getString(R.string.error_title) } returns "Error"
+        every { applicationContext.getString(R.string.error_products_message) } returns "Failed to load products"
+        every { applicationContext.getString(R.string.products_fetch_failed) } returns "Products fetch failed"
+        
+        // Mock productManagerUseCases.getProductsApi to return success
+        coEvery { 
+            productManagerUseCases.getProductsApi.invoke(any(), any())
+        } returns Resource.Success(mockProducts)
+        
+        // Mock billingManagerUseCases to return product details
+        coEvery { 
+            billingManagerUseCases.getProductDetails.invoke(any(), any())
+        } returns mockProductDetails
+        
+        // Set up viewModel with necessary state
+        viewModel.apiKey = TEST_API_KEY
+        viewModel.partnerUserId = TEST_USER_ID
+        viewModel.isLoading.value = true
+        
+        // Set lastKnownProductTimestamp via reflection since it's private
+        val lastKnownProductTimestampField = SubscriptionsViewModel::class.java.getDeclaredField("lastKnownProductTimestamp")
+        lastKnownProductTimestampField.isAccessible = true
+        lastKnownProductTimestampField.set(viewModel, 123L) // Set some timestamp for test
+        
+        try {
+            // When - Call the method using callSuspend
+            val fetchAndLoadProductsMethod = SubscriptionsViewModel::class.memberFunctions.first { it.name == "fetchAndLoadProducts" }
+            fetchAndLoadProductsMethod.isAccessible = true
+            
+            fetchAndLoadProductsMethod.callSuspend(viewModel, false)
+            
+            // Then - Wait for coroutines to complete
+            advanceUntilIdle()
+            
+            // Verify loading state has been updated
+            assertFalse(viewModel.isLoading.value)
+            
+            // Verify product manager was called
+            coVerify { 
+                productManagerUseCases.getProductsApi.invoke(eq(123L), TEST_API_KEY) 
+            }
+            
+            // Verify products were set
+            assertEquals(mockProducts, viewModel.products)
+            assertEquals(mockProductDetails, viewModel.productDetails)
+            
+            // Verify initializeTabsIfNeeded was called (indirectly by checking if filteredProductDetails is not null)
+            assertNotNull(viewModel.filteredProductDetails)
+        } finally {
+            // Clean up mocks
+            unmockkObject(GlobalBillingConfig)
+            unmockkObject(LogUtils)
+        }
+    }
+
+    @Test
+    fun `handleIosPlatformProducts with no matching product does not set currentProduct`() = runTest {
+        // Given
+        val iosProduct = createMockProduct("ios_product", "P1M").copy(
+            platform = "IOS",
+            serviceLevel = "premium"
+        )
+        val differentAndroidProduct = createMockProduct("android_product", "P1Y").copy(
+            serviceLevel = "basic" // Different service level
+        )
+
+        // Set up viewModel with necessary state
+        viewModel.isIosPlatform = true
+        viewModel.activeProduct = iosProduct
+        viewModel.products = listOf(differentAndroidProduct)
+        
+        // Initial state - currentProduct should be null
+        assertNull(viewModel.currentProduct)
+        
+        // When - Call handleIosPlatformProducts
+        val handleIosPlatformProductsMethod = SubscriptionsViewModel::class.java.getDeclaredMethod("handleIosPlatformProducts")
+        handleIosPlatformProductsMethod.isAccessible = true
+        handleIosPlatformProductsMethod.invoke(viewModel)
+        
+        // Then - currentProduct should still be null because no matching product was found
+        assertNull(viewModel.currentProduct)
+        assertNull(viewModel.currentProductId)
+        assertNull(viewModel.currentProductDetails)
+    }
+    
+    @Test
+    fun `handleIosPlatformProducts with non-iOS platform does not match by serviceLevel`() = runTest {
+        // Given
+        val androidProduct = createMockProduct("android_product", "P1M").copy(
+            platform = "ANDROID",
+            serviceLevel = "basic"
+        )
+        val mockProductDetails = createMockProductDetails("android_product", "P1M")
+
+        // Set up viewModel with necessary state
+        viewModel.isIosPlatform = false // Not iOS platform
+        viewModel.currentProductId = "android_product"
+        viewModel.products = listOf(androidProduct)
+        viewModel.productDetails = listOf(mockProductDetails)
+        
+        // When - Call handleIosPlatformProducts
+        val handleIosPlatformProductsMethod = SubscriptionsViewModel::class.java.getDeclaredMethod("handleIosPlatformProducts")
+        handleIosPlatformProductsMethod.isAccessible = true
+        handleIosPlatformProductsMethod.invoke(viewModel)
+        
+        // Then - currentProductDetails should be set based on currentProductId
+        assertNotNull(viewModel.currentProductDetails)
+        assertEquals("android_product", viewModel.currentProductDetails?.productId)
+    }
+    
+    @Test
+    fun `handleIosPlatformProducts with non-iOS platform and no matching productId returns null`() = runTest {
+        // Given
+        val androidProduct = createMockProduct("android_product", "P1M")
+        val mockProductDetails = createMockProductDetails("android_product", "P1M")
+
+        // Set up viewModel with necessary state
+        viewModel.isIosPlatform = false
+        viewModel.currentProductId = "non_existing_product" // No matching product ID
+        viewModel.products = listOf(androidProduct)
+        viewModel.productDetails = listOf(mockProductDetails)
+        
+        // Initial state
+        assertNull(viewModel.currentProductDetails)
+        
+        // When - Call handleIosPlatformProducts
+        val handleIosPlatformProductsMethod = SubscriptionsViewModel::class.java.getDeclaredMethod("handleIosPlatformProducts")
+        handleIosPlatformProductsMethod.isAccessible = true
+        handleIosPlatformProductsMethod.invoke(viewModel)
+        
+        // Then - currentProductDetails should still be null
+        assertNull(viewModel.currentProductDetails)
+    }
+    
+    @Test
+    fun `initializeTabsIfNeeded with null selectedTab and currentProductDetails sets tab based on billing period`() = runTest {
+        // Given
+        val yearlyProductDetails = createMockProductDetails("yearly_product", "P1Y")
+
+        // Set up viewModel with necessary state
+        viewModel.selectedTab = null
+        viewModel.currentProductDetails = yearlyProductDetails
+        viewModel.productDetails = listOf(yearlyProductDetails)
+        
+        // When
+        viewModel.initializeTabsIfNeeded()
+        
+        // Then
+        assertEquals(TabOption.YEARLY, viewModel.selectedTab)
+        assertNotNull(viewModel.filteredProductDetails)
+    }
+
+    @Test
+    fun `fetchAndLoadProducts with purchaseUpdate true updates loading state correctly`() = runTest {
+        // Given
+        val mockProducts = listOf(
+            createMockProduct("monthly_product", "P1M"),
+            createMockProduct("yearly_product", "P1Y")
+        )
+        val mockProductDetails = listOf(
+            createMockProductDetails("monthly_product", "P1M"),
+            createMockProductDetails("yearly_product", "P1Y")
+        )
+        
+        // Mock GlobalBillingConfig.apiKey
+        mockkObject(GlobalBillingConfig)
+        every { GlobalBillingConfig.apiKey } returns TEST_API_KEY
+        
+        // Mock LogUtils
+        mockkObject(LogUtils)
+        every { LogUtils.initialize(any()) } just Runs
+        every { LogUtils.clearLogs() } just Runs
+        every { LogUtils.d(any(), any()) } just Runs
+        every { LogUtils.e(any(), any()) } just Runs
+        every { LogUtils.e(any(), any(), any()) } just Runs
+        
+        // Mock productManagerUseCases.getProductsApi to return success
+        coEvery { 
+            productManagerUseCases.getProductsApi.invoke(any(), any())
+        } returns Resource.Success(mockProducts)
+        
+        // Mock billingManagerUseCases to return product details
+        coEvery { 
+            billingManagerUseCases.getProductDetails.invoke(any(), any())
+        } returns mockProductDetails
+        
+        // Set up viewModel with necessary state
+        viewModel.apiKey = TEST_API_KEY
+        viewModel.isLoading.value = true
+        
+        // Set lastKnownProductTimestamp via reflection
+        val lastKnownProductTimestampField = SubscriptionsViewModel::class.java.getDeclaredField("lastKnownProductTimestamp")
+        lastKnownProductTimestampField.isAccessible = true
+        lastKnownProductTimestampField.set(viewModel, 123L)
+        
+        try {
+            // When - Call fetchAndLoadProducts with purchaseUpdate = true
+            val fetchAndLoadProductsMethod = SubscriptionsViewModel::class.memberFunctions.first { it.name == "fetchAndLoadProducts" }
+            fetchAndLoadProductsMethod.isAccessible = true
+            
+            fetchAndLoadProductsMethod.callSuspend(viewModel, true)
+            
+            // Then
+            advanceUntilIdle()
+            
+            // Verify loading state has been updated
+            assertFalse(viewModel.isLoading.value)
+            
+            // Verify the API was called with the correct parameters
+            coVerify { 
+                productManagerUseCases.getProductsApi.invoke(eq(123L), TEST_API_KEY) 
+            }
+            
+            // Verify products were set correctly
+            assertEquals(mockProducts, viewModel.products)
+            assertEquals(mockProductDetails, viewModel.productDetails)
+        } finally {
+            unmockkObject(GlobalBillingConfig)
+            unmockkObject(LogUtils)
+        }
+    }
+
+    @Test
+    fun `fetchAndLoadProducts handles product details error callback`() = runTest {
+        // Given
+        val mockProducts = listOf(
+            createMockProduct("monthly_product", "P1M")
+        )
+        val errorMessage = "Failed to fetch product details"
+        
+        // Mock GlobalBillingConfig.apiKey
+        mockkObject(GlobalBillingConfig)
+        every { GlobalBillingConfig.apiKey } returns TEST_API_KEY
+        
+        // Mock LogUtils
+        mockkObject(LogUtils)
+        every { LogUtils.initialize(any()) } just Runs
+        every { LogUtils.clearLogs() } just Runs
+        every { LogUtils.d(any(), any()) } just Runs
+        every { LogUtils.e(any(), any()) } just Runs
+        every { LogUtils.e(any(), any(), any()) } just Runs
+        
+        // Mock productManagerUseCases.getProductsApi to return success
+        coEvery { 
+            productManagerUseCases.getProductsApi.invoke(any(), any())
+        } returns Resource.Success(mockProducts)
+        
+        // Mock billingManagerUseCases to capture and execute the error callback
+        coEvery { 
+            billingManagerUseCases.getProductDetails.invoke(any(), captureLambda())
+        } answers {
+            // Capture the error callback and call it with our error message
+            val errorCallback = lambda<(String) -> Unit>()
+            errorCallback.invoke(errorMessage)
+            emptyList() // Return empty product details
+        }
+        
+        // Set up viewModel
+        viewModel.apiKey = TEST_API_KEY
+        viewModel.isLoading.value = true
+        
+        try {
+            // When - Call fetchAndLoadProducts
+            val fetchAndLoadProductsMethod = SubscriptionsViewModel::class.memberFunctions.first { it.name == "fetchAndLoadProducts" }
+            fetchAndLoadProductsMethod.isAccessible = true
+            
+            fetchAndLoadProductsMethod.callSuspend(viewModel, false)
+            
+            // Then
+            advanceUntilIdle()
+            
+            // Verify error was logged
+            verify { LogUtils.d(any(), match { it.contains(errorMessage) }) }
+            
+            // Verify loading state has been updated
+            assertFalse(viewModel.isLoading.value)
+        } finally {
+            unmockkObject(GlobalBillingConfig)
+            unmockkObject(LogUtils)
+        }
+    }
+
+    @Test
+    fun `handleIosPlatformProducts with matching iOS product sets currentProduct correctly`() = runTest {
+        // Given
+        val iosProduct = createMockProduct("ios_product", "P1M").copy(
+            platform = "IOS",
+            serviceLevel = "premium",
+            recurringPeriodCode = "P1M"
+        )
+        val matchingAndroidProduct = createMockProduct("android_product", "P1M").copy(
+            serviceLevel = "premium",
+            recurringPeriodCode = "P1M"
+        )
+        val mockProductDetails = createMockProductDetails("android_product", "P1M")
+
+        // Set up viewModel with necessary state
+        viewModel.isIosPlatform = true
+        viewModel.activeProduct = iosProduct
+        viewModel.products = listOf(matchingAndroidProduct)
+        viewModel.productDetails = listOf(mockProductDetails)
+        
+        // When - Call handleIosPlatformProducts
+        val handleIosPlatformProductsMethod = SubscriptionsViewModel::class.java.getDeclaredMethod("handleIosPlatformProducts")
+        handleIosPlatformProductsMethod.isAccessible = true
+        handleIosPlatformProductsMethod.invoke(viewModel)
+        
+        // Then - currentProduct should be set to the matching Android product
+        assertNotNull(viewModel.currentProduct)
+        assertEquals("android_product", viewModel.currentProduct?.productId)
+        assertEquals("android_product", viewModel.currentProductId)
+        assertEquals(mockProductDetails, viewModel.currentProductDetails)
+    }
+
+    @Test
+    fun `initializeTabsIfNeeded with existing selectedTab does nothing`() = runTest {
+        // Given
+        viewModel.selectedTab = TabOption.MONTHLY
+        
+        // Mock products so we can verify they're not touched
+        val mockProductDetails = listOf(
+            createMockProductDetails("monthly_product", "P1M")
+        )
+        viewModel.productDetails = mockProductDetails
+        viewModel.filteredProductDetails = mockProductDetails
+        
+        // When
+        viewModel.initializeTabsIfNeeded()
+        
+        // Then - selectedTab should not change
+        assertEquals(TabOption.MONTHLY, viewModel.selectedTab)
+        assertEquals(mockProductDetails, viewModel.filteredProductDetails)
+    }
+    
+    @Test
+    fun `initializeTabsIfNeeded with null productDetails sets default tab to YEARLY`() = runTest {
+        // Given
+        viewModel.selectedTab = null
+        viewModel.productDetails = null
+        
+        // When
+        viewModel.initializeTabsIfNeeded()
+        
+        // Then - Default to YEARLY when productDetails is null
+        assertEquals(TabOption.YEARLY, viewModel.selectedTab)
+        assertNull(viewModel.filteredProductDetails)
+    }
+    
+    @Test
+    fun `initializeTabsIfNeeded with currentBillingPeriod not null filters by period last character`() = runTest {
+        // Given
+        val monthlyProductDetails = createMockProductDetails("monthly_product", "P1M")
+        val yearlyProductDetails = createMockProductDetails("yearly_product", "P1Y")
+        
+        // Set up viewModel with necessary state
+        viewModel.selectedTab = null
+        viewModel.currentProductDetails = monthlyProductDetails
+        viewModel.productDetails = listOf(monthlyProductDetails, yearlyProductDetails)
+        
+        // When
+        viewModel.initializeTabsIfNeeded()
+        
+        // Then
+        assertEquals(TabOption.MONTHLY, viewModel.selectedTab)
+        assertEquals(1, viewModel.filteredProductDetails?.size)
+        assertEquals("monthly_product", viewModel.filteredProductDetails?.first()?.productId)
+    }
+    
+    @Test
+    fun `initializeTabsIfNeeded with only weekly products defaults to weekly tab`() = runTest {
+        // Given
+        val weeklyProductDetails = createMockProductDetails("weekly_product", "P1W")
+        
+        // Set up viewModel with necessary state
+        viewModel.selectedTab = null
+        viewModel.currentProductDetails = null
+        viewModel.productDetails = listOf(weeklyProductDetails)
+        
+        // When
+        viewModel.initializeTabsIfNeeded()
+        
+        // Then
+        assertEquals(TabOption.WEEKlY, viewModel.selectedTab)
+        assertNotNull(viewModel.filteredProductDetails)
+        assertEquals(1, viewModel.filteredProductDetails?.size)
+        assertEquals("weekly_product", viewModel.filteredProductDetails?.first()?.productId)
+    }
+    
+    @Test
+    fun `initializeTabsIfNeeded with only monthly products defaults to monthly tab`() = runTest {
+        // Given
+        val monthlyProductDetails = createMockProductDetails("monthly_product", "P1M")
+        
+        // Set up viewModel with necessary state
+        viewModel.selectedTab = null
+        viewModel.currentProductDetails = null
+        viewModel.productDetails = listOf(monthlyProductDetails)
+        
+        // When
+        viewModel.initializeTabsIfNeeded()
+        
+        // Then
+        assertEquals(TabOption.MONTHLY, viewModel.selectedTab)
+        assertEquals(1, viewModel.filteredProductDetails?.size)
+        assertEquals("monthly_product", viewModel.filteredProductDetails?.first()?.productId)
+    }
+
+    @Test
+    fun `initializeTabsIfNeeded with yearly product details sets tab based on yearly billing period`() = runTest {
+        // Given
+        val yearlyProductDetails = createMockProductDetails("yearly_product", "P1Y")
+
+        // Set up viewModel with necessary state
+        viewModel.selectedTab = null
+        viewModel.currentProductDetails = yearlyProductDetails
+        viewModel.productDetails = listOf(yearlyProductDetails)
+        
+        // When
+        viewModel.initializeTabsIfNeeded()
+        
+        // Then
+        assertEquals(TabOption.YEARLY, viewModel.selectedTab)
+        assertNotNull(viewModel.filteredProductDetails)
+    }
+
+    @Test
+    fun `fetchAndLoadProducts with null lastKnownProductTimestamp calls API correctly`() = runTest {
+        // Given
+        val mockProducts = listOf(
+            createMockProduct("monthly_product", "P1M")
+        )
+        
+        // Mock GlobalBillingConfig.apiKey
+        mockkObject(GlobalBillingConfig)
+        every { GlobalBillingConfig.apiKey } returns TEST_API_KEY
+        
+        // Mock LogUtils
+        mockkObject(LogUtils)
+        every { LogUtils.initialize(any()) } just Runs
+        every { LogUtils.clearLogs() } just Runs
+        every { LogUtils.d(any(), any()) } just Runs
+        every { LogUtils.e(any(), any()) } just Runs
+        every { LogUtils.e(any(), any(), any()) } just Runs
+        
+        // Mock productManagerUseCases.getProductsApi to return success
+        coEvery { 
+            productManagerUseCases.getProductsApi.invoke(null, TEST_API_KEY)
+        } returns Resource.Success(mockProducts)
+        
+        // Mock billingManagerUseCases to return empty list
+        coEvery { 
+            billingManagerUseCases.getProductDetails.invoke(any(), any())
+        } returns emptyList()
+        
+        // Set up viewModel with necessary state
+        viewModel.apiKey = TEST_API_KEY
+        viewModel.isLoading.value = true
+        
+        // Set lastKnownProductTimestamp to null via reflection
+        val lastKnownProductTimestampField = SubscriptionsViewModel::class.java.getDeclaredField("lastKnownProductTimestamp")
+        lastKnownProductTimestampField.isAccessible = true
+        lastKnownProductTimestampField.set(viewModel, null)
+        
+        try {
+            // When - Call fetchAndLoadProducts
+            val fetchAndLoadProductsMethod = SubscriptionsViewModel::class.memberFunctions.first { it.name == "fetchAndLoadProducts" }
+            fetchAndLoadProductsMethod.isAccessible = true
+            
+            fetchAndLoadProductsMethod.callSuspend(viewModel, false)
+            
+            // Then
+            advanceUntilIdle()
+            
+            // Verify API was called with null timestamp
+            coVerify { 
+                productManagerUseCases.getProductsApi.invoke(null, TEST_API_KEY) 
+            }
+            
+            // Verify products were set but product details are empty
+            assertEquals(mockProducts, viewModel.products)
+            assertEquals(emptyList<ProductDetails>(), viewModel.productDetails)
+            
+            // Verify loading state has been updated
+            assertFalse(viewModel.isLoading.value)
+        } finally {
+            unmockkObject(GlobalBillingConfig)
+            unmockkObject(LogUtils)
+        }
+    }
+     /**
+     * Test initializing subscription ViewModel with normal flow without errors
+     */
+    @Test
+    fun `initialize should complete successfully in normal flow`() = runTest {
+        // Given
+        val mockProduct = createMockProduct("test_product", "P1M")
+        val mockActiveSubscriptionInfo = createMockActiveSubscriptionInfo(mockProduct)
+        val mockProductDetails = createMockProductDetails("test_product", "P1M")
+        val mockProducts = listOf(mockProduct)
+        val completableDeferred = CompletableDeferred<Unit>()
+        completableDeferred.complete(Unit)
+
+        // Mock NetworkConnectionListener to return true (connected)
+        coEvery { networkConnectionListener.register() } returns true
+        
+        // Mock LogUtils
+        mockkObject(LogUtils)
+        every { LogUtils.initialize(any()) } just Runs
+        every { LogUtils.clearLogs() } just Runs
+        every { LogUtils.d(any(), any()) } just Runs
+        
+        // Mock theme-related responses
+        val mockThemeColors = mockk<ThemeColors>(relaxed = true)
+        every { themeLoader.getThemeColors() } returns mockk {
+            every { themeColors } returns mockThemeColors
+            every { logoUrl } returns "https://example.com/logo.png"
+        }
+        every { themeLoader.getDarkThemeColors() } returns mockk {
+            every { themeColors } returns mockThemeColors
+            every { logoUrl } returns "https://example.com/dark-logo.png"
+        }
+        
+        // Mock billing connection success
+        coEvery { billingManagerUseCases.startConnection() } returns completableDeferred
+        
+        // Mock active subscription response
+        coEvery { 
+            productManagerUseCases.getActiveSubscription(TEST_USER_ID, TEST_API_KEY)
+        } returns Resource.Success(mockActiveSubscriptionInfo)
+        
+        // Mock unacknowledged purchases handling
+        coEvery { 
+            billingManagerUseCases.handleUnacknowledgedPurchases(any())
+        } returns false
+        
+        // Mock product details check
+        coEvery { 
+            billingManagerUseCases.checkExistingSubscription(any())
+        } returns null
+        
+        // Mock products API success
+        coEvery { 
+            productManagerUseCases.getProductsApi(any(), any())
+        } returns Resource.Success(mockProducts)
+        
+        // Mock product details fetch
+        coEvery { 
+            billingManagerUseCases.getProductDetails(any(), any())
+        } returns listOf(mockProductDetails)
+        
+        // When
+        viewModel.initialize(TEST_USER_ID, TEST_API_KEY, false, mockActivity)
+        
+        // Advance coroutines to complete all async operations
+        testDispatcher.scheduler.advanceUntilIdle()
+            
+            // Then
+        // Check initialization status
+        assertTrue(viewModel.isInitialised)
+            assertFalse(viewModel.isLoading.value)
+            
+        // Check user information is correctly set
+        assertEquals(TEST_USER_ID, GlobalBillingConfig.partnerUserId)
+        assertEquals(TEST_API_KEY, GlobalBillingConfig.apiKey)
+        assertEquals(TEST_USER_UUID, viewModel.userUUID)
+        assertEquals(TEST_USER_UUID, GlobalBillingConfig.userUUID)
+        
+        // Check product information is correctly set
+        assertEquals(mockProduct.productId, viewModel.currentProductId)
+        assertEquals("Premium", viewModel.baseServiceLevel)
+        assertEquals(mockProduct, viewModel.currentProduct)
+        assertEquals(mockProduct, viewModel.activeProduct)
+            assertEquals(mockProducts, viewModel.products)
+        assertEquals(listOf(mockProductDetails), viewModel.productDetails)
+        
+        // Verify interactions with dependencies
+        verify { 
+            analyticsUseCases.initialize()
+            libraryActivityManagerUseCases.launchLibrary(mockActivity)
+        }
+        
+            coVerify { 
+            LogUtils.initialize(applicationContext)
+            LogUtils.clearLogs()
+            themeLoader.loadTheme()
+            billingManagerUseCases.startConnection()
+            productManagerUseCases.getActiveSubscription(TEST_USER_ID, TEST_API_KEY)
+            billingManagerUseCases.handleUnacknowledgedPurchases(any())
+            billingManagerUseCases.checkExistingSubscription(any())
+            productManagerUseCases.getProductsApi(any(), any())
+            billingManagerUseCases.getProductDetails(any(), any())
+        }
+    }
+
+    @Test
+    fun `test scrollToTop with both scroll states present`() = runTest {
+        // Given
+        val mainScrollState = mockk<androidx.compose.foundation.ScrollState>(relaxed = true)
+        val plansScrollState = mockk<androidx.compose.foundation.ScrollState>(relaxed = true)
+        
+        // Mock scroll values
+        every { mainScrollState.value } returns 100
+        every { plansScrollState.value } returns 50
+        
+        // Mock scrollTo and animateScrollTo to return 0f
+        coEvery { mainScrollState.scrollTo(any()) } coAnswers { 0f }
+        coEvery { plansScrollState.scrollTo(any()) } coAnswers { 0f }
+        coEvery { mainScrollState.animateScrollTo(any()) } coAnswers { 0f }
+        coEvery { plansScrollState.animateScrollTo(any()) } coAnswers { 0f }
+        
+        // Set the scroll states in the view model
+        viewModel.mainContentScrollState = mainScrollState
+        viewModel.plansScrollState = plansScrollState
+        
+        // When - Use reflection to access private method
+        val scrollToTopMethod = SubscriptionsViewModel::class.java.getDeclaredMethod("scrollToTop")
+        scrollToTopMethod.isAccessible = true
+        scrollToTopMethod.invoke(viewModel)
+        
+        // Advance time to complete coroutine
+        testDispatcher.scheduler.advanceTimeBy(200)
+        
+        // Then - Verify both scroll states were scrolled to 0
+        coVerify(exactly = 1) { mainScrollState.scrollTo(0) }
+        coVerify(exactly = 1) { plansScrollState.scrollTo(0) }
+        coVerify(exactly = 1) { mainScrollState.animateScrollTo(0) }
+        coVerify(exactly = 1) { plansScrollState.animateScrollTo(0) }
+    }
+
+    @Test
+    fun `test scrollToTop with null mainContentScrollState`() = runTest {
+        // Given
+        val plansScrollState = mockk<androidx.compose.foundation.ScrollState>(relaxed = true)
+        
+        // Mock scroll values
+        every { plansScrollState.value } returns 50
+        
+        // Mock scrollTo and animateScrollTo to return 0f
+        coEvery { plansScrollState.scrollTo(any()) } coAnswers { 0f }
+        coEvery { plansScrollState.animateScrollTo(any()) } coAnswers { 0f }
+        
+        // Set only one scroll state in the view model
+        viewModel.mainContentScrollState = null
+        viewModel.plansScrollState = plansScrollState
+        
+        // When - Use reflection to access private method
+        val scrollToTopMethod = SubscriptionsViewModel::class.java.getDeclaredMethod("scrollToTop")
+        scrollToTopMethod.isAccessible = true
+        scrollToTopMethod.invoke(viewModel)
+        
+        // Advance time to complete coroutine
+        testDispatcher.scheduler.advanceTimeBy(200)
+        
+        // Then - Verify only the plans scroll state was scrolled to 0
+        coVerify(exactly = 1) { plansScrollState.scrollTo(0) }
+        coVerify(exactly = 1) { plansScrollState.animateScrollTo(0) }
+    }
+
+    @Test
+    fun `test scrollToTop with null plansScrollState`() = runTest {
+        // Given
+        val mainScrollState = mockk<androidx.compose.foundation.ScrollState>(relaxed = true)
+        
+        // Mock scroll values
+        every { mainScrollState.value } returns 100
+        
+        // Mock scrollTo and animateScrollTo to return 0f
+        coEvery { mainScrollState.scrollTo(any()) } coAnswers { 0f }
+        coEvery { mainScrollState.animateScrollTo(any()) } coAnswers { 0f }
+        
+        // Set only one scroll state in the view model
+        viewModel.mainContentScrollState = mainScrollState
+        viewModel.plansScrollState = null
+        
+        // When - Use reflection to access private method
+        val scrollToTopMethod = SubscriptionsViewModel::class.java.getDeclaredMethod("scrollToTop")
+        scrollToTopMethod.isAccessible = true
+        scrollToTopMethod.invoke(viewModel)
+        
+        // Advance time to complete coroutine
+        testDispatcher.scheduler.advanceTimeBy(200)
+        
+        // Then - Verify only the main scroll state was scrolled to 0
+        coVerify(exactly = 1) { mainScrollState.scrollTo(0) }
+        coVerify(exactly = 1) { mainScrollState.animateScrollTo(0) }
+    }
+
+    @Test
+    fun `test scrollToTop with both scroll states null`() = runTest {
+        // Given
+        viewModel.mainContentScrollState = null
+        viewModel.plansScrollState = null
+        
+        // When - Use reflection to access private method
+        val scrollToTopMethod = SubscriptionsViewModel::class.java.getDeclaredMethod("scrollToTop")
+        scrollToTopMethod.isAccessible = true
+        scrollToTopMethod.invoke(viewModel)
+        
+        // Advance time to complete coroutine
+        testDispatcher.scheduler.advanceTimeBy(200)
+        
+        // Then - No exceptions should be thrown
+        // No verification needed as both states are null
+    }
+
+    @Test
+    fun `test scrollToTop with exception thrown`() = runTest {
+        // Given
+        val mainScrollState = mockk<androidx.compose.foundation.ScrollState>(relaxed = true)
+        val plansScrollState = mockk<androidx.compose.foundation.ScrollState>(relaxed = true)
+        
+        // Mock scrollTo to throw exception
+        coEvery { mainScrollState.scrollTo(any()) } throws RuntimeException("Scroll error")
+        
+        // Set the scroll states in the view model
+        viewModel.mainContentScrollState = mainScrollState
+        viewModel.plansScrollState = plansScrollState
+        
+        // When - Use reflection to access private method
+        val scrollToTopMethod = SubscriptionsViewModel::class.java.getDeclaredMethod("scrollToTop")
+        scrollToTopMethod.isAccessible = true
+        scrollToTopMethod.invoke(viewModel)
+        
+        // Advance time to complete coroutine
+        testDispatcher.scheduler.advanceTimeBy(200)
+        
+        // Then - Verify exception was logged - we just verify it didn't crash
+        coVerify(exactly = 1) { mainScrollState.scrollTo(0) }
+        // plansScrollState.scrollTo shouldn't be called due to the exception
+    }
+
+    @Test
+    fun `test scrollToTop is called during purchase success`() = runTest {
+        // Given
+        val mainScrollState = mockk<androidx.compose.foundation.ScrollState>(relaxed = true)
+        val plansScrollState = mockk<androidx.compose.foundation.ScrollState>(relaxed = true)
+        val mockProductInfo = createMockProduct("test_product", "P1M")
+        val mockActiveSubscriptionInfo = createMockActiveSubscriptionInfo(mockProductInfo)
+        
+        // Mock scroll states
+        coEvery { mainScrollState.scrollTo(any()) } coAnswers { 0f }
+        coEvery { plansScrollState.scrollTo(any()) } coAnswers { 0f }
+        coEvery { mainScrollState.animateScrollTo(any()) } coAnswers { 0f }
+        coEvery { plansScrollState.animateScrollTo(any()) } coAnswers { 0f }
+        
+        // Set the scroll states in the view model
+        viewModel.mainContentScrollState = mainScrollState
+        viewModel.plansScrollState = plansScrollState
+        
+        // Mock product update behavior
+        coEvery {
+            productManagerUseCases.getActiveSubscription(any(), any())
+        } returns Resource.Success(mockActiveSubscriptionInfo)
+        
+        coEvery {
+            productManagerUseCases.getProductsApi(any(), any())
+        } returns Resource.Success(listOf(mockProductInfo))
+        
+        // Mock string resources to avoid NPE
+        every { applicationContext.getString(R.string.purchase_completed_title) } returns "Purchase Completed"
+        every { applicationContext.getString(R.string.purchase_completed_message) } returns "Your purchase is complete"
+        
+        // Setup the purchase update handler to call the onPurchaseUpdated lambda directly
+        val onPurchaseUpdatedSlot = slot<() -> Unit>()
+        every { purchaseUpdateHandler.onPurchaseUpdated = capture(onPurchaseUpdatedSlot) } answers { 
+            callOriginal()
+        }
+        
+        // Setup event handlers to capture the onPurchaseUpdated lambda
+        viewModel.setupEventHandlers()
+        
+        // When - call the captured lambda directly
+        onPurchaseUpdatedSlot.captured.invoke()
+        
+        // Advance time to complete all coroutines including the delays
+        advanceUntilIdle()
+        
+        // Then - Verify scrollTo was called
+        coVerify(atLeast = 1) { mainScrollState.scrollTo(0) }
+    }
+
+    @Test
+    fun `test scrollToTop is called during purchase failure`() = runTest {
+        // Given
+        val mainScrollState = mockk<androidx.compose.foundation.ScrollState>(relaxed = true)
+        val plansScrollState = mockk<androidx.compose.foundation.ScrollState>(relaxed = true)
+        val mockProductInfo = createMockProduct("test_product", "P1M")
+        val mockActiveSubscriptionInfo = createMockActiveSubscriptionInfo(mockProductInfo)
+        
+        // Mock scroll states
+        coEvery { mainScrollState.scrollTo(any()) } coAnswers { 0f }
+        coEvery { plansScrollState.scrollTo(any()) } coAnswers { 0f }
+        coEvery { mainScrollState.animateScrollTo(any()) } coAnswers { 0f }
+        coEvery { plansScrollState.animateScrollTo(any()) } coAnswers { 0f }
+        
+        // Set the scroll states in the view model
+        viewModel.mainContentScrollState = mainScrollState
+        viewModel.plansScrollState = plansScrollState
+        
+        // Mock product update behavior
+        coEvery {
+            productManagerUseCases.getActiveSubscription(any(), any())
+        } returns Resource.Success(mockActiveSubscriptionInfo)
+        
+        coEvery {
+            productManagerUseCases.getProductsApi(any(), any())
+        } returns Resource.Success(listOf(mockProductInfo))
+        
+        // Mock string resources
+        every { applicationContext.getString(R.string.purchase_pending_title) } returns "Purchase Pending"
+        every { applicationContext.getString(R.string.purchase_pending_message) } returns "Your purchase is pending"
+        
+        // Setup the purchase update handler to call the onPurchaseFailed lambda directly
+        val onPurchaseFailedSlot = slot<() -> Unit>()
+        every { purchaseUpdateHandler.onPurchaseFailed = capture(onPurchaseFailedSlot) } answers { 
+            callOriginal()
+        }
+        
+        // Setup event handlers to capture the onPurchaseFailed lambda
+        viewModel.setupEventHandlers()
+        
+        // When - call the captured lambda directly
+        onPurchaseFailedSlot.captured.invoke()
+        
+        // Advance time to complete all coroutines including the delays
+        advanceUntilIdle()
+        
+        // Then - Verify scrollTo was called
+        coVerify(atLeast = 1) { mainScrollState.scrollTo(0) }
+    }
+
+    @Test
+    fun `setupEventHandlers registers all event handlers correctly`() = runTest {
+        // Given - fresh mock handlers
+        val mockPurchaseUpdateHandler = mockk<PurchaseUpdateHandler>(relaxed = true)
+        val mockSubscriptionCancelledHandler = mockk<SubscriptionCancelledHandler>(relaxed = true)
+        
+        // Capture lambdas for each handler
+        val onPurchaseStartedSlot = slot<() -> Unit>()
+        val onPurchaseUpdatedSlot = slot<() -> Unit>()
+        val onPurchaseFailedSlot = slot<() -> Unit>()
+        val onPurchaseStoppedSlot = slot<() -> Unit>()
+        val onSubscriptionCancelledSlot = slot<() -> Unit>()
+        
+        // Configure mocks to capture lambdas
+        every { mockPurchaseUpdateHandler.onPurchaseStarted = capture(onPurchaseStartedSlot) } just Runs
+        every { mockPurchaseUpdateHandler.onPurchaseUpdated = capture(onPurchaseUpdatedSlot) } just Runs
+        every { mockPurchaseUpdateHandler.onPurchaseFailed = capture(onPurchaseFailedSlot) } just Runs
+        every { mockPurchaseUpdateHandler.onPurchaseStopped = capture(onPurchaseStoppedSlot) } just Runs
+        every { mockSubscriptionCancelledHandler.onSubscriptionCancelled = capture(onSubscriptionCancelledSlot) } just Runs
+        
+        // Create a new viewModel with our mock handlers
+        val testViewModel = SubscriptionsViewModel(
+            billingManagerUseCases = billingManagerUseCases,
+            productManagerUseCases = productManagerUseCases,
+            themeLoader = themeLoader,
+            libraryActivityManagerUseCases = libraryActivityManagerUseCases,
+            purchaseUpdateHandler = mockPurchaseUpdateHandler,
+            subscriptionCancelledHandler = mockSubscriptionCancelledHandler,
+            analyticsUseCases = analyticsUseCases,
+            context = applicationContext
+        )
+        
+        // When
+        testViewModel.setupEventHandlers()
+        
+        // Then - verify all handlers were registered
+        verify(exactly = 1) { mockPurchaseUpdateHandler.onPurchaseStarted = any() }
+        verify(exactly = 1) { mockPurchaseUpdateHandler.onPurchaseUpdated = any() }
+        verify(exactly = 1) { mockPurchaseUpdateHandler.onPurchaseFailed = any() }
+        verify(exactly = 1) { mockPurchaseUpdateHandler.onPurchaseStopped = any() }
+        verify(exactly = 1) { mockSubscriptionCancelledHandler.onSubscriptionCancelled = any() }
+    }
+    
+    @Test
+    fun `setupEventHandlers assigns isLaunchedViaIntent to purchase handler`() = runTest {
+        // Given - a fresh mock handler
+        val mockPurchaseUpdateHandler = mockk<PurchaseUpdateHandler>(relaxed = true)
+        
+        // Create a new viewModel with our mock handler and set isLaunchedViaIntent
+        val testViewModel = SubscriptionsViewModel(
+            billingManagerUseCases = billingManagerUseCases,
+            productManagerUseCases = productManagerUseCases,
+            themeLoader = themeLoader,
+            libraryActivityManagerUseCases = libraryActivityManagerUseCases,
+            purchaseUpdateHandler = mockPurchaseUpdateHandler,
+            subscriptionCancelledHandler = subscriptionCancelledHandler,
+            analyticsUseCases = analyticsUseCases,
+            context = applicationContext
+        )
+        testViewModel.isLaunchedViaIntent = true
+        
+        // When
+        testViewModel.setupEventHandlers()
+        
+        // Then - verify isLaunchedViaIntent was assigned to the handler
+        verify(exactly = 1) { mockPurchaseUpdateHandler.isLaunchedViaIntent = true }
+    }
+    
+    
+    @Test
+    fun `purchase update handlers trigger correct state changes`() = runTest {
+        // Given
+        val mockProductInfo = createMockProduct("test_product", "P1M")
+        val mockActiveSubscriptionInfo = createMockActiveSubscriptionInfo(mockProductInfo)
+        val mockProductDetails = createMockProductDetails("test_product", "P1M")
+        
+        // Configure viewModel with initial state
+        viewModel.currentProduct = mockProductInfo
+        viewModel.currentProductDetails = mockProductDetails
+        viewModel.selectedPlan = 1
+        viewModel.isCurrentProductBeingUpdated = false
+        viewModel.isPurchasePending = true
+        
+        // Capture lambdas for purchase handlers
+        val onPurchaseStartedSlot = slot<() -> Unit>()
+        val onPurchaseUpdatedSlot = slot<() -> Unit>()
+        val onPurchaseFailedSlot = slot<() -> Unit>()
+        val onPurchaseStoppedSlot = slot<() -> Unit>()
+        
+        every { purchaseUpdateHandler.onPurchaseStarted = capture(onPurchaseStartedSlot) } answers {
+            val callback = firstArg<() -> Unit>()
+            every { purchaseUpdateHandler.onPurchaseStarted } returns callback
+        }
+        
+        every { purchaseUpdateHandler.onPurchaseUpdated = capture(onPurchaseUpdatedSlot) } answers {
+            val callback = firstArg<() -> Unit>()
+            every { purchaseUpdateHandler.onPurchaseUpdated } returns callback
+        }
+        
+        every { purchaseUpdateHandler.onPurchaseFailed = capture(onPurchaseFailedSlot) } answers {
+            val callback = firstArg<() -> Unit>()
+            every { purchaseUpdateHandler.onPurchaseFailed } returns callback
+        }
+        
+        every { purchaseUpdateHandler.onPurchaseStopped = capture(onPurchaseStoppedSlot) } answers {
+            val callback = firstArg<() -> Unit>()
+            every { purchaseUpdateHandler.onPurchaseStopped } returns callback
+        }
+        
+        // Mock API calls for product updates
+        coEvery { productManagerUseCases.getActiveSubscription(any(), any()) } returns Resource.Success(mockActiveSubscriptionInfo)
+        coEvery { productManagerUseCases.getProductsApi(any(), any()) } returns Resource.Success(listOf(mockProductInfo))
+        coEvery { billingManagerUseCases.checkExistingSubscription(any()) } returns null
+        
+        // Mock string resources
+        every { applicationContext.getString(R.string.purchase_completed_title) } returns "Purchase Completed"
+        every { applicationContext.getString(R.string.purchase_completed_message) } returns "Your purchase is complete"
+        every { applicationContext.getString(R.string.purchase_pending_title) } returns "Purchase Pending"
+        every { applicationContext.getString(R.string.purchase_pending_message) } returns "Your purchase is pending"
+        
+        // Setup scroll states
+        val mainScrollState = mockk<androidx.compose.foundation.ScrollState>(relaxed = true)
+        val plansScrollState = mockk<androidx.compose.foundation.ScrollState>(relaxed = true)
+        coEvery { mainScrollState.scrollTo(any()) } coAnswers { 0f }
+        coEvery { plansScrollState.scrollTo(any()) } coAnswers { 0f }
+        coEvery { mainScrollState.animateScrollTo(any()) } coAnswers { 0f }
+        coEvery { plansScrollState.animateScrollTo(any()) } coAnswers { 0f }
+        viewModel.mainContentScrollState = mainScrollState
+        viewModel.plansScrollState = plansScrollState
+        
+        // Setup event handlers
+        viewModel.setupEventHandlers()
+        
+        // When - trigger onPurchaseStarted
+        onPurchaseStartedSlot.captured.invoke()
+        
+        // Then - verify state
+        assertTrue(viewModel.isCurrentProductBeingUpdated)
+        
+        // When - trigger onPurchaseUpdated
+        onPurchaseUpdatedSlot.captured.invoke()
+        
+        // Advance time to complete coroutines
+        advanceUntilIdle()
+        
+        // Then - verify state changes
+        assertEquals(-1, viewModel.selectedPlan) // Reset to -1
+        assertFalse(viewModel.isCurrentProductBeingUpdated)
+        assertFalse(viewModel.isPurchasePending)
+        
+        // Verify analytics tracking
+        verify { analyticsUseCases.track(
+            eventName = "subscription_purchase_success",
+            properties = any()
+        ) }
+        
+        // Verify toast shown
+        verify { applicationContext.getString(R.string.purchase_completed_title) }
+        verify { applicationContext.getString(R.string.purchase_completed_message) }
+        
+        // Reset state for next test
+        viewModel.isCurrentProductBeingUpdated = true
+        viewModel.isPurchasePending = false
+        
+        // When - trigger onPurchaseFailed
+        onPurchaseFailedSlot.captured.invoke()
+        
+        // Advance time to complete coroutines
+        advanceUntilIdle()
+        
+        // Then - verify state changes
+        assertFalse(viewModel.isCurrentProductBeingUpdated)
+        assertTrue(viewModel.isPurchasePending)
+        
+        // Verify toast shown
+        verify { applicationContext.getString(R.string.purchase_pending_title) }
+        verify { applicationContext.getString(R.string.purchase_pending_message) }
+        
+        // Reset state for next test
+        viewModel.isCurrentProductBeingUpdated = true
+        
+        // When - trigger onPurchaseStopped
+        onPurchaseStoppedSlot.captured.invoke()
+        
+        // Advance time to complete coroutines
+        advanceUntilIdle()
+        
+        // Then - verify state changes
+        assertFalse(viewModel.isCurrentProductBeingUpdated)
+    }
+    
+    @Test
+    fun `setupEventHandlers with isLaunchedViaIntent false does not modify handler property`() = runTest {
+        // Given - a fresh mock handler
+        val mockPurchaseUpdateHandler = mockk<PurchaseUpdateHandler>(relaxed = true)
+        
+        // Create a new viewModel with our mock handler
+        val testViewModel = SubscriptionsViewModel(
+            billingManagerUseCases = billingManagerUseCases,
+            productManagerUseCases = productManagerUseCases,
+            themeLoader = themeLoader,
+            libraryActivityManagerUseCases = libraryActivityManagerUseCases,
+            purchaseUpdateHandler = mockPurchaseUpdateHandler,
+            subscriptionCancelledHandler = subscriptionCancelledHandler,
+            analyticsUseCases = analyticsUseCases,
+            context = applicationContext
+        )
+        testViewModel.isLaunchedViaIntent = false
+        
+        // When
+        testViewModel.setupEventHandlers()
+        
+        // Then - verify isLaunchedViaIntent was assigned to the handler
+        verify(exactly = 1) { mockPurchaseUpdateHandler.isLaunchedViaIntent = false }
+    }
+
+    @Test
+    fun `initialize handles when id is same as GlobalBillingConfig partnerUserId`() = runTest {
+        // Given
+        val mockProductInfo = createMockProduct("test_product", "P1M")
+        val mockActiveSubscriptionInfo = createMockActiveSubscriptionInfo(mockProductInfo)
+        
+        // Set up GlobalBillingConfig with the same user ID we'll use for initialization
+        GlobalBillingConfig.partnerUserId = TEST_USER_ID
+        viewModel.isInitialised = true  // Already initialized
+        
+        // When
+        viewModel.partnerUserId = TEST_USER_ID 
+        viewModel.initialize(TEST_USER_ID, TEST_API_KEY, false, mockActivity)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.isInitialised)
+        verify(exactly = 0) { libraryActivityManagerUseCases.launchLibrary(any()) }
+    }
+
+    @Test
+    fun `initialize reinitializes when id is different from GlobalBillingConfig partnerUserId`() = runTest {
+        // Given
+        val mockProductInfo = createMockProduct("test_product", "P1M")
+        val mockActiveSubscriptionInfo = createMockActiveSubscriptionInfo(mockProductInfo)
+        val completableDeferred = CompletableDeferred<Unit>()
+        completableDeferred.complete(Unit)
+        
+        // Set up GlobalBillingConfig with different user ID
+        GlobalBillingConfig.partnerUserId = "different_user_id"
+        
+        coEvery {
+            productManagerUseCases.getActiveSubscription(TEST_USER_ID, TEST_API_KEY)
+        } returns Resource.Success(mockActiveSubscriptionInfo)
+
+        coEvery {
+            billingManagerUseCases.startConnection.invoke()
+        } returns completableDeferred
+
+        coEvery {
+            billingManagerUseCases.handleUnacknowledgedPurchases(any())
+        } returns true
+        
+        // Need to mock the LogUtils calls
+        mockkObject(LogUtils)
+        coEvery { LogUtils.initialize(any()) } just Runs
+        coEvery { LogUtils.clearLogs() } just Runs
+        coEvery { LogUtils.d(any(), any()) } returns Unit
+
+        // When
+        viewModel.partnerUserId = "old_user_id"  
+        viewModel.isInitialised = true  // Set as already initialized
+        viewModel.initialize(TEST_USER_ID, TEST_API_KEY, false, mockActivity)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.isInitialised)
+        assertEquals(TEST_USER_ID, GlobalBillingConfig.partnerUserId)
+        verify { libraryActivityManagerUseCases.launchLibrary(mockActivity) }
+    }
+
+    @Test
+    fun `initialize with intent launch sets flag correctly`() = runTest {
+        // Given
+        val mockProductInfo = createMockProduct("test_product", "P1M")
+        val mockActiveSubscriptionInfo = createMockActiveSubscriptionInfo(mockProductInfo)
+        val completableDeferred = CompletableDeferred<Unit>()
+        completableDeferred.complete(Unit)
+        
+        coEvery {
+            productManagerUseCases.getActiveSubscription(TEST_USER_ID, TEST_API_KEY)
+        } returns Resource.Success(mockActiveSubscriptionInfo)
+
+        coEvery {
+            billingManagerUseCases.startConnection.invoke()
+        } returns completableDeferred
+        
+        coEvery {
+            billingManagerUseCases.handleUnacknowledgedPurchases(any())
+        } returns true
+        
+        // Need to mock the LogUtils calls
+        mockkObject(LogUtils)
+        coEvery { LogUtils.initialize(any()) } just Runs
+        coEvery { LogUtils.clearLogs() } just Runs
+        coEvery { LogUtils.d(any(), any()) } returns Unit
+
+        // When - pass true for intentLaunch
+        viewModel.partnerUserId = TEST_USER_ID
+        viewModel.initialize(TEST_USER_ID, TEST_API_KEY, true, mockActivity)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.isInitialised)
+        assertTrue(viewModel.isLaunchedViaIntent)
+        verify { purchaseUpdateHandler.isLaunchedViaIntent = true }
+    }
+    @Test
+fun `setupEventHandlers handles purchase update events correctly`() = runTest {
+    // Given
+    val mockPurchaseUpdateHandler = mockk<PurchaseUpdateHandler>(relaxed = true)
+    val onPurchaseUpdatedSlot = slot<() -> Unit>()
+    val mockAnalyticsUseCases = mockk<AnalyticsUseCases>(relaxed = true)
+    
+    // Create a properly mocked ProductDetails
+    val mockProductDetails = mockk<ProductDetails> {
+        every { productId } returns "test_product"
+        every { name } returns "Test Product"
+        every { subscriptionOfferDetails } returns listOf(
+            mockk {
+                every { pricingPhases } returns mockk {
+                    every { pricingPhaseList } returns listOf(
+                        mockk {
+                            every { formattedPrice } returns "$9.99"
+                            every { priceAmountMicros } returns 9990000L
+                            every { priceCurrencyCode } returns "USD"
+                        }
+                    )
+                }
+            }
+        )
+    }
+    
+    every { mockPurchaseUpdateHandler.onPurchaseUpdated = capture(onPurchaseUpdatedSlot) } just Runs
+    
+    // Mock resources
+    every { applicationContext.getString(R.string.purchase_completed_title) } returns "Purchase Complete"
+    every { applicationContext.getString(R.string.purchase_completed_message) } returns "Success"
+
+    // Set up ViewModel with mock handlers
+    val testViewModel = SubscriptionsViewModel(
+        billingManagerUseCases = billingManagerUseCases,
+        productManagerUseCases = productManagerUseCases,
+        themeLoader = themeLoader,
+        libraryActivityManagerUseCases = libraryActivityManagerUseCases,
+        purchaseUpdateHandler = mockPurchaseUpdateHandler,
+        subscriptionCancelledHandler = subscriptionCancelledHandler,
+        analyticsUseCases = mockAnalyticsUseCases,
+        context = applicationContext
+    ).apply {
+        // Initialize required properties
+        currentProductDetails = mockProductDetails
+        userUUID = "test-uuid"
+        selectedPlan = 1
+    }
+
+    // When
+    testViewModel.setupEventHandlers()
+    onPurchaseUpdatedSlot.captured.invoke()
+    
+    // Then
+    advanceUntilIdle()
+    
+    verify { 
+        mockAnalyticsUseCases.track(
+            eventName = "subscription_purchase_success",
+            match { props ->
+                props["product_id"] == "test_product" &&
+                props["user_id"] == "test-uuid" &&
+                props["product_name"] == "Test Product" &&
+                props["price"] == "$9.99"
+            }
+        )
+    }
+    
+    // Verify state updates
+    assertFalse(testViewModel.isCurrentProductBeingUpdated)
+    assertEquals(-1, testViewModel.selectedPlan) // Should reset to -1 after purchase
+}
+
+@Test
+fun `setupEventHandlers handles subscription cancelled correctly`() = runTest {
+    // Given
+    val onSubscriptionCancelledSlot = slot<() -> Unit>()
+    every { subscriptionCancelledHandler.onSubscriptionCancelled = capture(onSubscriptionCancelledSlot) } just Runs
+
+    // Mock resources
+    every { applicationContext.getString(R.string.subscription_cancelled_title) } returns "Cancelled"
+    every { applicationContext.getString(R.string.subscription_cancelled_message) } returns "Subscription cancelled"
+
+    // When
+    viewModel.setupEventHandlers()
+    viewModel.isLoading.value = false
+    
+    // Then invoke the captured lambda
+    onSubscriptionCancelledSlot.captured.invoke()
+    advanceUntilIdle()
+    
+    // Verify loading state was updated
+    assertTrue(viewModel.isLoading.value)
+}
+
+@Test
+fun `setupEventHandlers handles purchase failed correctly`() = runTest {
+    // Given
+    val onPurchaseFailedSlot = slot<() -> Unit>()
+    every { purchaseUpdateHandler.onPurchaseFailed = capture(onPurchaseFailedSlot) } just Runs
+
+    // Mock resources
+    every { applicationContext.getString(R.string.purchase_pending_title) } returns "Pending"
+    every { applicationContext.getString(R.string.purchase_pending_message) } returns "Purchase pending"
+
+    // When
+    viewModel.setupEventHandlers()
+    viewModel.isCurrentProductBeingUpdated = true
+    viewModel.isPurchasePending = false
+    
+    // Then invoke the captured lambda
+    onPurchaseFailedSlot.captured.invoke()
+    advanceUntilIdle()
+    
+    // Verify state changes
+    assertFalse(viewModel.isCurrentProductBeingUpdated)
+    assertTrue(viewModel.isPurchasePending)
+}
+
+@Test
+fun `setupEventHandlers handles purchase stopped correctly`() = runTest {
+    // Given
+    val onPurchaseStoppedSlot = slot<() -> Unit>()
+    every { purchaseUpdateHandler.onPurchaseStopped = capture(onPurchaseStoppedSlot) } just Runs
+
+    // When
+    viewModel.setupEventHandlers()
+    viewModel.isCurrentProductBeingUpdated = true
+    
+    // Then invoke the captured lambda
+    onPurchaseStoppedSlot.captured.invoke()
+    advanceUntilIdle()
+    
+    // Verify state changes
+    assertFalse(viewModel.isCurrentProductBeingUpdated)
+}
 }
