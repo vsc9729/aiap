@@ -54,7 +54,7 @@
     <!-- Subscription View strings -->
     <string name="image_url_description">Image from URL</string>
     <string name="restore_purchase">Restore purchase</string>
-    <string name="no_products_available">No products available</string>
+    <string name="no_products_available">No Products available at this time!</string>
     <string name="current_subscription">Current Subscription</string>
     <string name="pending_subscription">Purchase Pending</string>
     <string name="selected_plan_indicator">Selected Plan Indicator</string>

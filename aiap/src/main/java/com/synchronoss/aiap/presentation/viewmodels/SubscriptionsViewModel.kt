@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.ScrollState
 
 // Lifecycle imports
 import androidx.lifecycle.ViewModel
@@ -126,6 +127,11 @@ class SubscriptionsViewModel @Inject constructor(
     /** Theme color schemes */
     var lightThemeColorScheme: ColorScheme? by mutableStateOf(null)
     var darkThemeColorScheme: ColorScheme? by mutableStateOf(null)
+    //endregion
+
+    //region Scroll state references for programmatic scrolling
+    var mainContentScrollState: ScrollState? = null
+    var plansScrollState: ScrollState? = null
     //endregion
 
     //region Toast Management
@@ -306,16 +312,27 @@ class SubscriptionsViewModel @Inject constructor(
                 selectedPlan = -1
                 // Track successful purchase
                 trackPurchaseSuccess()
+                
+                // First update the content
                 val init = async { initProducts(purchaseUpdate = true) }
                 init.await()
+                
+                // Update UI state
                 isCurrentProductBeingUpdated = false
                 isPurchasePending = false
+                
+                // Show toast notification
                 showToast(
                     heading = context.getString(R.string.purchase_completed_title),
                     message = context.getString(R.string.purchase_completed_message),
                     formatArgs = currentProductDetails?.name,
                     isSuccess = true,
                 )
+                
+                // Scroll to top after everything is updated
+                // Add a delay to ensure content is fully updated
+                delay(150)
+                scrollToTop()
             }
         }
 
@@ -323,16 +340,26 @@ class SubscriptionsViewModel @Inject constructor(
         
         purchaseUpdateHandler.onPurchaseFailed = {
             viewModelScope.launch {
+                // First update the content
                 val init = async { initProducts(purchaseUpdate = true) }
                 init.await()
+                
+                // Update UI state
                 isCurrentProductBeingUpdated = false
                 isPurchasePending = true
+                
+                // Show toast notification
                 showToast(
                     heading = context.getString(R.string.purchase_pending_title),
                     message = context.getString(R.string.purchase_pending_message),
                     formatArgs = currentProductDetails?.name,
                     isPending = true,
                 )
+                
+                // Scroll to top after everything is updated
+                // Add a delay to ensure content is fully updated
+                delay(150)
+                scrollToTop()
             }
         }
 
@@ -484,7 +511,7 @@ class SubscriptionsViewModel @Inject constructor(
     /**
      * Handles iOS platform product mapping to Android products
      */
-    private fun handleIosPlatformProducts() {
+    public fun handleIosPlatformProducts() {
         if (isIosPlatform) {
             // Get the recurring period and service level from iOS subscription
             val iosRecurringPeriod = activeProduct?.recurringPeriodCode
@@ -510,47 +537,32 @@ class SubscriptionsViewModel @Inject constructor(
      * Initializes tab selection based on current product or available periods
      */
     public fun initializeTabsIfNeeded() {
-        if(selectedTab == null){
-            if(currentProductDetails != null){
-                selectedTab = when {
-                    currentProductDetails?.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("W") == true -> TabOption.WEEKlY
-                    currentProductDetails?.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("M") == true -> TabOption.MONTHLY
-                    else -> TabOption.YEARLY
-                }
+        if (selectedTab != null) return
 
-                // Filter based on the current product's billing period
-                val currentBillingPeriod = currentProductDetails?.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod
-                if (currentBillingPeriod != null) {
-                    filteredProductDetails = productDetails?.filter { details ->
-                        details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.last() == currentBillingPeriod.last()
-                    }
-                }
-            } else {
-                // If no current product, check available periods in productDetails
-                if (productDetails?.any { details -> 
-                    details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("W") == true 
-                } == true) {
-                    selectedTab = TabOption.WEEKlY
-                    filteredProductDetails = productDetails?.filter { details ->
-                        details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("W") == true
-                    }
-                } else if (productDetails?.any { details ->
-                    details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("M") == true
-                } == true) {
-                    selectedTab = TabOption.MONTHLY
-                    filteredProductDetails = productDetails?.filter { details ->
-                        details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("M") == true
-                    }
-                } else {
-                    selectedTab = TabOption.YEARLY
-                    filteredProductDetails = productDetails?.filter { details ->
-                        details.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod?.endsWith("Y") == true
-                    }
-                }
-            }
-            selectedTab?.let { onTabSelected(it) }
+        // Helper function to extract the billing suffix from a product's details.
+        fun getBillingSuffix(details: ProductDetails?): Char? =
+            details?.subscriptionOfferDetails?.lastOrNull()
+                ?.pricingPhases?.pricingPhaseList?.firstOrNull()
+                ?.billingPeriod?.lastOrNull()
+
+        // Try to get billing suffix from the current product, or else find one in the product list that has a 'W' or 'M'
+        val suffix = getBillingSuffix(currentProductDetails)
+            ?: productDetails?.firstOrNull { getBillingSuffix(it) in listOf('W', 'M') }?.let { getBillingSuffix(it) }
+            ?: 'Y'
+
+        // Set the selected tab based on the billing suffix.
+        selectedTab = when (suffix) {
+            'W' -> TabOption.WEEKlY
+            'M' -> TabOption.MONTHLY
+            else -> TabOption.YEARLY
         }
+
+        // Filter the product details to those matching the determined billing period suffix.
+        filteredProductDetails = productDetails?.filter { getBillingSuffix(it) == suffix }
+
+        selectedTab?.let { onTabSelected(it) }
     }
+
 
     /**
      * Handles tab selection and filters products accordingly
@@ -558,6 +570,11 @@ class SubscriptionsViewModel @Inject constructor(
     fun onTabSelected(tab: TabOption?) {
         selectedPlan = -1
         selectedTab = tab
+
+        if (tab == null) {
+            filteredProductDetails = null
+            return
+        }
 
         // Determine the required billing period suffix based on the selected tab.
         val billingSuffix = when (selectedTab) {
@@ -715,6 +732,29 @@ class SubscriptionsViewModel @Inject constructor(
         currentProductDetails = null
         lastKnownProductTimestamp = null
         lastKnownThemeTimestamp = null
+    }
+
+    // Function to scroll to the top of the appropriate scroll area
+    private fun scrollToTop() {
+        viewModelScope.launch {
+            // Add a short delay to ensure content is fully rendered before scrolling
+            delay(100)
+            
+            try {
+                // Force scroll to absolute top position
+                mainContentScrollState?.scrollTo(0)
+                plansScrollState?.scrollTo(0)
+                
+                // Add a small delay and then animate to ensure we're at the top
+                delay(50)
+                mainContentScrollState?.animateScrollTo(0)
+                plansScrollState?.animateScrollTo(0)
+                
+                LogUtils.d(TAG, "Scrolled to top: main=${mainContentScrollState?.value}, plans=${plansScrollState?.value}")
+            } catch (e: Exception) {
+                LogUtils.e(TAG, "Error scrolling to top", e)
+            }
+        }
     }
 }
 

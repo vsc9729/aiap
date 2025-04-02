@@ -225,14 +225,33 @@ private fun MainContent(
     val configuration = LocalConfiguration.current
     val context = LocalContext.current
     val filteredProductDetails = viewModel.filteredProductDetails
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    
+    // Create and remember scroll states for both scrollable areas
+    val mainContentScrollState = rememberScrollState()
+    val plansScrollState = rememberScrollState()
+    
+    // Store the scroll states in the ViewModel for access from callbacks
+    LaunchedEffect(mainContentScrollState, plansScrollState) {
+        LogUtils.d(TAG, "Setting scroll states: main=${mainContentScrollState.value}, plans=${plansScrollState.value}")
+        viewModel.mainContentScrollState = mainContentScrollState
+        viewModel.plansScrollState = plansScrollState
+    }
     
     Box {
-        // Scrollable content container
+        // In landscape mode, make the entire content scrollable
+        // In portrait mode, only the plan cards will be scrollable (handled in ScrollablePlans)
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(color = MaterialTheme.colorScheme.background)
-                .verticalScroll(rememberScrollState())
+                .then(
+                    if (isLandscape) {
+                        Modifier.verticalScroll(mainContentScrollState)
+                    } else {
+                        Modifier
+                    }
+                )
         ) {
             // Header content with padding
             Column(
@@ -265,7 +284,9 @@ private fun MainContent(
                 // Display scrollable subscription plans
                 ScrollablePlans(
                     activity = activity,
-                    enableDarkTheme = enableDarkTheme
+                    enableDarkTheme = enableDarkTheme,
+                    shouldScroll = !isLandscape, // Only enable scrolling for plans in portrait mode
+                    scrollState = plansScrollState // Pass the scroll state to ScrollablePlans
                 )
                 
                 // Add bottom spacing that adjusts based on orientation and selection state

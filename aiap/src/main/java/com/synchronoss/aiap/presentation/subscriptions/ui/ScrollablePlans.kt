@@ -24,13 +24,19 @@ import com.synchronoss.aiap.core.di.DaggerAiapComponent
 import com.synchronoss.aiap.presentation.subscriptions.wrapper.ScrollablePlansWrapper
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.utils.getDimension
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.fillMaxWidth
 
 @Composable
 fun ScrollablePlans(
     activity: ComponentActivity,
-    enableDarkTheme: Boolean = isSystemInDarkTheme()
+    enableDarkTheme: Boolean = isSystemInDarkTheme(),
+    shouldScroll: Boolean = true, // Default is true for backward compatibility
+    scrollState: ScrollState = rememberScrollState() // Default scroll state if not provided
 ) {
     val wrapper = remember {
         val wrapper = ScrollablePlansWrapper()
@@ -50,6 +56,7 @@ fun ScrollablePlans(
     val selectedTab = subscriptionsViewModel.selectedTab
     val isProductInIos = subscriptionsViewModel.isIosPlatform
     val unacknowledgedProductDetails = subscriptionsViewModel.unacknowledgedProductDetails
+    
     if (filteredProductDetails.isNullOrEmpty()) {
         Box(
             modifier = Modifier
@@ -74,9 +81,19 @@ fun ScrollablePlans(
             }
         }
     } else {
-        Column {
+        // Apply scrolling only when shouldScroll is true
+        Column(
+            modifier = if (shouldScroll) {
+                Modifier
+                    .verticalScroll(scrollState)
+                    // Add a key to force recomposition when content changes
+                    .fillMaxWidth()
+            } else {
+                Modifier.fillMaxWidth()
+            }
+        ) {
             // Display current product if exists and matches the selected tab's billing period
-            if ((currentProductDetails != null || unacknowledgedProductDetails != null) && !isProductInIos) {
+            if ((currentProductDetails != null || ( currentProductInfo == null && unacknowledgedProductDetails != null)) && !isProductInIos) {
                 val highlightedProductDetails: ProductDetails = currentProductDetails
                     ?: unacknowledgedProductDetails!!
                 val highlightedProductBillingPeriod = highlightedProductDetails.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod

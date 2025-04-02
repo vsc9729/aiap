@@ -20,6 +20,10 @@ dependencyResolutionManagement {
         maven {
             url = uri("https://maven.localytics.com/public")
         }
+        maven {
+            url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+        }
+
     }
 
 }
