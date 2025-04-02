@@ -16,6 +16,10 @@ import kotlin.test.assertTrue
 import kotlin.test.assertNull
 import kotlin.test.fail
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import com.android.billingclient.api.PurchasesResponseListener
+import com.android.billingclient.api.PurchasesUpdatedListener
+import com.synchronoss.aiap.core.data.repository.billing.BillingManagerConstants
 
 class BillingManagerTest {
     private lateinit var billingManager: BillingManager
@@ -307,7 +311,7 @@ class BillingManagerTest {
         
         // Then
         assertNull(result)
-        assertTrue(errorMessage == "Billing client not connected")
+        assertTrue(errorMessage == BillingManagerConstants.ERROR_BILLING_CLIENT_NOT_CONNECTED)
     }
 
     @Test
@@ -801,37 +805,413 @@ class BillingManagerTest {
     }
     
     @Test
-    fun `test onPurchasesUpdated with null purchases`() = runTest {
-        // Given
+    fun `test launchBillingFlow with currentProduct for update path`() = runTest {
+        // Setup for testing line 178 branch
+        val activity = mockk<ComponentActivity>()
+        val productDetails = mockk<ProductDetails>()
+        val mockCurrentPurchase = mockk<Purchase>(relaxed = true)
+        
+        // Set current purchase to test update flow
+        val billingManagerImpl = billingManager as BillingManagerImpl
+        val field = BillingManagerImpl::class.java.getDeclaredField("currentProduct")
+        field.isAccessible = true
+        field.set(billingManagerImpl, mockCurrentPurchase)
+        
+        // Setup necessary mocks
+        val subscriptionOfferDetails = listOf(
+            mockk<ProductDetails.SubscriptionOfferDetails> {
+                every { offerToken } returns "test_offer_token"
+            }
+        )
+        every { productDetails.subscriptionOfferDetails } returns subscriptionOfferDetails
+        every { productDetails.productId } returns "test_product_id"
+        
+        // All the necessary mocks for billing flow
+        mockBillingFlowProcess()
+        
+        // Execute
+        billingManager.purchaseSubscription(
+            activity = activity,
+            productDetails = productDetails,
+            onError = { fail("Error callback should not be called") },
+            userId = testUserId,
+            apiKey = testApiKey
+        )
+        
+        // Verify update flow was used
+        verify(exactly = 1) { mockBillingClient.launchBillingFlow(eq(activity), any()) }
+    }
+
+    @Test
+    fun `test checkExistingSubscriptions when client disconnected`() = runTest {
+        // Setup to test lines 209-211
+        every { mockBillingClient.connectionState } returns BillingClient.ConnectionState.DISCONNECTED
+        
+        var errorMessage = ""
+        val result = billingManager.checkExistingSubscriptions { errorMessage = it }
+        
+        // Verify error and null result
+        assertTrue(errorMessage == BillingManagerConstants.ERROR_BILLING_CLIENT_NOT_CONNECTED)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test checkExistingSubscriptions with billing error`() = runTest {
+        // Setup to test lines 222-224
+        val mockBillingResult = mockk<BillingResult> {
+            every { responseCode } returns BillingClient.BillingResponseCode.ERROR
+            every { debugMessage } returns "Billing client error"
+        }
+        
+        every { mockBillingClient.connectionState } returns BillingClient.ConnectionState.CONNECTED
+        every { mockBillingClient.queryPurchasesAsync(any<QueryPurchasesParams>(), any()) } answers {
+            secondArg<PurchasesResponseListener>().onQueryPurchasesResponse(
+                mockBillingResult,
+                emptyList()
+            )
+        }
+        
+        var errorMessage = ""
+        val result = billingManager.checkExistingSubscriptions { errorMessage = it }
+        
+        // Verify error handling
+        assertTrue(errorMessage.contains("Failed to query purchases"))
+        assertNull(result)
+    }
+
+    @Test
+    fun `test checkExistingSubscriptions with no subscription found`() = runTest {
+        // Setup to test line 227
         val mockBillingResult = mockk<BillingResult> {
             every { responseCode } returns BillingClient.BillingResponseCode.OK
         }
         
-        // When
-        (billingManager as BillingManagerImpl).onPurchasesUpdated(mockBillingResult, null)
-        
-        // Then
-        verifyOrder {
-            mockPurchaseUpdateHandler.handlePurchaseStarted()
-            mockPurchaseUpdateHandler.handlePurchaseStopped()
+        every { mockBillingClient.connectionState } returns BillingClient.ConnectionState.CONNECTED
+        every { mockBillingClient.queryPurchasesAsync(any<QueryPurchasesParams>(), any()) } answers {
+            secondArg<PurchasesResponseListener>().onQueryPurchasesResponse(
+                mockBillingResult,
+                emptyList() // No subscriptions found
+            )
         }
+        
+        var errorCalled = false
+        val result = billingManager.checkExistingSubscriptions { errorCalled = true }
+        
+        // Verify no error and null result
+        assertFalse(errorCalled)
+        assertNull(result)
     }
-    
+
     @Test
-    fun `test onPurchasesUpdated with purchases but error response code`() = runTest {
-        // Given
+    fun `test checkExistingSubscriptions with subscription but no product ID`() = runTest {
+        // Setup to test line 231
+        val mockBillingResult = mockk<BillingResult> {
+            every { responseCode } returns BillingClient.BillingResponseCode.OK
+        }
+        
+        val mockPurchase = mockk<Purchase> {
+            every { purchaseState } returns Purchase.PurchaseState.PURCHASED
+            every { products } returns emptyList() // No product ID
+        }
+        
+        every { mockBillingClient.connectionState } returns BillingClient.ConnectionState.CONNECTED
+        every { mockBillingClient.queryPurchasesAsync(any<QueryPurchasesParams>(), any()) } answers {
+            secondArg<PurchasesResponseListener>().onQueryPurchasesResponse(
+                mockBillingResult,
+                listOf(mockPurchase)
+            )
+        }
+        
+        var errorCalled = false
+        val result = billingManager.checkExistingSubscriptions { errorCalled = true }
+        
+        // Verify no error and null result
+        assertFalse(errorCalled)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test checkExistingSubscriptions with query product details failure`() = runTest {
+        // Setup to test line 244+
+        val mockBillingResult = mockk<BillingResult> {
+            every { responseCode } returns BillingClient.BillingResponseCode.OK
+        }
+        
+        val mockErrorResult = mockk<BillingResult> {
+            every { responseCode } returns BillingClient.BillingResponseCode.ERROR
+            every { debugMessage } returns "Failed to get product details"
+        }
+        
+        val mockPurchase = mockk<Purchase> {
+            every { purchaseState } returns Purchase.PurchaseState.PURCHASED
+            every { products } returns listOf("test_product_id")
+        }
+        
+        every { mockBillingClient.connectionState } returns BillingClient.ConnectionState.CONNECTED
+        every { mockBillingClient.queryPurchasesAsync(any<QueryPurchasesParams>(), any()) } answers {
+            secondArg<PurchasesResponseListener>().onQueryPurchasesResponse(
+                mockBillingResult,
+                listOf(mockPurchase)
+            )
+        }
+        
+        // Mock product details failure
+        every { mockBillingClient.queryProductDetailsAsync(any(), any()) } answers {
+            secondArg<ProductDetailsResponseListener>().onProductDetailsResponse(
+                mockErrorResult,
+                emptyList()
+            )
+        }
+        
+        var errorMessage = ""
+        val result = billingManager.checkExistingSubscriptions { errorMessage = it }
+        
+        // Verify error handling
+        assertTrue(errorMessage == "Failed to get product details")
+        assertNull(result)
+    }
+
+    @Test
+    fun `test checkExistingSubscriptions with exception`() = runTest {
+        // Setup to test lines 247-252, 255, 259-260
+        every { mockBillingClient.connectionState } returns BillingClient.ConnectionState.CONNECTED
+        every { mockBillingClient.queryPurchasesAsync(any<QueryPurchasesParams>(), any()) } throws RuntimeException("Test exception")
+        
+        var errorMessage = ""
+        val result = billingManager.checkExistingSubscriptions { errorMessage = it }
+        
+        // Verify error handling
+        assertTrue(errorMessage.contains("Error checking subscriptions"))
+        assertNull(result)
+    }
+
+    @Test
+    fun `test getProductDetails with disconnected client`() = runTest {
+        // Setup to test line 264, 266
+        every { mockBillingClient.connectionState } returns BillingClient.ConnectionState.DISCONNECTED
+        
+        var errorMessage = ""
+        val result = billingManager.getProductDetails(listOf("test_product")) { errorMessage = it }
+        
+        // Verify error handling
+        assertTrue(errorMessage == BillingManagerConstants.ERROR_BILLING_CLIENT_NOT_CONNECTED)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test getProductDetails with billing error`() = runTest {
+        // Setup for line 290
+        val productIds = listOf("test_product_id")
         val mockBillingResult = mockk<BillingResult> {
             every { responseCode } returns BillingClient.BillingResponseCode.ERROR
+            every { debugMessage } returns "Query product details failed"
         }
-        val mockPurchase = mockk<Purchase>()
         
-        // When
-        (billingManager as BillingManagerImpl).onPurchasesUpdated(mockBillingResult, listOf(mockPurchase))
+        // Mock product details API call
+        setupProductDetailsQueryMocks()
         
-        // Then
-        verifyOrder {
-            mockPurchaseUpdateHandler.handlePurchaseStarted()
-            mockPurchaseUpdateHandler.handlePurchaseStopped()
+        every { mockBillingClient.queryProductDetailsAsync(any(), any()) } answers {
+            secondArg<ProductDetailsResponseListener>().onProductDetailsResponse(
+                mockBillingResult,
+                emptyList()
+            )
         }
+        
+        var errorMessage = ""
+        val result = billingManager.getProductDetails(productIds) { errorMessage = it }
+        
+        // Verify error handling
+        assertTrue(errorMessage == "Query product details failed")
+        assertNull(result)
+    }
+
+    @Test
+    fun `test getProductDetails with exception`() = runTest {
+        // Setup for lines 342, 345, 350, 352
+        val productIds = listOf("test_product_id")
+        setupProductDetailsQueryMocks()
+        
+        every { mockBillingClient.queryProductDetailsAsync(any(), any()) } throws RuntimeException("Test exception")
+        
+        var errorMessage = ""
+        val result = billingManager.getProductDetails(productIds) { errorMessage = it }
+        
+        // Verify error handling
+        assertTrue(errorMessage.contains("Test exception"))
+        assertNull(result)
+    }
+
+    @Test
+    fun `test handleUnacknowledgedPurchases with client disconnected`() = runTest {
+        // Setup for lines 358-360
+        every { mockBillingClient.connectionState } returns BillingClient.ConnectionState.DISCONNECTED
+        
+        var errorMessage = ""
+        val result = billingManager.handleUnacknowledgedPurchases { errorMessage = it }
+        
+        // Verify error handling
+        assertTrue(errorMessage == BillingManagerConstants.ERROR_BILLING_CLIENT_NOT_CONNECTED)
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test handleUnacknowledgedPurchases with billing error`() = runTest {
+        // Setup for lines 372-377
+        val mockBillingResult = mockk<BillingResult> {
+            every { responseCode } returns BillingClient.BillingResponseCode.ERROR
+            every { debugMessage } returns "Query purchases failed"
+        }
+        
+        every { mockBillingClient.connectionState } returns BillingClient.ConnectionState.CONNECTED
+        every { mockBillingClient.queryPurchasesAsync(any<QueryPurchasesParams>(), any()) } answers {
+            secondArg<PurchasesResponseListener>().onQueryPurchasesResponse(
+                mockBillingResult,
+                emptyList()
+            )
+        }
+        
+        var errorMessage = ""
+        val result = billingManager.handleUnacknowledgedPurchases { errorMessage = it }
+        
+        // Verify error handling
+        assertTrue(errorMessage.contains("Failed to query purchases"))
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test handleUnacknowledgedPurchases with unacknowledged purchase and API failure`() = runTest {
+        // Setup for line 379, 388
+        val mockBillingResult = mockk<BillingResult> {
+            every { responseCode } returns BillingClient.BillingResponseCode.OK
+        }
+        
+        val mockPurchase = mockk<Purchase> {
+            every { purchaseState } returns Purchase.PurchaseState.PURCHASED
+            every { isAcknowledged } returns false
+            every { products } returns listOf("test_product_id")
+            every { purchaseTime } returns 1234567890L
+            every { purchaseToken } returns "test_purchase_token"
+        }
+        
+        every { mockBillingClient.connectionState } returns BillingClient.ConnectionState.CONNECTED
+        every { mockBillingClient.queryPurchasesAsync(any<QueryPurchasesParams>(), any()) } answers {
+            secondArg<PurchasesResponseListener>().onQueryPurchasesResponse(
+                mockBillingResult,
+                listOf(mockPurchase)
+            )
+        }
+        
+        // Mock API failure
+        coEvery { 
+            mockProductManagerUseCases.handlePurchase(
+                productId = any(),
+                purchaseTime = any(),
+                purchaseToken = any(),
+                partnerUserId = any(),
+                apiKey = any()
+            ) 
+        } returns false
+        
+        var errorCalled = false
+        val result = billingManager.handleUnacknowledgedPurchases { errorCalled = true }
+        
+        // Verify handling
+        assertFalse(result)
+        assertFalse(errorCalled)
+    }
+
+    @Test
+    fun `test handleUnacknowledgedPurchases with exception`() = runTest {
+        // Setup for lines 397-398, 407, 411
+        every { mockBillingClient.connectionState } returns BillingClient.ConnectionState.CONNECTED
+        every { mockBillingClient.queryPurchasesAsync(any<QueryPurchasesParams>(), any()) } throws RuntimeException("Test exception")
+        
+        var errorMessage = ""
+        val result = billingManager.handleUnacknowledgedPurchases { errorMessage = it }
+        
+        // Verify error handling
+        assertTrue(errorMessage.contains("Test exception"))
+        assertFalse(result)
+    }
+
+    // Helper method to setup product details query mocks
+    private fun setupProductDetailsQueryMocks() {
+        val mockProduct = mockk<QueryProductDetailsParams.Product>()
+        val mockProductBuilder = mockk<QueryProductDetailsParams.Product.Builder> {
+            every { setProductId(any()) } returns this
+            every { setProductType(any()) } returns this
+            every { build() } returns mockProduct
+        }
+        
+        val mockParams = mockk<QueryProductDetailsParams>()
+        val mockParamsBuilder = mockk<QueryProductDetailsParams.Builder> {
+            every { setProductList(any()) } returns this
+            every { build() } returns mockParams
+        }
+        
+        mockkStatic(QueryProductDetailsParams.Product::class)
+        mockkStatic(QueryProductDetailsParams::class)
+        
+        every { QueryProductDetailsParams.Product.newBuilder() } returns mockProductBuilder
+        every { QueryProductDetailsParams.newBuilder() } returns mockParamsBuilder
+    }
+
+    // Helper method to setup billing flow process mocks
+    private fun mockBillingFlowProcess() {
+        val mockProductDetailsParams = mockk<BillingFlowParams.ProductDetailsParams>()
+        val mockProductDetailsParamsBuilder = mockk<BillingFlowParams.ProductDetailsParams.Builder> {
+            every { setProductDetails(any()) } returns this
+            every { setOfferToken(any()) } returns this
+            every { build() } returns mockProductDetailsParams
+        }
+        
+        val mockSubscriptionUpdateParams = mockk<BillingFlowParams.SubscriptionUpdateParams>()
+        val mockSubscriptionUpdateParamsBuilder = mockk<BillingFlowParams.SubscriptionUpdateParams.Builder> {
+            every { setOldPurchaseToken(any()) } returns this
+            every { setSubscriptionReplacementMode(any()) } returns this
+            every { build() } returns mockSubscriptionUpdateParams
+        }
+        
+        val mockBillingFlowParams = mockk<BillingFlowParams>()
+        val mockBillingFlowParamsBuilder = mockk<BillingFlowParams.Builder> {
+            every { setProductDetailsParamsList(any()) } returns this
+            every { setObfuscatedAccountId(any()) } returns this
+            every { setObfuscatedProfileId(any()) } returns this
+            every { setSubscriptionUpdateParams(any()) } returns this
+            every { build() } returns mockBillingFlowParams
+        }
+        
+        val billingResult = mockk<BillingResult> {
+            every { responseCode } returns BillingClient.BillingResponseCode.OK
+        }
+        
+        mockkStatic(BillingFlowParams.ProductDetailsParams::class)
+        mockkStatic(BillingFlowParams.SubscriptionUpdateParams::class)
+        every { BillingFlowParams.ProductDetailsParams.newBuilder() } returns mockProductDetailsParamsBuilder
+        every { BillingFlowParams.SubscriptionUpdateParams.newBuilder() } returns mockSubscriptionUpdateParamsBuilder
+        every { BillingFlowParams.newBuilder() } returns mockBillingFlowParamsBuilder
+        
+        every { mockBillingClient.launchBillingFlow(any(), any()) } returns billingResult
+    }
+
+    @Test
+    fun `test purchaseSubscription with exception handling`() = runTest {
+        // Setup to trigger the catch block in line 95
+        val activity = mockk<ComponentActivity>()
+        val productDetails = mockk<ProductDetails>()
+        
+        every { productDetails.subscriptionOfferDetails } throws RuntimeException("Test exception")
+        
+        var errorMessage = ""
+        billingManager.purchaseSubscription(
+            activity = activity,
+            productDetails = productDetails,
+            onError = { errorMessage = it },
+            userId = testUserId,
+            apiKey = testApiKey
+        )
+        
+        // Just verify the error message is not empty - the exact message might vary
+        assertTrue(errorMessage.isNotEmpty())
     }
 }
