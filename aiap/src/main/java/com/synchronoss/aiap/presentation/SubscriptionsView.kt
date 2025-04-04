@@ -263,7 +263,11 @@ private fun MainContent(
                 }
                 
                 // Display logo and tagline
-                LogoAndTagline(logoUrl = viewModel.finalLogoUrl!!)
+                if (viewModel.finalLogoUrl != null) {
+                    LogoAndTagline(logoUrl = viewModel.finalLogoUrl)
+                } else {
+                    LogUtils.e(TAG, "Logo URL is null")
+                }
                 
                 // Display tab selector for different subscription categories
                 TabSelectorSection(viewModel, activity)
@@ -273,7 +277,10 @@ private fun MainContent(
 
             // Show current storage banner if user has base service level but no current product
             if(viewModel.baseServiceLevel != null && viewModel.currentProduct == null) {
-                CurrentStorageBanner(baseServiceLevel = viewModel.baseServiceLevel!!, enableDarkTheme = enableDarkTheme)
+                if(viewModel.baseServiceLevel != null){
+                    CurrentStorageBanner(baseServiceLevel = viewModel.baseServiceLevel, enableDarkTheme = enableDarkTheme)
+                }
+
             }
 
             // Plans section with horizontal padding
@@ -373,7 +380,7 @@ private fun IosPlatformWarning() {
  * @param logoUrl URL of the logo image to display
  */
 @Composable
-private fun LogoAndTagline(logoUrl: String) {
+private fun LogoAndTagline(logoUrl: String?) {
     val context = LocalContext.current
     val logoUrlWidth = getDimension(R.dimen.logo_width)
     val logoUrlHeight = getDimension(R.dimen.logo_height)
@@ -442,9 +449,9 @@ private fun TabSelectorSection(viewModel: SubscriptionsViewModel, activity: Comp
  * @param baseServiceLevel String representing the user's base service level
  */
 @Composable
-private fun CurrentStorageBanner(baseServiceLevel: String, enableDarkTheme : Boolean = isSystemInDarkTheme()) {
+private fun CurrentStorageBanner(baseServiceLevel: String?, enableDarkTheme : Boolean = isSystemInDarkTheme()) {
     val context = LocalContext.current
-    
+    if(baseServiceLevel !=null)
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -457,6 +464,7 @@ private fun CurrentStorageBanner(baseServiceLevel: String, enableDarkTheme : Boo
             horizontalArrangement = Arrangement.Center
         ) {
             // Extract storage size from the base service level
+
             val formattedStorage: String = extractSize(baseServiceLevel)
             val rawString = stringResource(
                 R.string.current_storage_banner_text,

@@ -30,6 +30,7 @@ import com.android.billingclient.api.ProductDetails
 import com.synchronoss.aiap.utils.getDimension
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.fillMaxWidth
+import com.synchronoss.aiap.utils.LogUtils
 
 @Composable
 fun ScrollablePlans(
@@ -94,8 +95,14 @@ fun ScrollablePlans(
         ) {
             // Display current product if exists and matches the selected tab's billing period
             if ((currentProductDetails != null || ( currentProductInfo == null && unacknowledgedProductDetails != null)) && !isProductInIos) {
-                val highlightedProductDetails: ProductDetails = currentProductDetails
-                    ?: unacknowledgedProductDetails!!
+                val highlightedProductDetails: ProductDetails = currentProductDetails ?: run {
+                    if (unacknowledgedProductDetails != null) {
+                        unacknowledgedProductDetails
+                    } else {
+                        LogUtils.e("ScrollablePlans", "Both currentProductDetails and unacknowledgedProductDetails are null")
+                        return@Column
+                    }
+                }
                 val highlightedProductBillingPeriod = highlightedProductDetails.subscriptionOfferDetails?.last()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.billingPeriod
                 val shouldShowCurrentPlan = when (selectedTab) {
                     TabOption.WEEKlY -> highlightedProductBillingPeriod?.endsWith("W") == true

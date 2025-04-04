@@ -138,17 +138,23 @@ fun ActualCurrentPlanCard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Start,
                         ) {
-                            val pricingPhases =
-                                productDetails.subscriptionOfferDetails?.first()?.pricingPhases?.pricingPhaseList!!
-                            val finalPhase = pricingPhases.last()
+                            val pricingPhaseList = productDetails.subscriptionOfferDetails?.first()?.pricingPhases?.pricingPhaseList
+                            if (pricingPhaseList != null) {
+                                val pricingPhases = pricingPhaseList
+                                val finalPhase = pricingPhases.last()
 
-                            Text(
-                                text = productDetails.name,
-                                fontSize = getDimensionText(R.dimen.text_size_plan_price),
-                                fontWeight = FontWeight.W700,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier.padding(bottom = getDimension(R.dimen.card_content_spacing))
-                            )
+                                Text(
+                                    text = productDetails.name,
+                                    fontSize = getDimensionText(R.dimen.text_size_plan_price),
+                                    fontWeight = FontWeight.W700,
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    modifier = Modifier.padding(bottom = getDimension(R.dimen.card_content_spacing))
+                                )
+                            } else {
+                                LogUtils.e("PlanCards", "Pricing phase list is null")
+                                // Return early or provide fallback behavior
+                                return@Row
+                            }
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -296,73 +302,73 @@ fun OtherPlanCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                    val pricingPhases = offerDetails.pricingPhases.pricingPhaseList
-                    val finalPhase = pricingPhases.last()
+                val pricingPhaseList = offerDetails.pricingPhases.pricingPhaseList
+                val pricingPhases = pricingPhaseList
+                val finalPhase = pricingPhases.last()
 
-                    Text(
-                        text = productDetails.name,
-                        fontSize = getDimensionText(R.dimen.text_size_plan_price),
-                        fontWeight = FontWeight.W700,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(bottom = getDimension(R.dimen.card_content_spacing))
-                    )
+                Text(
+                    text = productDetails.name,
+                    fontSize = getDimensionText(R.dimen.text_size_plan_price),
+                    fontWeight = FontWeight.W700,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(bottom = getDimension(R.dimen.card_content_spacing))
+                )
 
-                    if (pricingPhases.size > 1) {
-                        val firstPhase = pricingPhases.first()
-                        val lastPhase = pricingPhases.last()
+                if (pricingPhases.size > 1) {
+                    val firstPhase = pricingPhases.first()
+                    val lastPhase = pricingPhases.last()
 
-                        // Extract numeric values from price strings (assuming format like "₹100.00" or "$100.00")
-                        val firstPrice = firstPhase.priceAmountMicros / 1_000_000.0
-                        val lastPrice = lastPhase.priceAmountMicros / 1_000_000.0
+                    // Extract numeric values from price strings (assuming format like "₹100.00" or "$100.00")
+                    val firstPrice = firstPhase.priceAmountMicros / 1_000_000.0
+                    val lastPrice = lastPhase.priceAmountMicros / 1_000_000.0
 
-                        val priceDifference = lastPrice - firstPrice
-                        val currencySymbol = lastPhase.formattedPrice.first()
+                    val priceDifference = lastPrice - firstPrice
+                    val currencySymbol = lastPhase.formattedPrice.first()
 
-                        val savingsText = if (priceDifference > 0) {
-                            "${currencySymbol}${String.format(Locale.US, "%.2f", priceDifference)} OFF"
-                        } else {
-                            ""
-                        }
+                    val savingsText = if (priceDifference > 0) {
+                        "${currencySymbol}${String.format(Locale.US, "%.2f", priceDifference)} OFF"
+                    } else {
+                        ""
+                    }
 
-                        Spacer(modifier = Modifier.height(getDimension(R.dimen.plan_card_spacer_height)))
-                        if (savingsText.isNotEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .background(
-                                        color = MaterialTheme.colorScheme.surface,
-                                        shape = RoundedCornerShape(getDimension(R.dimen.plan_card_savings_corner))
-                                    )
-                                    .clip(RoundedCornerShape(getDimension(R.dimen.plan_card_savings_corner)))
-                                    .border(
-                                        color = MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.5F
-                                        ), width = getDimension(R.dimen.plan_card_savings_border), shape = RoundedCornerShape(getDimension(R.dimen.plan_card_savings_corner))
-                                    )
-                                    .padding(horizontal = getDimension(R.dimen.plan_card_savings_padding_horizontal), vertical = getDimension(R.dimen.plan_card_savings_padding_vertical))
+                    Spacer(modifier = Modifier.height(getDimension(R.dimen.plan_card_spacer_height)))
+                    if (savingsText.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.surface,
+                                    shape = RoundedCornerShape(getDimension(R.dimen.plan_card_savings_corner))
+                                )
+                                .clip(RoundedCornerShape(getDimension(R.dimen.plan_card_savings_corner)))
+                                .border(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.5F
+                                    ), width = getDimension(R.dimen.plan_card_savings_border), shape = RoundedCornerShape(getDimension(R.dimen.plan_card_savings_corner))
+                                )
+                                .padding(horizontal = getDimension(R.dimen.plan_card_savings_padding_horizontal), vertical = getDimension(R.dimen.plan_card_savings_padding_vertical))
+                        ){
+                            Row (
+                                verticalAlignment = Alignment.CenterVertically
                             ){
-                                Row (
-                                    verticalAlignment = Alignment.CenterVertically
-                                ){
-                                    Image(
-                                        painter = rememberAsyncImagePainter(R.drawable.discount),
-                                        contentDescription = "Discount Icon",
-                                        modifier = Modifier.size(getDimension(R.dimen.plan_card_savings_icon_size))
-                                    )
-                                    Spacer(modifier = Modifier.width(getDimension(R.dimen.plan_card_savings_spacer)))
-                                    Text(
-                                        text = savingsText,
-                                        fontSize = getDimensionText(R.dimen.text_size_plan_intro_price),
-                                        fontWeight = FontWeight.W500,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        lineHeight = getDimensionText(R.dimen.text_line_height)
-                                    )
-                                }
-
+                                Image(
+                                    painter = rememberAsyncImagePainter(R.drawable.discount),
+                                    contentDescription = "Discount Icon",
+                                    modifier = Modifier.size(getDimension(R.dimen.plan_card_savings_icon_size))
+                                )
+                                Spacer(modifier = Modifier.width(getDimension(R.dimen.plan_card_savings_spacer)))
+                                Text(
+                                    text = savingsText,
+                                    fontSize = getDimensionText(R.dimen.text_size_plan_intro_price),
+                                    fontWeight = FontWeight.W500,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    lineHeight = getDimensionText(R.dimen.text_line_height)
+                                )
                             }
 
                         }
-                }
 
+                    }
+                }
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),

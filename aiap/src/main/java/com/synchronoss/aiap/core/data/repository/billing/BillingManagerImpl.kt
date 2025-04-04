@@ -23,6 +23,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CompletableDeferred
+import com.synchronoss.aiap.utils.LogUtils
 
 /**
  * Implementation of BillingManager interface that handles Google Play Billing operations.
@@ -41,7 +42,6 @@ class BillingManagerImpl(
 
     private val productDetailsMap = mutableMapOf<String, ProductDetails>()
     private var currentProduct: Purchase? = null
-    
     private val billingClient: BillingClient = BillingClient.newBuilder(context)
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .setListener(this)
@@ -124,14 +124,21 @@ class BillingManagerImpl(
      * @return List of product details parameters
      */
     private fun createProductDetailsParams(product: ProductDetails): List<BillingFlowParams.ProductDetailsParams> {
-        val offerToken: String = product.subscriptionOfferDetails!!.first().offerToken
-        
-        return listOf(
-            BillingFlowParams.ProductDetailsParams.newBuilder()
-                .setProductDetails(product)
-                .setOfferToken(offerToken)
-                .build()
-        )
+        val subscriptionOfferDetails = product.subscriptionOfferDetails
+        if (subscriptionOfferDetails != null) {
+            val offerToken: String = subscriptionOfferDetails.first().offerToken
+            
+            return listOf(
+                BillingFlowParams.ProductDetailsParams.newBuilder()
+                    .setProductDetails(product)
+                    .setOfferToken(offerToken)
+                    .build()
+            )
+        } else {
+            LogUtils.e("BillingManagerImpl", "Subscription offer details is null")
+            // Return empty list or handle error differently
+            return emptyList()
+        }
     }
 
     /**

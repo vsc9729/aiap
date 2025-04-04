@@ -195,8 +195,14 @@ class SubscriptionsViewModel @Inject constructor(
                         productManagerUseCases.getActiveSubscription(userId = id, apiKey = apiKey)
                     }
                     var activeSubResult = activeSubResultDeferred.await()
-                    userUUID = activeSubResult.data?.userUUID!!
-                    GlobalBillingConfig.userUUID = userUUID
+                    val userUuidFromResponse = activeSubResult.data?.userUUID
+                    if (userUuidFromResponse != null) {
+                        userUUID = userUuidFromResponse
+                        GlobalBillingConfig.userUUID = userUUID
+                    } else {
+                        LogUtils.e(TAG, "userUUID is null in response")
+                        // You might want to throw an exception here or handle this error differently
+                    }
 
                     // Handle any unacknowledged purchases first
                     val purchaseHandledDeferred = async {
@@ -229,14 +235,25 @@ class SubscriptionsViewModel @Inject constructor(
                         
                         // Set up subscription data
                         activeProduct = activeSubResult.data?.subscriptionResponseInfo?.product
-                        baseServiceLevel = activeSubResult.data?.baseServiceLevel!!
+                        val baseServiceLevelFromResponse = activeSubResult.data?.baseServiceLevel
+                        if (baseServiceLevelFromResponse != null) {
+                            baseServiceLevel = baseServiceLevelFromResponse
+                        } else {
+                            LogUtils.e(TAG, "baseServiceLevel is null during initProducts")
+                            // Handle this appropriately
+                        }
                         lastKnownProductTimestamp = activeSubResult.data?.productUpdateTimeStamp
                         lastKnownThemeTimestamp = activeSubResult.data?.themConfigTimeStamp
                         currentProductId = activeSubResult.data?.subscriptionResponseInfo?.product?.productId
                         currentProduct = activeSubResult.data?.subscriptionResponseInfo?.product
-                        userUUID = activeSubResult.data?.userUUID!! 
-                        GlobalBillingConfig.userUUID = userUUID
-                        isIosPlatform = activeSubResult.data!!.subscriptionResponseInfo?.platform?.equals("IOS", ignoreCase = true) ?: false
+                        
+                        val responseData = activeSubResult.data
+                        if (responseData != null) {
+                            isIosPlatform = responseData.subscriptionResponseInfo?.platform?.equals("IOS", ignoreCase = true) ?: false
+                        } else {
+                            LogUtils.e(TAG, "Response data is null when checking platform")
+                            isIosPlatform = false
+                        }
 
                         // Initialize products
                         initProducts()
@@ -456,7 +473,13 @@ class SubscriptionsViewModel @Inject constructor(
                 if(activeSubResult is Resource.Success){
                     activeProduct = activeSubResult.data?.subscriptionResponseInfo?.product
 
-                    baseServiceLevel = activeSubResult.data?.baseServiceLevel!!
+                    val baseServiceLevelFromResponse = activeSubResult.data?.baseServiceLevel
+                    if (baseServiceLevelFromResponse != null) {
+                        baseServiceLevel = baseServiceLevelFromResponse
+                    } else {
+                        LogUtils.e(TAG, "baseServiceLevel is null during initProducts")
+                        // Handle this appropriately
+                    }
                     currentProduct = activeProduct
                     currentProductId = currentProduct?.productId
                     val checkSubscriptionDeferred = async {
@@ -570,11 +593,6 @@ class SubscriptionsViewModel @Inject constructor(
     fun onTabSelected(tab: TabOption?) {
         selectedPlan = -1
         selectedTab = tab
-
-        if (tab == null) {
-            filteredProductDetails = null
-            return
-        }
 
         // Determine the required billing period suffix based on the selected tab.
         val billingSuffix = when (selectedTab) {

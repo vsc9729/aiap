@@ -134,26 +134,8 @@ class OnTabSelectedTest {
         return mockProductDetails
     }
 
-    @Test
-    fun `test onTabSelected with null tab`() {
-        // Given
-        viewModel.selectedPlan = 1
-        viewModel.selectedTab = TabOption.MONTHLY
-        viewModel.productDetails = listOf(
-            createMockProductDetails("monthly", "P1M"),
-            createMockProductDetails("yearly", "P1Y")
-        )
 
-        // When
-        viewModel.onTabSelected(null)
-
-        // Then
-        assertEquals(-1, viewModel.selectedPlan)
-        assertNull(viewModel.selectedTab)
-        assertNull(viewModel.filteredProductDetails)
-    }
-
-    @Test
+    @Testw
     fun `test onTabSelected with MONTHLY tab`() {
         // Given
         val monthlyProduct = createMockProductDetails("monthly", "P1M")

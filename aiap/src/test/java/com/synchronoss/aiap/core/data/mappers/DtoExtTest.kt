@@ -99,17 +99,20 @@ class DtoExtTest {
         assertEquals("Basic", activeSubscriptionInfo.baseServiceLevel)
         assertFalse(activeSubscriptionInfo.pendingPurchase)
         
-        // Validate nested subscription response info
-        val subscriptionResponseInfo = activeSubscriptionInfo.subscriptionResponseInfo!!
-        assertEquals("Vendor", subscriptionResponseInfo.vendorName)
-        assertEquals("App", subscriptionResponseInfo.appName)
-        assertEquals("appID", subscriptionResponseInfo.appPlatformID)
-        assertEquals("Android", subscriptionResponseInfo.platform)
-        assertEquals("user123", subscriptionResponseInfo.partnerUserId)
-        assertEquals(1000L, subscriptionResponseInfo.startDate)
-        assertEquals(2000L, subscriptionResponseInfo.endDate)
-        assertEquals("Active", subscriptionResponseInfo.status)
-        assertEquals("Subscription", subscriptionResponseInfo.type)
+        val subscriptionResponseInfo = activeSubscriptionInfo.subscriptionResponseInfo
+        if (subscriptionResponseInfo != null) {
+            assertEquals("Vendor", subscriptionResponseInfo.vendorName)
+            assertEquals("App", subscriptionResponseInfo.appName)
+            assertEquals("appID", subscriptionResponseInfo.appPlatformID)
+            assertEquals("Android", subscriptionResponseInfo.platform)
+            assertEquals("user123", subscriptionResponseInfo.partnerUserId)
+            assertEquals(1000L, subscriptionResponseInfo.startDate)
+            assertEquals(2000L, subscriptionResponseInfo.endDate)
+            assertEquals("Active", subscriptionResponseInfo.status)
+            assertEquals("Subscription", subscriptionResponseInfo.type)
+        } else {
+            fail("subscriptionResponseInfo should not be null")
+        }
     }
 
     @Test
@@ -148,11 +151,15 @@ class DtoExtTest {
 
         // Validate mapping
         assertNotNull(subscriptionResponseInfo.product)
-        val productInfo = subscriptionResponseInfo.product!!
-        assertEquals("1", productInfo.id)
-        assertEquals("123", productInfo.productId)
-        assertEquals("Test Product", productInfo.displayName)
-        assertEquals("Description", productInfo.description)
+        val productInfo = subscriptionResponseInfo.product
+        if (productInfo != null) {
+            assertEquals("1", productInfo.id)
+            assertEquals("123", productInfo.productId)
+            assertEquals("Test Product", productInfo.displayName)
+            assertEquals("Description", productInfo.description)
+        } else {
+            fail("productInfo should not be null")
+        }
         assertEquals("Vendor", subscriptionResponseInfo.vendorName)
         assertEquals("App", subscriptionResponseInfo.appName)
         assertEquals("appID", subscriptionResponseInfo.appPlatformID)

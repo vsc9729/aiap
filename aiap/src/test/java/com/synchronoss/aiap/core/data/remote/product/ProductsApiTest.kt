@@ -14,6 +14,7 @@ import org.junit.Before
 import org.junit.Test
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import kotlin.test.DefaultAsserter.fail
 
 class ProductsApiTest {
 
@@ -295,12 +296,15 @@ class ProductsApiTest {
         // Then
         assertTrue(response.isSuccessful)
         assertNotNull(response.body())
-        with(response.body()!!) {
-            assertEquals(200, code)
-            assertEquals("SUCCESS", title)
-            assertEquals("Subscription Updated Successfully", message)
-            assertNotNull(data)
-            assertEquals("test_product", data.product.productId)
+        val responseBody = response.body()
+        if (responseBody != null) {
+            assertEquals(200, responseBody.code)
+            assertEquals("SUCCESS", responseBody.title)
+            assertEquals("Subscription Updated Successfully", responseBody.message)
+            assertNotNull(responseBody.data)
+            assertEquals("test_product", responseBody.data.product.productId)
+        } else {
+            fail("Response body should not be null")
         }
     }
 

@@ -164,7 +164,7 @@ android {
     }
 
     testCoverage {
-        jacocoVersion = "0.8.13-SNAPSHOT"  // Use compatible version
+        jacocoVersion = "0.8.12"  // Use compatible version
     }
 }
 
@@ -203,8 +203,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.moshi.kotlin)
     ksp(libs.moshi.kotlin.codegen)
-    jacocoAnt("org.jacoco:org.jacoco.ant:0.8.13-SNAPSHOT")
-    jacocoAgent("org.jacoco:org.jacoco.agent:0.8.13-SNAPSHOT")
+    jacocoAnt("org.jacoco:org.jacoco.ant:0.8.0.8.12")
+    jacocoAgent("org.jacoco:org.jacoco.agent:0.8.12")
 
     // Image Loading
     implementation(libs.coil.compose)
@@ -350,7 +350,7 @@ sonar {
 
 // JaCoCo configuration
 jacoco {
-    toolVersion = "0.8.13-SNAPSHOT"  // Update to the latest version
+    toolVersion = "0.8.12"  // Update to the latest version
     reportsDirectory.set(layout.buildDirectory.dir("reports/jacoco"))
 }
 
