@@ -51,8 +51,7 @@ fun MoreBottomSheet(
     var isVisible by remember { mutableStateOf(false) }
     val configuration = LocalConfiguration.current
     val context = LocalContext.current
-    val screenHeight = configuration.screenHeightDp.dp
-    val bottomSheetHeight = screenHeight * (0.147f)
+    val bottomSheetHeight = 105.dp
     
     val wrapper = remember {
         val wrapper = MoreBottomSheetWrapper()
