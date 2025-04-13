@@ -352,7 +352,7 @@ fun OtherPlanCard(
                             ){
                                 Image(
                                     painter = rememberAsyncImagePainter(R.drawable.discount),
-                                    contentDescription = "Discount Icon",
+                                    contentDescription = stringResource(R.string.discount_icon),
                                     modifier = Modifier.size(getDimension(R.dimen.plan_card_savings_icon_size))
                                 )
                                 Spacer(modifier = Modifier.width(getDimension(R.dimen.plan_card_savings_spacer)))

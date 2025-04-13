@@ -203,7 +203,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.moshi.kotlin)
     ksp(libs.moshi.kotlin.codegen)
-    jacocoAnt("org.jacoco:org.jacoco.ant:0.8.0.8.12")
+    jacocoAnt("org.jacoco:org.jacoco.ant:0.8.12")
     jacocoAgent("org.jacoco:org.jacoco.agent:0.8.12")
 
     // Image Loading

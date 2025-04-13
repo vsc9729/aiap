@@ -135,7 +135,7 @@ class OnTabSelectedTest {
     }
 
 
-    @Testw
+    @Test
     fun `test onTabSelected with MONTHLY tab`() {
         // Given
         val monthlyProduct = createMockProductDetails("monthly", "P1M")

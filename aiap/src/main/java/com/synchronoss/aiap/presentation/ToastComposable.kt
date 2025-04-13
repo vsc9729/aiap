@@ -130,7 +130,7 @@ fun ToastComposable(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "Close",
+                                    contentDescription = stringResource(R.string.close_button),
                                     modifier = Modifier.size(24.dp),
                                     tint = if(!isDarkMode) Color.Black else Color.White
                                 )

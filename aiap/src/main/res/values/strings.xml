@@ -27,6 +27,9 @@
     <string name="close_button">Close</string>
     <string name="continue_button">Continue</string>
     <string name="apply_coupon">Apply Coupon</string>
+    <string name="important_icon">Important Icon</string>
+    <string name="important_text">Important</string>
+    <string name="discount_icon">Discount Icon</string>
 
     <!-- ThemeLoader strings -->
     <string name="theme_manager_tag">ThemeManager</string>
@@ -97,4 +100,4 @@
     <!-- Subscription error messages -->
     <string name="subscription_handler_not_initialized">Subscription handler not initialized</string>
     <string name="subscription_refresh_failed">Failed to refresh subscription status</string>
-</resources> 
+</resources>

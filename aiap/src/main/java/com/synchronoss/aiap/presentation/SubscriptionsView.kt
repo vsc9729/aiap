@@ -164,7 +164,7 @@ private fun HeaderSection(
             Icon(
                 // Show back arrow if launched via intent, otherwise show close icon
                 imageVector = if(launchedViaIntent) Icons.Default.ArrowBack else Icons.Default.Close,
-                contentDescription = "Close",
+                contentDescription = stringResource(R.string.close_button),
                 tint = Color(context.getColor(R.color.light_primary_default)),
                 modifier = Modifier.size(getDimension(R.dimen.bottom_sheet_icon_size))
             )
@@ -343,12 +343,12 @@ private fun IosPlatformWarning() {
             ) {
                 Image(
                     painter = rememberAsyncImagePainter(R.drawable.important),
-                    contentDescription = "Important Icon",
+                    contentDescription = stringResource(R.string.important_icon),
                     modifier = Modifier.size(12.dp)
                 )
                 Spacer(Modifier.width(getDimension(R.dimen.ios_warning_internal_padding)/2))
                 Text(
-                    "Important", 
+                    stringResource(R.string.important_text), 
                     color = Color(context.getColor(R.color.ios_warning_text_heading)), 
                     fontWeight = FontWeight.W600, 
                     fontSize = getDimensionText(R.dimen.ios_warning_text_size)

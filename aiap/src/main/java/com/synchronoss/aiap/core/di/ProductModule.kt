@@ -16,14 +16,10 @@ import dagger.Module
 import dagger.Provides
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import okhttp3.CertificatePinner
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
-import javax.net.ssl.SSLContext
-import javax.net.ssl.TrustManager
-import javax.net.ssl.X509TrustManager
-import java.security.SecureRandom
-import java.security.cert.X509Certificate
 
 /**
  * Dagger module for providing product-related dependencies.
@@ -31,6 +27,12 @@ import java.security.cert.X509Certificate
  */
 @Module
 object ProductModule {
+
+    // Host name extracted from BASE_URL
+    private const val API_HOSTNAME = "sync-api.blr0.geekydev.com"
+    
+    // Public key hash obtained from server certificate
+    private const val PUBLIC_KEY_HASH = "sha256/DuoT1aaVH1iGP0LdH+on/FPguR9jTKjwAwha/1n1OsM="
 
     /**
      * Provides a singleton instance of Moshi for JSON parsing.
@@ -46,7 +48,7 @@ object ProductModule {
 
     /**
      * Provides a singleton instance of OkHttpClient.
-     * Configures logging and SSL settings for network requests.
+     * Configures logging and SSL pinning for network requests.
      * @return A new instance of OkHttpClient with custom configuration
      */
     @Provides
@@ -56,21 +58,14 @@ object ProductModule {
             setLevel(HttpLoggingInterceptor.Level.BODY)
         }
 
-        // Create a trust manager that does not validate certificate chains
-        val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
-            override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
-            override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
-            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-        })
-
-        // Install the all-trusting trust manager
-        val sslContext = SSLContext.getInstance("SSL")
-        sslContext.init(null, trustAllCerts, SecureRandom())
+        // Implement SSL pinning using CertificatePinner
+        val certificatePinner = CertificatePinner.Builder()
+            .add(API_HOSTNAME, PUBLIC_KEY_HASH)
+            .build()
 
         return OkHttpClient.Builder()
-            .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
-            .hostnameVerifier { _, _ -> true }
             .addInterceptor(logging)
+            .certificatePinner(certificatePinner)
             .build()
     }
 
