@@ -12,6 +12,8 @@ import com.synchronoss.aiap.core.domain.usecases.product.HandlePurchase
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.utils.CacheManager
 import com.synchronoss.aiap.utils.Constants.BASE_URL
+import com.synchronoss.aiap.utils.Constants.SSLPinning.API_HOSTNAME
+import com.synchronoss.aiap.utils.Constants.SSLPinning.PUBLIC_KEY_HASH
 import dagger.Module
 import dagger.Provides
 import okhttp3.OkHttpClient
@@ -27,12 +29,6 @@ import javax.inject.Singleton
  */
 @Module
 object ProductModule {
-
-    // Host name extracted from BASE_URL
-    private const val API_HOSTNAME = "sync-api.blr0.geekydev.com"
-    
-    // Public key hash obtained from server certificate
-    private const val PUBLIC_KEY_HASH = "sha256/DuoT1aaVH1iGP0LdH+on/FPguR9jTKjwAwha/1n1OsM="
 
     /**
      * Provides a singleton instance of Moshi for JSON parsing.
@@ -58,7 +54,7 @@ object ProductModule {
             setLevel(HttpLoggingInterceptor.Level.BODY)
         }
 
-        // Implement SSL pinning using CertificatePinner
+        // Implement SSL pinning using CertificatePinner with constants from Constants.SSLPinning
         val certificatePinner = CertificatePinner.Builder()
             .add(API_HOSTNAME, PUBLIC_KEY_HASH)
             .build()
