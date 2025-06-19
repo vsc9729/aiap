@@ -42,6 +42,7 @@ import com.synchronoss.aiap.presentation.subscriptions.ui.TabSelector
 import com.synchronoss.aiap.presentation.viewmodels.SubscriptionsViewModel
 import com.synchronoss.aiap.presentation.wrappers.SubscriptionsViewWrapper
 import com.synchronoss.aiap.utils.Constants
+import com.synchronoss.aiap.utils.UrlManager
 import com.synchronoss.aiap.utils.getDimension
 import com.synchronoss.aiap.utils.getDimensionText
 import com.synchronoss.aiap.utils.LogUtils
@@ -62,8 +63,12 @@ fun SubscriptionsView(
     activity: ComponentActivity, 
     modifier: Modifier = Modifier, 
     launchedViaIntent: Boolean,
+    useEventCloudIap: Boolean = false,
     enableDarkTheme: Boolean = isSystemInDarkTheme()
 ) {
+    LaunchedEffect(useEventCloudIap) {
+        UrlManager.useEventCloudIap = useEventCloudIap
+    }
     // Initialize the ViewModel using the custom remember function
     val viewModel = rememberSubscriptionsViewModel(activity)
     // State for controlling the visibility of the "More" dialog

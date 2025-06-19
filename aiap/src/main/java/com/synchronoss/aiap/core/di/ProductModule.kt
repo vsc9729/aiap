@@ -11,9 +11,8 @@ import com.synchronoss.aiap.core.domain.usecases.product.GetProductsApi
 import com.synchronoss.aiap.core.domain.usecases.product.HandlePurchase
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.utils.CacheManager
-import com.synchronoss.aiap.utils.Constants.BASE_URL
-import com.synchronoss.aiap.utils.Constants.SSLPinning.API_HOSTNAME
 import com.synchronoss.aiap.utils.Constants.SSLPinning.PUBLIC_KEY_HASH
+import com.synchronoss.aiap.utils.UrlManager
 import dagger.Module
 import dagger.Provides
 import okhttp3.OkHttpClient
@@ -56,7 +55,7 @@ object ProductModule {
 
         // Implement SSL pinning using CertificatePinner with constants from Constants.SSLPinning
         val certificatePinner = CertificatePinner.Builder()
-            .add(API_HOSTNAME, PUBLIC_KEY_HASH)
+            .add(UrlManager.getApiHostname(), PUBLIC_KEY_HASH)
             .build()
 
         return OkHttpClient.Builder()
@@ -75,7 +74,7 @@ object ProductModule {
     @Singleton
     fun provideRetrofit(moshi: Moshi, okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(UrlManager.getBaseUrl())
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .client(okHttpClient)
             .build()
