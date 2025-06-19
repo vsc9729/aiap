@@ -53,15 +53,17 @@ object ProductModule {
             setLevel(HttpLoggingInterceptor.Level.BODY)
         }
 
-        // Implement SSL pinning using CertificatePinner with constants from Constants.SSLPinning
-        val certificatePinner = CertificatePinner.Builder()
-            .add(UrlManager.getApiHostname(), PUBLIC_KEY_HASH)
-            .build()
+        val clientBuilder = OkHttpClient.Builder().addInterceptor(logging)
 
-        return OkHttpClient.Builder()
-            .addInterceptor(logging)
-            .certificatePinner(certificatePinner)
-            .build()
+        // Conditionally apply SSL pinning
+        if (!UrlManager.useEventCloudIap) {
+            val certificatePinner = CertificatePinner.Builder()
+                .add(UrlManager.getApiHostname(), PUBLIC_KEY_HASH)
+                .build()
+            clientBuilder.certificatePinner(certificatePinner)
+        }
+
+        return clientBuilder.build()
     }
 
     /**
