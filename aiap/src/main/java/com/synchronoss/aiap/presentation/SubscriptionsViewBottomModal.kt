@@ -47,22 +47,20 @@ fun SubscriptionsViewBottomSheet(
     useEventCloudIap: Boolean = false,
     enableDarkTheme: Boolean = isSystemInDarkTheme()
 ) {
-    LaunchedEffect(useEventCloudIap) {
+    val wrapper = remember(useEventCloudIap) {
         UrlManager.useEventCloudIap = useEventCloudIap
-    }
-    val wrapper = remember {
         val wrapper = SubscriptionsViewBottomModalWrapper()
         val application = activity.application
         val aiapComponent = DaggerAiapComponent.factory().create(application)
         aiapComponent.inject(wrapper)
         wrapper
     }
-    
-    val viewModel = remember {
+
+    val viewModel = remember(wrapper) {
         wrapper.getViewModel(activity)
     }
 
-    LaunchedEffect(partnerUserId) {
+    LaunchedEffect(viewModel, partnerUserId, isLaunchedViaIntent, apiKey) {
         viewModel.initialize(id = partnerUserId, intentLaunch = isLaunchedViaIntent, apiKey = apiKey, activity = activity)
     }
 
