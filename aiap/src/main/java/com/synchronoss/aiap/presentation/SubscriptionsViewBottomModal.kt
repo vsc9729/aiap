@@ -33,6 +33,7 @@ import com.synchronoss.aiap.presentation.viewmodels.SubscriptionsViewModel
 import com.synchronoss.aiap.ui.theme.AiAPTheme
 import com.synchronoss.aiap.core.di.DaggerAiapComponent
 import com.synchronoss.aiap.presentation.viewmodels.SubscriptionsViewBottomModalWrapper
+import com.synchronoss.aiap.utils.UrlManager
 
 @Composable
 fun SubscriptionsViewBottomSheet(
@@ -43,8 +44,12 @@ fun SubscriptionsViewBottomSheet(
     activity: ComponentActivity,
     isLaunchedViaIntent: Boolean = false,
     apiKey: String,
+    useEventCloudIap: Boolean = false,
     enableDarkTheme: Boolean = isSystemInDarkTheme()
 ) {
+    LaunchedEffect(useEventCloudIap) {
+        UrlManager.useEventCloudIap = useEventCloudIap
+    }
     val wrapper = remember {
         val wrapper = SubscriptionsViewBottomModalWrapper()
         val application = activity.application

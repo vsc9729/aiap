@@ -63,12 +63,8 @@ fun SubscriptionsView(
     activity: ComponentActivity, 
     modifier: Modifier = Modifier, 
     launchedViaIntent: Boolean,
-    useEventCloudIap: Boolean = false,
     enableDarkTheme: Boolean = isSystemInDarkTheme()
 ) {
-    LaunchedEffect(useEventCloudIap) {
-        UrlManager.useEventCloudIap = useEventCloudIap
-    }
     // Initialize the ViewModel using the custom remember function
     val viewModel = rememberSubscriptionsViewModel(activity)
     // State for controlling the visibility of the "More" dialog
