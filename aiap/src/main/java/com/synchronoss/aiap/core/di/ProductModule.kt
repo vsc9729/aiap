@@ -11,7 +11,6 @@ import com.synchronoss.aiap.core.domain.usecases.product.GetProductsApi
 import com.synchronoss.aiap.core.domain.usecases.product.HandlePurchase
 import com.synchronoss.aiap.core.domain.usecases.product.ProductManagerUseCases
 import com.synchronoss.aiap.utils.CacheManager
-import com.synchronoss.aiap.utils.Constants.SSLPinning.PUBLIC_KEY_HASH
 import com.synchronoss.aiap.utils.UrlManager
 import dagger.Module
 import dagger.Provides
@@ -53,17 +52,14 @@ object ProductModule {
             setLevel(HttpLoggingInterceptor.Level.BODY)
         }
 
-        val clientBuilder = OkHttpClient.Builder().addInterceptor(logging)
+        val certificatePinner = CertificatePinner.Builder()
+            .add(UrlManager.getApiHostname(), UrlManager.getPublicKeyHash())
+            .build()
 
-        // Conditionally apply SSL pinning
-        if (!UrlManager.useEventCloudIap) {
-            val certificatePinner = CertificatePinner.Builder()
-                .add(UrlManager.getApiHostname(), PUBLIC_KEY_HASH)
-                .build()
-            clientBuilder.certificatePinner(certificatePinner)
-        }
-
-        return clientBuilder.build()
+        return OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .certificatePinner(certificatePinner)
+            .build()
     }
 
     /**

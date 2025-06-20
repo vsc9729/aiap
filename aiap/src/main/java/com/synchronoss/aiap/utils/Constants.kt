@@ -10,7 +10,10 @@ object Constants {
     
     // SSL Pinning Configuration
     object SSLPinning {
-        // Public key hash obtained from server certificate
-        const val PUBLIC_KEY_HASH = "sha256/DuoT1aaVH1iGP0LdH+on/FPguR9jTKjwAwha/1n1OsM="
+        // Public key hash for sync-api.blr0.geekydev.com
+        const val GEEKYANTS_PUBLIC_KEY_HASH = "sha256/DuoT1aaVH1iGP0LdH+on/FPguR9jTKjwAwha/1n1OsM="
+
+        // Public key hash for common-coredev-eks-wlpc.cloud.synchronoss.net
+        const val EVENTCLOUD_PUBLIC_KEY_HASH = "sha256/UzjiyoNRnhPMbDtZ+BaH7bR7jFxHGbVkYWlzGtvxhKI="
     }
 }
